@@ -1,0 +1,11 @@
+## Interface: 11304
+## Title: Classic Loot Assistant
+## Notes: An addon to assist in raid looting
+## SavedVariables: ClassicLootAssistantConfig
+
+embeds.xml
+
+Helpers.lua
+FrameHelpers.lua
+ClassicLootAssistant.xml
+ClassicLootAssistant.lua

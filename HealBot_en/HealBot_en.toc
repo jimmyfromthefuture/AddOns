@@ -1,0 +1,28 @@
+## Interface: 11303
+## Title: HealBot English Localization
+## Author: Strife
+## Notes: Adds a panel with skinable bars for healing, decursive, buffing, ressing, range checking and aggro tracking
+## Version: 1.13.3.0
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+
+Libs\LibSharedMedia-3.0\lib.xml
+Libs\libdatabroker-1-1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\lib.xml
+Libs\UTF8\utf8data.lua
+Libs\UTF8\utf8.lua
+Libs\LibHealComm-4.0\LibHealComm-4.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceBucket-3.0\AceBucket-3.0.xml
+Libs\AceComm-3.0\AceComm-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceSerializer-3.0\AceSerializer-3.0.xml
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\ThreatClassic-1.0\lib.xml
+Libs\LibClassicDurations\LibClassicDurations.xml
+
+HealBot_Global.lua
+HealBot_Version.lua
+HealBot_Localization.en.lua
+HealBot_Libs.lua

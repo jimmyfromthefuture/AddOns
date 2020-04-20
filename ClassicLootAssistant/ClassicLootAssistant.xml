@@ -1,0 +1,16 @@
+<Ui>
+  <Script File="ClassicLootAssistant.lua"/>
+  <Frame name="ClassicLootAssistantFrame">
+    <Scripts>
+      <OnLoad>
+				self:RegisterEvent("CHAT_MSG_ADDON");
+				self:RegisterEvent("PLAYER_LOGIN");
+				self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
+        self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
+        self:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
+        self:RegisterEvent("LOOT_OPENED");
+      </OnLoad>
+      <OnEvent function="CLA_OnEvent"></OnEvent>
+    </Scripts>
+  </Frame>
+</Ui>
