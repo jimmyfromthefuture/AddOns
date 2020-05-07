@@ -111,7 +111,7 @@ L["dmf"] = "Darkmoon Faire"; --Darkmoon Faire
 L["noTimer"] = "No timer"; --No timer
 L["noCurrentTimer"] = "No current timer"; --No current timer
 L["noActiveTimers"] = "No active timers";	--No active timers
-L["newBuffCanBeDropped"] = "A new %s buff can be dropped now"
+L["newBuffCanBeDropped"] = "A new %s buff can be dropped now";
 L["buffResetsIn"] = "%s resets in %s";
 L["rendFirstYellMsg"] = "Rend will drop in 6 seconds.";
 L["onyxiaFirstYellMsg"] = "Onyxia will drop in 14 seconds.";
@@ -167,6 +167,7 @@ L["Zandalarian Emissary"] = "Zandalarian Emissary";
 L["Whipper Root Tuber"] = "Whipper Root Tuber";
 L["Night Dragon's Breath"] = "Night Dragon's Breath";
 L["Resist Fire"] = "Resist Fire"; -- LBRS fire resist buff.
+L["Blessing of Blackfathom"] = "Blessing of Blackfathom";
 
 L["zan"] = "Zandalar";
 L["zanFirstYellMsg"] = "Zandalar will drop in 30 seconds.";
@@ -181,6 +182,9 @@ L["North-West of Irontree Woods"] = "North-West of Irontree Woods";
 L["South of Irontree Woods"] = "South of Irontree Woods";
 
 
-
-L["cityMapLayerMsgHorde"] = "Showing timers for %s\nTarget any NPC in Orgrimmar\nto update your layer.|r";
-L["cityMapLayerMsgAlliance"] = "Showing timers for %s\nTarget any NPC in Stormwind\nto update your layer.|r";
+L["worldMapBuffsMsg"] = "Type /buffs to view all your\ncharacters current world buffs.";
+L["cityMapLayerMsgHorde"] = "Currently on %s\nTarget any NPC in Orgrimmar\nto update your layer after changing zones.|r";
+L["cityMapLayerMsgAlliance"] = "Currently on %s\nTarget any NPC in Stormwind\nto update your layer after changing zones.|r";
+L["noLayerYetHorde"] = "Please target any NPC in Orgrimmar\nto find your current layer.";
+L["noLayerYetAlliance"] = "Please target any NPC in Stormwind\nto find your current layer.";
+L["Reset Data"] = "Reset Data"; --A button to Reset buffs window data.

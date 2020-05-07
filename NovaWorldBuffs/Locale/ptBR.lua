@@ -170,6 +170,7 @@ L["Zandalarian Emissary"] = "Emissário Zandalariano";
 L["Whipper Root Tuber"] = "Tubérculo de Raiz-açoite";
 L["Night Dragon's Breath"] = "Sopro de Dragão Noturno";
 L["Resist Fire"] = "Resistir ao Fogo"; -- LBRS fire resist buff.
+L["Blessing of Blackfathom"] = "Bênção das Profundezas Negras";
 
 L["zan"] = "Zandalar";
 L["zanFirstYellMsg"] = "Zandalar will drop in 30 seconds.";

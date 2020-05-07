@@ -1,6 +1,6 @@
 
 	----------------------------------------------------------------------
-	-- 	Leatrix Maps 1.13.58 (15th April 2020)
+	-- 	Leatrix Maps 1.13.62 (7th May 2020)
 	----------------------------------------------------------------------
 
 	-- 10:Func, 20:Comm, 30:Evnt, 40:Panl
@@ -12,7 +12,7 @@
 	local LeaMapsLC, LeaMapsCB, LeaConfigList = {}, {}, {}
 
 	-- Version
-	LeaMapsLC["AddonVer"] = "1.13.58"
+	LeaMapsLC["AddonVer"] = "1.13.62"
 	LeaMapsLC["RestartReq"] = nil
 
 	-- Get locale table
@@ -730,24 +730,29 @@
 
 		do
 
+			-- Store initial pan and zoom settings
 			local lastZoomLevel = WorldMapFrame.ScrollContainer:GetCanvasScale()
 			local lastHorizontal = WorldMapFrame.ScrollContainer:GetNormalizedHorizontalScroll()
 			local lastVertical = WorldMapFrame.ScrollContainer:GetNormalizedVerticalScroll()
 			local lastMapID = WorldMapFrame.mapID
 
-			hooksecurefunc("ToggleWorldMap", function()
+			-- Store pan and zoom settings when map is hidden
+			WorldMapFrame:HookScript("OnHide", function()
 				if LeaMapsLC["RememberZoom"] == "On" then
-					if not WorldMapFrame:IsShown() then
-						lastZoomLevel = WorldMapFrame.ScrollContainer:GetCanvasScale()
-						lastHorizontal = WorldMapFrame.ScrollContainer:GetNormalizedHorizontalScroll()
-						lastVertical = WorldMapFrame.ScrollContainer:GetNormalizedVerticalScroll()
-						lastMapID = WorldMapFrame.mapID
-					else
-						if WorldMapFrame.mapID == lastMapID then
-							WorldMapFrame.ScrollContainer:InstantPanAndZoom(lastZoomLevel, lastHorizontal, lastVertical)
-							WorldMapFrame.ScrollContainer:SetPanTarget(lastHorizontal, lastVertical)
-							WorldMapFrame.ScrollContainer:Hide(); WorldMapFrame.ScrollContainer:Show()
-						end
+					lastZoomLevel = WorldMapFrame.ScrollContainer:GetCanvasScale()
+					lastHorizontal = WorldMapFrame.ScrollContainer:GetNormalizedHorizontalScroll()
+					lastVertical = WorldMapFrame.ScrollContainer:GetNormalizedVerticalScroll()
+					lastMapID = WorldMapFrame.mapID
+				end
+			end)
+
+			-- Restore pan and zoom settings when map is shown
+			WorldMapFrame:HookScript("OnShow", function()
+				if LeaMapsLC["RememberZoom"] == "On" then
+					if WorldMapFrame.mapID == lastMapID then
+						WorldMapFrame.ScrollContainer:InstantPanAndZoom(lastZoomLevel, lastHorizontal, lastVertical)
+						WorldMapFrame.ScrollContainer:SetPanTarget(lastHorizontal, lastVertical)
+						WorldMapFrame.ScrollContainer:Hide(); WorldMapFrame.ScrollContainer:Show()
 					end
 				end
 			end)

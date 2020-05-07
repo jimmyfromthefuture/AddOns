@@ -155,16 +155,17 @@ L["Options"] = "Настройки";
 ---New stuff---
 
 --Spirit of Zandalar buff NPC first yell string (part of his first yell msg before before buff).
-L["Begin the ritual"] = "Begin the ritual"
-L["The Blood God"] = "The Blood God"; --First Booty bay yell from Zandalarian Emissary.
+L["Begin the ritual"] = "Начинайте ритуал"
+L["The Blood God"] = "Кровавый Свежеватель Душ"; --First Booty bay yell from Zandalarian Emissary.
 --Spirit of Zandalar buff NPC second yell string (part of his second yell msg before before buff).
-L["slayer of Hakkar"] = "slayer of Hakkar";
+L["slayer of Hakkar"] = "победитель Хаккара";
 
 L["Molthor"] = "Молтор";
 L["Zandalarian Emissary"] = "Зандаларский эмиссар";
 L["Whipper Root Tuber"] = "Плод кнутокорня";
 L["Night Dragon's Breath"] = "Ночное дыхание дракона";
 L["Resist Fire"] = "Сопротивление огню"; -- LBRS fire resist buff.
+L["Blessing of Blackfathom"] = "Благословение Черных Глубин";
 
 L["zan"] = "Зандалар";
 L["zanFirstYellMsg"] = "Зандалар будет бафнут через 30 секунд.";

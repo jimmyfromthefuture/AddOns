@@ -145,6 +145,23 @@ NWB.options = {
 			get = "getColorizePrefixLinks",
 			set = "setColorizePrefixLinks",
 		},
+		showAllAlts = {
+			type = "toggle",
+			name = "Show All Alts",
+			desc = "Show all alts in the /buffs window even if they don't have an active buff?",
+			order = 16,
+			get = "getShowAllAlts",
+			set = "setShowAllAlts",
+		},
+		flashMinimized = {
+			type = "toggle",
+			name = "Flash Minimized",
+			desc = "Flash the wow client when you have it minimized and a buff is about to drop? Flashes when  minute left on timer "
+					.. "and when a head is handed in a few seconds before buff drops.",
+			order = 17,
+			get = "getFlashMinimized",
+			set = "setFlashMinimized",
+		},
 		logonHeader = {
 			type = "header",
 			name = "Logon Messages",
@@ -312,13 +329,14 @@ NWB.options = {
 			get = "getMiddle0",
 			set = "setMiddle0",
 		},
-		middleZan = {
+		middleBuffWarning = {
 			type = "toggle",
-			name = "Zandalar Buff Warning",
-			desc = "Show a raid warning style msg in the middle of the screen 30 seconds before Zandalar buff will drop when the NPC starts yelling.",
+			name = "Buff Drop Warning",
+			desc = "Show a raid warning style msg in the middle of the screen when someone hands in the head for any buff and the "
+					.. "NPC yells a few seconds before the buff will drop.",
 			order = 47,
-			get = "getMiddleZan",
-			set = "setMiddleZan",
+			get = "getMiddleBuffWarning",
+			set = "setMiddleBuffWarning",
 		},
 		guildWarningHeader = {
 			type = "header",
@@ -561,19 +579,104 @@ NWB.options = {
 			get = "getShowDmfMap",
 			set = "setShowDmfMap",
 		},
+		guildChatFilter = {
+			type = "header",
+			name = "Guild Chat Filter",
+			order = 90,
+		},
+		guildChatFilterDesc = {
+			type = "description",
+			name = "|CffDEDE42This will block any guild msgs from this addon you choose so you don't see them. It will stop "
+					.. "you from seeing your own msgs and msgs from other addon users in guild chat.",
+			fontSize = "medium",
+			order = 91,
+		},
+		filterYells = {
+			type = "toggle",
+			name = "Filter Buff Warning",
+			desc = "Filter the msg when a buff is about to drop in a few seconds (Onyxia will drop in 14 seconds).",
+			order = 92,
+			get = "getFilterYells",
+			set = "setFilterYells",
+		},
+		filterDrops = {
+			type = "toggle",
+			name = "Filter Buff Dropped",
+			desc = "Filter the msg when a buff has dropped (Rallying Cry of the Dragonslayer (Onyxia) has dropped).",
+			order = 93,
+			get = "getFilterDrops",
+			set = "setFilterDrops",
+		},
+		filterTimers = {
+			type = "toggle",
+			name = "Filter Timer Msgs",
+			desc = "Filter timer msgs (Onyxia resets in 1 minute).",
+			order = 94,
+			get = "getFilterTimers",
+			set = "setFilterTimers",
+		},
+		filterCommand = {
+			type = "toggle",
+			name = "Filter !wb command",
+			desc = "Filter the !wb and !dmf in guild chat when typed by players.",
+			order = 95,
+			get = "getFilterCommand",
+			set = "setFilterCommand",
+		},
+		filterCommandResponse = {
+			type = "toggle",
+			name = "Filter !wb reply",
+			desc = "Filter the reply msg with timers this addon does when !wb or !!dmf is used.",
+			order = 96,
+			get = "getFilterCommandResponse",
+			set = "setFilterCommandResponse",
+		},
+		filterSongflowers = {
+			type = "toggle",
+			name = "Filter Songflowers",
+			desc = "Filter the msg when a songflower is picked.",
+			order = 97,
+			get = "getFilterSongflowers",
+			set = "setFilterSongflowers",
+		},
+		filterNpcKilled = {
+			type = "toggle",
+			name = "Filter NPC Killed",
+			desc = "Filter the msg when a buff hand in NPC is killed in your city.",
+			order = 98,
+			get = "getFilterNpcKilled",
+			set = "setFilterNpcKilled",
+		},
 	},
 };
 
-function NWB:loadFactionSpecificOptions()
+function NWB:loadSpecificOptions()
 	if (NWB.faction == "Alliance") then
 		NWB.options.args["allianceEnableRend"] = {
 			type = "toggle",
 			name = "Enable Alliance Rend",
 			desc = "Enable this to track rend as Alliance, for guilds that mind control to get rend buff. If you use this then everyone in "
 					.. "the guild with the addon should enable it or guild chat msgs may not work properly (personal timer msgs will still work).";
-			order = 19,
+			order = 18,
 			get = "getAllianceEnableRend",
 			set = "setAllianceEnableRend",
+		};
+	end
+	if (NWB.isLayered) then
+		NWB.options.args["minimapLayerFrame"] = {
+			type = "toggle",
+			name = "Show Minimap Layer",
+			desc = "Show the little frame on the minimap with your current layer while in a capital city?";
+			order = 18,
+			get = "getMinimapLayerFrame",
+			set = "setMinimapLayerFrame",
+		};
+		NWB.options.args["minimapLayerFrameReset"] = {
+				type = "execute",
+				name = "Reset Minimap Layer",
+				desc = "Reset minimap layer frame back to default position (hold shift to drag the minimap frame).",
+				func = "resetMinimapLayerFrame",
+				order = 19,
 		};
 	end
 end
@@ -601,7 +704,7 @@ NWB.optionDefaults = {
 		middle5 = false,
 		middle1 = true,
 		middle0 = true,
-		middleZan = false,
+		middleBuffWarning = true,
 		guild30 = false,
 		guild15 = false,
 		guild10 = true,
@@ -661,16 +764,27 @@ NWB.optionDefaults = {
 		printNef = true,
 		printZan = true,
 		iceBuffTime = 1800, --Debug.
-		resetSongflowers = true, --reset songflowers one time.
 		logonRend = true,
 		logonOny = true,
 		logonNef = true,
 		logonDmfSpawn = true,
 		logonDmfBuffCooldown = true,
 		showDmfBuffWb = true,
+		showAllAlts = false,
+		flashMinimized = true,
+		filterYells = false,
+		filterDrops = false,
+		filterTimers = false,
+		filterCommand = false,
+		filterCommandResponse = false,
+		filterSongflowers = false,
+		filterNpcKilled = false,
+		minimapLayerFrame = true,
+		blackfathomBuffTime = 3600,
 		
-		resetLayers = true, --Reset layers one time (needed when upgrading from old version.
+		resetLayers3 = true, --Reset layers one time (sometimes needed when upgrading from old version.
 		resetSongflowers = true, --Reset songflowers one time.
+		experimental = true, --Enable features being tested on occasion.
 	},
 };
 
@@ -865,6 +979,11 @@ function NWB:resetColors(info, r, g, b, a)
 	NWB.chatColor = "|cff" .. NWB:RGBToHex(self.db.global.chatColorR, self.db.global.chatColorG, self.db.global.chatColorB);
 end
 
+--Reset colors.
+function NWB:resetMinimapLayerFrame(info)
+	MinimapLayerFrame:ClearAllPoints();
+	MinimapLayerFrame:SetPoint("BOTTOM", Minimap, 2, 4);
+end
 --Colorize chat prefix in all chat channels.
 function NWB:setColorizePrefixLinks(info, value)
 	self.db.global.colorizePrefixLinks = value;
@@ -872,6 +991,24 @@ end
 
 function NWB:getColorizePrefixLinks(info)
 	return self.db.global.colorizePrefixLinks;
+end
+
+--Show all alts in the buffs window.
+function NWB:setShowAllAlts(info, value)
+	self.db.global.showAllAlts = value;
+end
+
+function NWB:getShowAllAlts(info)
+	return self.db.global.showAllAlts;
+end
+
+--Show all alts in the buffs window.
+function NWB:setFlashMinimized(info, value)
+	self.db.global.flashMinimized = value;
+end
+
+function NWB:getFlashMinimized(info)
+	return self.db.global.flashMinimized;
 end
 
 --Chat 30 minute warning.
@@ -991,13 +1128,13 @@ function NWB:getMiddle0(info)
 	return self.db.global.middle0;
 end
 
---Middle of the screen 0 minute warning.
-function NWB:setMiddleZan(info, value)
-	self.db.global.middleZan = value;
+--Middle of the screen buff hand in warning.
+function NWB:setMiddleBuffWarning(info, value)
+	self.db.global.middleBuffWarning = value;
 end
 
-function NWB:getMiddleZan(info)
-	return self.db.global.middleZan;
+function NWB:getMiddleBuffWarning(info)
+	return self.db.global.middleBuffWarning;
 end
 
 --Guild 30 minute warning.
@@ -1289,4 +1426,77 @@ end
 
 function NWB:getLogonDmfBuffCooldown(info)
 	return self.db.global.logonDmfBuffCooldown;
+end
+
+--Filter guild chat buff warning.
+function NWB:setFilterYells(info, value)
+	self.db.global.filterYells = value;
+end
+
+function NWB:getFilterYells(info)
+	return self.db.global.filterYells;
+end
+
+--Filter guild chat buff dropped.
+function NWB:setFilterDrops(info, value)
+	self.db.global.filterDrops = value;
+end
+
+function NWB:getFilterDrops(info)
+	return self.db.global.filterDrops;
+end
+
+--Filter guild chat buff timer warnings.
+function NWB:setFilterTimers(info, value)
+	self.db.global.filterTimers = value;
+end
+
+function NWB:getFilterTimers(info)
+	return self.db.global.filterTimers;
+end
+
+--Filter guild chat !wb and !dmf commands.
+function NWB:setFilterCommand(info, value)
+	self.db.global.filterCommand = value;
+end
+
+function NWB:getFilterCommand(info)
+	return self.db.global.filterCommand;
+end
+
+--Filter guild chat !wb and !dmf command response.
+function NWB:setFilterCommandResponse(info, value)
+	self.db.global.filterCommandResponse = value;
+end
+
+function NWB:getFilterCommandResponse(info)
+	return self.db.global.filterCommandResponse;
+end
+
+--Filter guild chat songflower picked.
+function NWB:setFilterSongflowers(info, value)
+	self.db.global.filterSongflowers = value;
+end
+
+function NWB:getFilterSongflowers(info)
+	return self.db.global.filterSongflowers;
+end
+
+--Filter guild chat NPC killed msg.
+function NWB:setFilterNpcKilled(info, value)
+	self.db.global.filterNpcKilled = value;
+end
+
+function NWB:getFilterNpcKilled(info)
+	return self.db.global.filterNpcKilled;
+end
+
+--Minimap layer frame.
+function NWB:setMinimapLayerFrame(info, value)
+	self.db.global.minimapLayerFrame = value;
+	NWB:recalcMinimapLayerFrame();
+end
+
+function NWB:getMinimapLayerFrame(info)
+	return self.db.global.minimapLayerFrame;
 end

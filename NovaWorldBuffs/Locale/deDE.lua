@@ -166,6 +166,7 @@ L["Zandalarian Emissary"] = "Abgesandter der Zandalarianer";
 L["Whipper Root Tuber"] = "Peitscherwurzelknollen";
 L["Night Dragon's Breath"] = "Nachtdrachenodem";
 L["Resist Fire"] = "Feuer widerstehen"; -- LBRS fire resist buff.
+L["Blessing of Blackfathom"] = "Segen von Blackfathom";
 
 L["zan"] = "Zandalar";
 L["zanFirstYellMsg"] = "Zandalar Buff in 27 Sekunden.";
