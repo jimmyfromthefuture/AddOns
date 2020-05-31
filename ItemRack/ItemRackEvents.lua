@@ -2,7 +2,7 @@
 
 	Events can be one of four types:
 		Buff : Triggered by PLAYER_AURAS_CHANGED and delayed .3 sec
-		Zone : Triggered by ZONE_CHANGED_NEW_AREA and delayed .5 sec
+		Zone : Triggered by ZONE_CHANGED_NEW_AREA or ZONE_CHANGED_INDOORS and delayed .5 sec
 		Stance : Triggered by UPDATE_SHAPESHIFT_FORM and not delayed
 		Script : User-defined trigger
 
@@ -28,7 +28,7 @@
 ]]
 
 -- increment this value when default events are changed to deploy them to existing events
-ItemRack.EventsVersion = 15
+ItemRack.EventsVersion = 17
 
 -- default events, loaded when no events exist or ItemRack.EventsVersion is increased
 ItemRack.DefaultEvents = {
@@ -63,24 +63,25 @@ ItemRack.DefaultEvents = {
 	},
 	["Mounted"] = { Type = "Buff", Unequip = 1, Anymount = 1 },
 	["Drinking"] = { Type = "Buff", Unequip = 1, Buff = "Drink" },
-	["Evocation"] = { Type = "Buff", Unequip = 1, Buff = "Evocation" },
 
-	["Warrior Battle"] = { Type = "Stance", Stance = 1 },
-	["Warrior Defensive"] = { Type = "Stance", Stance = 2 },
-	["Warrior Berserker"] = { Type = "Stance", Stance = 3 },
+	["Evocation"] = { Class = "MAGE", Type = "Buff", Unequip = 1, Buff = "Evocation" },
 
-	["Priest Shadowform"] = { Type = "Stance", Unequip = 1, Stance = 1 },
+	["Warrior Battle"] = { Class = "WARRIOR", Type = "Stance", Stance = 1 },
+	["Warrior Defensive"] = { Class = "WARRIOR", Type = "Stance", Stance = 2 },
+	["Warrior Berserker"] = { Class = "WARRIOR", Type = "Stance", Stance = 3 },
 
-	["Druid Humanoid"] = { Type = "Stance", Stance = 0 },
-	["Druid Bear"] = { Type = "Stance", Stance = 1 },
-	["Druid Aquatic"] = { Type = "Stance", Stance = 2 },
-	["Druid Cat"] = { Type = "Stance", Stance = 3 },
-	["Druid Travel"] = { Type = "Stance", Stance = 4 },
-	["Druid Moonkin"] = { Type = "Stance", Stance = "Moonkin Form" },
+	["Priest Shadowform"] = { Class = "PRIEST", Type = "Stance", Unequip = 1, Stance = 1 },
 
-	["Rogue Stealth"] = { Type = "Stance", Unequip = 1, Stance = 1 },
+	["Druid Humanoid"] = { Class = "DRUID", Type = "Stance", Stance = 0 },
+	["Druid Bear"] = { Class = "DRUID", Type = "Stance", Stance = 1 },
+	["Druid Aquatic"] = { Class = "DRUID", Type = "Stance", Stance = 2 },
+	["Druid Cat"] = { Class = "DRUID", Type = "Stance", Stance = 3 },
+	["Druid Travel"] = { Class = "DRUID", Type = "Stance", Stance = 4 },
+	["Druid Moonkin"] = { Class = "DRUID", Type = "Stance", Stance = "Moonkin Form" },
 
-	["Shaman Ghostwolf"] = { Type = "Stance", Unequip = 1, Stance = 1 },
+	["Rogue Stealth"] = { Class = "ROGUE", Type = "Stance", Unequip = 1, Stance = 1 },
+
+	["Shaman Ghostwolf"] = { Class = "SHAMAN", Type = "Stance", Unequip = 1, Stance = 1 },
 
 	["Swimming"] = {
 		["Trigger"] = "MIRROR_TIMER_START",
@@ -99,12 +100,22 @@ ItemRack.DefaultEvents = {
 		Trigger = "UNIT_SPELLCAST_SUCCEEDED",
 		Script = "local spell = \"Name of spell\"\nlocal set = \"Name of set\"\nif arg1==\"player\" and arg2==spell then\n  EquipSet(set)\nend\n\n--[[This event will equip \"Name of set\" when \"Name of spell\" has finished casting.  Change the names for your own use.]]",
 	},
+
+	["Nefarian's Lair"] = {
+		Type = "Zone",
+		Unequip = 1,
+		Zones = {
+			["Nefarian's Lair"] = 1,
+		}
+	},
 }
 
 -- resetDefault to reload/update default events, resetAll to wipe all events and recreate them
 function ItemRack.LoadEvents(resetDefault,resetAll)
 
+	local _, playerClass = UnitClass("player")
 	local version = tonumber(ItemRackSettings.EventsVersion) or 0
+
 	if ItemRack.EventsVersion > version then
 		resetDefault = 1 -- force a load of default events (leaving custom ones intact)
 		ItemRackSettings.EventsVersion = ItemRack.EventsVersion
@@ -123,7 +134,11 @@ function ItemRack.LoadEvents(resetDefault,resetAll)
 
 	if resetDefault or resetAll then
 		for i in pairs(ItemRack.DefaultEvents) do
-			ItemRack.CopyDefaultEvent(i)
+			local eventClass = ItemRack.DefaultEvents[i].Class
+
+			if not eventClass or eventClass == playerClass then
+				ItemRack.CopyDefaultEvent(i)
+			end
 		end
 	end
 
@@ -239,6 +254,9 @@ function ItemRack.RegisterEvents()
 			if not frame:IsEventRegistered("ZONE_CHANGED_NEW_AREA") then
 				frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 			end
+			if not frame:IsEventRegistered("ZONE_CHANGED_INDOORS") then
+				frame:RegisterEvent("ZONE_CHANGED_INDOORS")
+			end
 		elseif eventType=="Script" then
 			if not frame:IsEventRegistered(events[eventName].Trigger) then
 				frame:RegisterEvent(events[eventName].Trigger)
@@ -281,7 +299,7 @@ function ItemRack.ProcessingFrameOnEvent(self,event,...)
 			startBuff = 1
 		elseif event=="UPDATE_SHAPESHIFT_FORM" and eventType=="Stance" then
 			startStance = 1
-		elseif event=="ZONE_CHANGED_NEW_AREA" and eventType=="Zone" then
+		elseif (event=="ZONE_CHANGED_NEW_AREA" or event=="ZONE_CHANGED_INDOORS")  and eventType=="Zone" then
 			startZone = 1
 		elseif eventType=="Script" and events[eventName].Trigger==event then
 			local method = loadstring(events[eventName].Script)
@@ -353,14 +371,15 @@ function ItemRack.ProcessZoneEvent()
 	local events = ItemRackEvents
 
 	local currentZone = GetRealZoneText()
+	local currentSubZone = GetSubZoneText()
 	local setToEquip, setToUnequip, setname
 
 	for eventName in pairs(enabled) do
 		if events[eventName].Type=="Zone" then
 			setname = ItemRackUser.Events.Set[eventName]
-			if events[eventName].Zones[currentZone] and not ItemRack.IsSetEquipped(setname) then
+			if (events[eventName].Zones[currentZone] or events[eventName].Zones[currentSubZone]) and not ItemRack.IsSetEquipped(setname) then
 				setToEquip = setname
-			elseif not events[eventName].Zones[currentZone] and events[eventName].Unequip and ItemRack.IsSetEquipped(setname) then
+			elseif not (events[eventName].Zones[currentZone] or events[eventName].Zones[currentSubZone]) and events[eventName].Unequip and ItemRack.IsSetEquipped(setname) then
 				setToUnequip = setname
 			end
 		end
@@ -416,7 +435,7 @@ function ItemRack.ProcessBuffEvent()
 				isSetEquipped = ItemRack.IsSetEquipped(setname)
 				if buff and not isSetEquipped then
 					ItemRack.EquipSet(setname)
-				elseif not buff and isSetEquipped then
+				elseif not buff and isSetEquipped and events[eventName].Unequip then
 					ItemRack.UnequipSet(setname)
 				end
 			end

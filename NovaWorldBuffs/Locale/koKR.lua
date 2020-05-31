@@ -1,8 +1,8 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("NovaWorldBuffs", "koKR");
 if (not L) then
-	return;
+    return;
 end
-
+ 
 --Rend buff aura name.
 L["Warchief's Blessing"] = "대족장의 축복";
 --Onyxia and Nefarian buff aura name.
@@ -54,17 +54,17 @@ L["Revel in his rallying cry"] = "모두 함께 함성을 질러 승리를 축�
 --Alliance Onyxia buff NPC.
 L["Major Mattingly"] = "상사 매팅글리";
 --Alliance Onyxia buff NPC first yell string (part of his first yell msg before before buff).
---L["history has been made"] = "";
+L["history has been made"] = "역사가 이루어졌노라";
 --Alliance Onyxia buff NPC second yell string (part of his second yell msg before before buff).
---L["Onyxia, hangs from the arches"] = "";
+L["Onyxia, hangs from the arches"] = "오닉시아의 목이 잘려 홍예문에 걸려 있다";
  
  
 --Alliance Nefarian buff NPC.
 L["Field Marshal Afrasiabi"] = "야전사령관 아프라샤비";
 --Alliance Nefarian buff NPC first yell string (part of his first yell msg before before buff).
---L["the Lord of Blackrock is slain"] = "";
+L["the Lord of Blackrock is slain"] = "검은바위부족의 군주가 쓰려졌다";
 --Alliance Nefarian buff NPC second yell string (part of his second yell msg before before buff).
---L["Revel in the rallying cry"] = "";
+L["Revel in the rallying cry"] = "단결을 향한 외침을 즐겨라";
  
 ---===========----
 ---NPC's killed---
@@ -78,7 +78,7 @@ L["onyxiaNpcKilledHordeWithTimer"] = "오닉시아 NPC (룬탁) 가 %s 전에 �
 L["NefarianNpcKilledHordeWithTimer"] = "네파리안 NPC (사울팽) 가 %s 전에 죽었고 이후 버프기록이 없습니다.";
 L["onyxiaNpcKilledAllianceWithTimer"] = "오닉시아 NPC (매팅글리) 가 %s 전에 죽었고 이후 버프기록이 없습니다.";
 L["NefarianNpcKilledAllianceWithTimer"] = "네파리안 NPC (아프라샤비) 가 %s 전에 죽었고 이후 버프기록이 없습니다.";
-L["anyNpcKilledAllianceWithTimer"] = "NPC 가 %s 전에 죽었다."; --Map timers tooltip msg.
+L["anyNpcKilledWithTimer"] = "NPC 가 %s 전에 죽었다."; --Map timers tooltip msg.
  
  
 ---==============---
@@ -114,14 +114,14 @@ L["dmf"] = "다크문 축제"; --Darkmoon Faire
 L["noTimer"] = "기록 없음"; --No timer
 L["noCurrentTimer"] = "현재 기록 없음"; --No current timer
 L["noActiveTimers"] = "활성화된 기록 없음"; --No active timers
-L["newBuffCanBeDropped"] = "%s 버프 가능"
+L["newBuffCanBeDropped"] = "%s 버프 가능";
 L["buffResetsIn"] = "%s 버프가 %s 후 리셋";
 L["rendFirstYellMsg"] = "대족장의 축복 6초 전!!";
 L["onyxiaFirstYellMsg"] = "오닉 버프 14초 전!!";
 L["nefarianFirstYellMsg"] = "네파 버프 15초 전!!";
-L["rendBuffDropped"] = "대족장의 축복 끝!!";
+L["rendBuffDropped"] = "대족장의 축복 완료!!";
 L["onyxiaBuffDropped"] = "오닉 버프 완료!!";
-L["nefarianBuffDropped"] = "네파 버프 끝!!";
+L["nefarianBuffDropped"] = "네파 버프 완료!!";
 L["onyxiaNpcKilledHorde"] = "대군주 룬탁이 죽음 (오닉버프 NPC).";
 L["onyxiaNpcKilledAlliance"] = "상사 매팅글리가 죽음 (오닉버프 NPC).";
 L["nefarianNpcKilledHorde"] = "대군주 사울팽이 죽음 (네파버프 NPC).";
@@ -184,8 +184,10 @@ L["Jaedenar"] = "자에데나르";
 L["North-West of Irontree Woods"] = "강철나무 숲(북서)";
 L["South of Irontree Woods"] = "강철나무 숲(남)";
  
-L["cityMapLayerMsgHorde"] = "현재 위상은 %s 입니다.\n위상이 정해진 후에 \n오그리마 내 아무 NPC를 타겟하면 타이머가 교정됩니다.|r";
-L["cityMapLayerMsgAlliance"] = "현재 위상은 %s 입니다.\n위상이 정해진 후에 \n스톰윈드 내 아무 NPC를 선택하면 타이머가 교정됩니다.|r";
-L["noLayerYetHorde"] = "로그인 후 오그리마 NPC를 타겟하세요.\n오그리마 내 아무 NPC를 타겟하면 \n당신의 위상을 특정하고 시간을 가져옵니다.";
-L["noLayerYetAlliance"] = "로그인 후 스톰윈드 NPC를 타겟하세요.\n스톰윈드 내 아무 NPC를 타겟하면 \n당신의 위상을 특정하고 시간을 가져옵니다.";
+L["worldMapBuffsMsg"] = "/buff 명령으로 당신 케릭터들의 \n월드버프를 보여줍니다.";
+L["cityMapLayerMsgHorde"] = "현재 위상은 %s 입니다.\n지역변경 후 오그리마 내 NPC를 \n타겟하면 위상이 업데이트 됩니다.|r";
+L["cityMapLayerMsgAlliance"] = "현재 위상은 %s 입니다.\n지역변경 후 스톰윈드 내 \n NPC를 타겟하면 위상이 업데이트 됩니다.|r";
+L["noLayerYetHorde"] = "오그리마 내 아무 NPC를 타겟하면 \n당신의 위상을 특정하고 시간을 가져옵니다.";
+L["noLayerYetAlliance"] = "스톰윈드 내 아무 NPC를 타겟하면 \n당신의 위상을 특정하고 시간을 가져옵니다.";
+ 
 L["Reset Data"] = "기록 리셋"; --A button to Reset buffs window data.

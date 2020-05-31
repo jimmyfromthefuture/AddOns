@@ -1,7 +1,7 @@
 local ADDON_NAME, ADDON_TABLE = ...
 
 SLASH_CLA1 = "/cla"
-CLA_VERSION = "2.3"
+CLA_VERSION = "2.5"
 CLA_LOOTLIST = {} -- String encoded NAME:GUID
 CLA_SKINNING_TARGET_IDS = {
     11671, -- Core hound

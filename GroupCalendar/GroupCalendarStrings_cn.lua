@@ -1,4 +1,4 @@
-﻿-- File containing localized strings
+-- File containing localized strings
 -- Translation : zhCN - AndyAska.com (20060626)
 
 if GetLocale() == "zhCN" then
@@ -156,7 +156,7 @@ if GetLocale() == "zhCN" then
 	GroupCalendar_cGnomerEventName = "诺姆瑞根";
 	GroupCalendar_cMaraEventName = "玛拉顿";
 	GroupCalendar_cMCEventName = "熔火之心";
-	GroupCalendar_cOnyxiaEventName = "奥尼西亚洞穴";
+	GroupCalendar_cOnyxiaEventName = "奥妮克希亚的巢穴";
 	GroupCalendar_cRFCEventName = "怒焰裂谷";
 	GroupCalendar_cRFDEventName = "剃刀高地";
 	GroupCalendar_cRFKEventName = "剃刀沼泽";
@@ -174,7 +174,7 @@ if GetLocale() == "zhCN" then
 
 	GroupCalendar_cPvPEventName = "综合 PvP";
 	GroupCalendar_cABEventName = "阿拉希盆地";
-	GroupCalendar_cAVEventName = "奥特蔺克山谷";
+	GroupCalendar_cAVEventName = "奥特兰克山谷";
 	GroupCalendar_cWSGEventName = "战歌峡谷";
 
 	GroupCalendar_cZGResetEventName = "祖尔格拉布 重置";
@@ -186,9 +186,9 @@ if GetLocale() == "zhCN" then
 	GroupCalendar_cNaxxResetEventName = "纳克萨玛斯 重置";
 
 	GroupCalendar_cTransmuteCooldownEventName = "转换 就绪";
-	GroupCalendar_cSaltShakerCooldownEventName = "Salt Shaker 就绪";
+	GroupCalendar_cSaltShakerCooldownEventName = "筛盐器 就绪";
 	GroupCalendar_cMoonclothCooldownEventName = "月布 就绪";
-	GroupCalendar_cSnowmasterCooldownEventName = "SnowMaster 9000 就绪";
+	GroupCalendar_cSnowmasterCooldownEventName = "雪王9000型 就绪";
 
 	GroupCalendar_cPersonalEventOwner = "私人";
 
@@ -358,6 +358,8 @@ if GetLocale() == "zhCN" then
 	GroupCalendar_cInviteNow = "邀请到队伍";
 	GroupCalendar_cStatus = "状态";
 	GroupCalendar_cAddPlayerEllipses = "加入玩家...";
+	GroupCalendar_cAll = "全部";
+	GroupCalendar_cClearSelected = "清除选择";
 
 	GroupCalendar_cAddPlayer = "加入玩家";
 	GroupCalendar_cPlayerLevel = "等级:";
@@ -385,6 +387,7 @@ if GetLocale() == "zhCN" then
 	GroupCalendar_cViewByRank = "检视阶级";
 	GroupCalendar_cViewByName = "检视名称";
 	GroupCalendar_cViewByStatus = "检视状态";
+	GroupCalendar_cViewByClass = "检视职业";
 	GroupCalendar_cViewByClassRank = "检视职业阶级";
 
 	GroupCalendar_cMaxPartySizeLabel = "队伍人数上限:";
@@ -430,6 +433,7 @@ if GetLocale() == "zhCN" then
 	GroupCalendar_cPriorityLabel = "优先权:";
 	GroupCalendar_cPriorityDate = "时间";
 	GroupCalendar_cPriorityRank = "阶级";
+	GroupCalendar_cPriorityClass = "职业";
 
 	GroupCalendar_cConfrimDeleteRSVP = "将 %s 从此活动中移除? 除非你手动把他们重新加入，否则他们将无法再参加。";
 

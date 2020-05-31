@@ -1,6 +1,25 @@
 local BCT = LibStub("AceAddon-3.0"):GetAddon("BCT")
 local SM = LibStub:GetLibrary("LibSharedMedia-3.0")
 
+local timer = C_Timer.NewTimer(1, function() end)
+local function Announce(spellName)
+	local found, blacklisted, tracked = BCT.GetAura(spellName)
+	local blacklist = (blacklisted and BCT.session.db.announcer.enabledBl)
+	local track = (tracked and BCT.session.db.announcer.enabledTrck)
+	
+	if found and (blacklist or track) then
+		local hex = "|cff00ff00"
+		if track then hex = "|cffff0000" end
+
+		BCT.Announcer.text:SetText(hex .. "÷" .. spellName:upper() .. "|r" )
+		BCT.Announcer:Show()
+		timer:Cancel()
+		timer = C_Timer.NewTimer(3, function() BCT.Announcer:Hide() end)
+	end
+
+end
+BCT.Announce = Announce
+
 local function UpdateFontAnnouncer()
 	BCT.Announcer.text:SetFont(SM:Fetch("font",BCT.session.db.announcer.font), BCT.session.db.announcer.font_size, "OUTLINE")
 end

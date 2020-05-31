@@ -5,8 +5,8 @@
 ---@class ECS
 ECS = {...}
 
----@type Locale
-local Locale = ECSLoader:ImportModule("Locale")
+---@type i18n
+local i18n = ECSLoader:ImportModule("i18n")
 ---@type Config
 local Config = ECSLoader:ImportModule("Config")
 ---@type Stats
@@ -39,31 +39,31 @@ end)
 ECS.loadingFrame = loadingFrame
 
 _InitAddon = function()
-    if ExtendedCharacterStats == nil then
+    if (not ExtendedCharacterStats) then
         ExtendedCharacterStats = {}
-    elseif ExtendedCharacterStats.v23reset == nil then
-        -- Reset the settings for the update to v2.3.0
-        ExtendedCharacterStats = {}
-        ExtendedCharacterStats.v23reset = true
     end
 
-    local profileData = Profile:GetProfileData()
-    if ExtendedCharacterStats.profile == nil then
+    local ecs = ExtendedCharacterStats
+    local defaultProfile = Profile:GetDefaultProfile()
+    local profileVersion = Profile:GetProfileVersion()
+
+    if ecs.general and (ecs.general.profileVersion == nil or ecs.general.profileVersion ~= profileVersion) then
         ---@class ECSProfile
-        ExtendedCharacterStats.profile = profileData.profile
-    end
-    if ExtendedCharacterStats.general == nil then
-        ExtendedCharacterStats.general = profileData.general
+        ExtendedCharacterStats.profile = defaultProfile.profile
+        ExtendedCharacterStats.general = defaultProfile.general
+
+        ExtendedCharacterStats.general.profileVersion = profileVersion
     end
 
-    Locale:Init()
+    if ecs.general == nil or (not next(ecs.general)) then
+        ExtendedCharacterStats.general = defaultProfile.general
+    end
 
-    ExtendedCharacterStats.windowSize = {
-        height = 422,
-        width = 175,
-        xOffset = 144,
-        yOffset = 30
-    }
+    if ecs.profile == nil or (not next(ecs.profile)) then
+        ExtendedCharacterStats.profile = defaultProfile.profile
+    end
+
+    i18n:LoadLanguageData()
 end
 
 local lastSuccessfulSpell = 0
@@ -125,9 +125,9 @@ local function _HandleSlash(msg)
     elseif cmd == "config" then
         Config:ToggleWindow()
     else
-        print("Available Commmands")
-        print("/ecs toggle - Toggles the visibility of the stats window")
-        print("/ecs config - Opens up the configuration window")
+        print(i18n("AVAILABLE_COMMANDS"))
+        print(i18n("SLASH_TOGGLE") .. " - " .. i18n("SLASH_TOGGLE_DESC"))
+        print(i18n("SLASH_CONFIG") .. " - " .. i18n("SLASH_CONFIG_DESC"))
     end
 end
 

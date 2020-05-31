@@ -79,7 +79,7 @@ L["onyxiaNpcKilledHordeWithTimer"] = "Le PNJ d'Onyxia (Runthak) a été tué il 
 L["NefarianNpcKilledHordeWithTimer"] = "Le PNJ de Nefarian (Saurfang) a été tué il y a %s, pas de buff enregistré depuis";
 L["onyxiaNpcKilledAllianceWithTimer"] = "Le PNJ d'Onyxia (Mattingly) a été tué il y a %s, pas de buff enregistré depuis";
 L["NefarianNpcKilledAllianceWithTimer"] = "Le PNJ de Nefarian (Afrasiabi) a été tué il y a %s, pas de buff enregistré depuis";
-L["anyNpcKilledAllianceWithTimer"] = "Le PNJ a été tué il y a %s";
+L["anyNpcKilledWithTimer"] = "Le PNJ a été tué il y a %s";
 
 ---==============---
 ---Darkmoon Faire---
@@ -115,7 +115,7 @@ L["dmf"] = "Foire de Sombrelune"; --Darkmoon Faire
 L["noTimer"] = "--"; --No timer (used only in map timer frames)
 L["noCurrentTimer"] = "Actuellement pas de timer"; --No current timer
 L["noActiveTimers"] = "Pas de timer actif";	--No active timers
-L["newBuffCanBeDropped"] = "Un nouveau buff %s peut être activé"
+L["newBuffCanBeDropped"] = "Un nouveau buff %s peut être activé";
 L["buffResetsIn"] = "%s resets dans %s";
 L["rendFirstYellMsg"] = "Rend va être posé dans 6 secondes.";
 L["onyxiaFirstYellMsg"] = "Onyxia va être posé dans 14 secondes.";
@@ -156,13 +156,13 @@ L["Options"] = "Options";
 ---New stuff---
 
 --Spirit of Zandalar buff NPC first yell string (part of his first yell msg before before buff).
-L["Begin the ritual"] = "Begin the ritual"
-L["The Blood God"] = "The Blood God"; --First Booty bay yell from Zandalarian Emissary.
+L["Begin the ritual"] = "Commencez le rituel"
+L["The Blood God"] = "Le Dieu sanglantd"; --First Booty bay yell from Zandalarian Emissary.
 --Spirit of Zandalar buff NPC second yell string (part of his second yell msg before before buff).
-L["slayer of Hakkar"] = "slayer of Hakkar";
+L["slayer of Hakkar"] = "vainqueur d’Hakkar";
 
 L["Molthor"] = "Molthor";
-L["Emissaire zandalarien"] = "Zandalarian Emissary";
+L["Zandalarian Emissary"] = "Emissaire zandalarien";
 L["Whipper Root Tuber"] = "Tubercule de navetille";
 L["Night Dragon's Breath"] = "Souffle de dragon nocturne";
 L["Resist Fire"] = "Résistance au Feu"; -- LBRS fire resist buff.

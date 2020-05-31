@@ -79,7 +79,7 @@ L["onyxiaNpcKilledHordeWithTimer"] = "Рунтак (баф Ониксии) бы�
 L["NefarianNpcKilledHordeWithTimer"] = "Саурфанг (баф Нефариана) был убит %s назад. С тех пор баф не был зафиксирован.";
 L["onyxiaNpcKilledAllianceWithTimer"] = "Маттингли (баф Ониксии) был убит %s назад. С тех пор баф не был зафиксирован.";
 L["NefarianNpcKilledAllianceWithTimer"] = "Афрасиаби (баф Нефариана) был убит %s назад. С тех пор баф не был зафиксирован.";
-L["anyNpcKilledAllianceWithTimer"] = "был убит %s назад"; --Map timers tooltip msg.
+L["anyNpcKilledWithTimer"] = "был убит %s назад"; --Map timers tooltip msg.
 
 ---==============---
 ---Darkmoon Faire---
@@ -114,7 +114,7 @@ L["dmf"] = "Ярмарка Новолуния"; --Darkmoon Faire
 L["noTimer"] = "—"; --No timer (used only in map timer frames)
 L["noCurrentTimer"] = "Таймер отсутствует"; --No current timer
 L["noActiveTimers"] = "Таймер отсутствует";	--No active timers
-L["newBuffCanBeDropped"] = "%s может быть поставлен(а) сейчас"
+L["newBuffCanBeDropped"] = "%s может быть поставлен(а) сейчас";
 L["buffResetsIn"] = "%s откатится через %s";
 L["rendFirstYellMsg"] = "Ренд будет бафнут через 6 секунд.";
 L["onyxiaFirstYellMsg"] = "Ониксия будет бафнута через 14 секунд.";

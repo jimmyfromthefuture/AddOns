@@ -55,17 +55,17 @@ L["Revel in his rallying cry"] = "Lasst seinen Siegesschrei eure Herzen höher s
 --Alliance Onyxia buff NPC.
 L["Major Mattingly"] = "Major Mattingly";
 --Alliance Onyxia buff NPC first yell string (part of his first yell msg before before buff).
---L["history has been made"] = "";
+L["history has been made"] = "am heutigen Tage ist Geschichte geschrieben worden";
 --Alliance Onyxia buff NPC second yell string (part of his second yell msg before before buff).
---L["Onyxia, hangs from the arches"] = "";
+L["Onyxia, hangs from the arches"] = "Onyxia baumelt leblos von den Torbögen";
 
 
 --Alliance Nefarian buff NPC.
 L["Field Marshal Afrasiabi"] = "Feldmarschall Afrasiabi";
 --Alliance Nefarian buff NPC first yell string (part of his first yell msg before before buff).
---L["the Lord of Blackrock is slain"] = "";
+L["the Lord of Blackrock is slain"] = "der Herrscher des Blackrocks wurde besiegt";
 --Alliance Nefarian buff NPC second yell string (part of his second yell msg before before buff).
---L["Revel in the rallying cry"] = "";
+L["Revel in the rallying cry"] = "Lasst den Siegesschrei des Drachentöters eure Herzen höher schlagen";
 
 ---===========----
 ---NPC's killed---
@@ -79,7 +79,7 @@ L["onyxiaNpcKilledHordeWithTimer"] = "Onyxia NPC (Runthak) wurde vor %s getötet
 L["NefarianNpcKilledHordeWithTimer"] = "Nefarian NPC (Saurfang) wurde vor %s getötet. Ein neuer Buff wurde bisher nicht festgestellt.";
 L["onyxiaNpcKilledAllianceWithTimer"] = "Onyxia NPC (Mattingly) wurde vor %s getötet. Ein neuer Buff wurde bisher nicht festgestellt.";
 L["NefarianNpcKilledAllianceWithTimer"] = "Nefarian NPC (Afrasiabi) wurde vor %s getötet. Ein neuer Buff wurde bisher nicht festgestellt.";
-L["anyNpcKilledAllianceWithTimer"] = "NPC wurde vor %s getötet"; --Map timers tooltip msg.
+L["anyNpcKilledWithTimer"] = "NPC wurde vor %s getötet"; --Map timers tooltip msg.
 
 ---==============---
 ---Darkmoon Faire---
@@ -115,7 +115,7 @@ L["dmf"] = "Dunkelmond-Jahrmarkt"; --Darkmoon Faire
 L["noTimer"] = "--"; --No timer (used only in map timer frames)
 L["noCurrentTimer"] = "Kein aktueller Timer"; --No current timer
 L["noActiveTimers"] = "Kein aktiver Timer";	--No active timers
-L["newBuffCanBeDropped"] = "Ein neuer %s Buff kann jetzt gestellt werden"
+L["newBuffCanBeDropped"] = "Ein neuer %s Buff kann jetzt gestellt werden";
 L["buffResetsIn"] = "%s wird zurückgesetzt in %s";
 L["rendFirstYellMsg"] = "Rend Buff in 6 Sekunden";
 L["onyxiaFirstYellMsg"] = "Onyxia Buff in 14 Sekunden.";

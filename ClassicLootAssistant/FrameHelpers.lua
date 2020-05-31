@@ -32,7 +32,8 @@ function cla_create_frame_with_table(name, cols, rows)
     local ScrollingTable = LibStub("ScrollingTable");
     local scrollTable = ScrollingTable:CreateST(cols, 16, 20, nil, frame);
 
-    scrollTable:SetData(rows)
+    scrollTable:SetData(rows);
+    scrollTable.frame:SetPoint("CENTER");
 
     return {
         frame = frame,
@@ -93,6 +94,29 @@ function cla_create_frame(name)
     })
     frame:SetBackdropColor(0,0,0,1)
     frame:SetBackdropBorderColor(0,0,0,1)
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+
+    frame:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" and not self.isMoving then
+         self:StartMoving();
+         self.isMoving = true;
+        end
+      end)
+
+    frame:SetScript("OnMouseUp", function(self, button)
+        if button == "LeftButton" and self.isMoving then
+            self:StopMovingOrSizing();
+            self.isMoving = false;
+        end
+    end)
+
+    frame:SetScript("OnHide", function(self)
+        if (self.isMoving ) then
+            self:StopMovingOrSizing();
+            self.isMoving = false;
+        end
+    end)
 
     frame.text = frame:CreateFontString(nil, "ARTWORK")
     frame.text:SetFont("Fonts\\ARIALN.ttf", 14, "OUTLINE")

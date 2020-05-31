@@ -1,11 +1,11 @@
 --------------------
 --Nova World Buffs--
---Classic WoW world buff timers and pre warnings.
 --Novaspark-Arugal OCE (classic).
 --https://www.curseforge.com/members/venomisto/projects
 --Note: Server restarts will cause the timers to be inaccurate because the NPC's reset.
 
 NWB = LibStub("AceAddon-3.0"):NewAddon("NovaWorldBuffs", "AceComm-3.0");
+NWB.LSM = LibStub("LibSharedMedia-3.0");
 NWB.dragonLib = LibStub("HereBeDragons-2.0");
 NWB.dragonLibPins = LibStub("HereBeDragons-Pins-2.0");
 NWB.commPrefix = "NWB";
@@ -13,12 +13,12 @@ NWB.hasAddon = {};
 NWB.realm = GetRealmName();
 NWB.faction = UnitFactionGroup("player");
 NWB.loadTime = 0;
---Can limit new layers created here, Blizzard have stated only 2 layers per realm.
---I can set this to 2 so only the first 2 layers after restart show up as a last ditch fix if needed.
---It's not a good solution though because the old layers still exist in database after restarts until the timers expire.
 NWB.limitLayerCount = 99;
+NWB.serializer = LibStub:GetLibrary("AceSerializer-3.0");
+NWB.libDeflate = LibStub:GetLibrary("LibDeflate");
 local L = LibStub("AceLocale-3.0"):GetLocale("NovaWorldBuffs");
-local Serializer = LibStub:GetLibrary("AceSerializer-3.0");
+local LDB = LibStub:GetLibrary("LibDataBroker-1.1");
+NWB.LDBIcon = LibStub("LibDBIcon-1.0");
 local version = GetAddOnMetadata("NovaWorldBuffs", "Version") or 9999;
 NWB.latestRemoteVersion = version;
 
@@ -31,6 +31,7 @@ function NWB:OnInitialize()
 	self.NWBOptions = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("NovaWorldBuffs", "NovaWorldBuffs");
 	self.chatColor = "|cff" .. self:RGBToHex(self.db.global.chatColorR, self.db.global.chatColorG, self.db.global.chatColorB);
 	self:RegisterComm(self.commPrefix);
+	self:registerSounds();
 	self.loadTime = GetServerTime();
 	self:registerOtherAddons();
 	self:buildRealmFactionData();
@@ -47,9 +48,12 @@ function NWB:OnInitialize()
 	self:createDmfMarkers();
 	self:resetSongFlowers();
 	self:resetLayerData();
+	self:resetLayerMaps();
 	self:removeOldLayers();
 	self:ticker();
 	self:yellTicker();
+	self:createBroker();
+	self:convertSettings();
 end
 
 --Set font used in fontstrings on frames.
@@ -67,807 +71,6 @@ function NWB:setRegionFont()
     end
 end
 
-local foundPartner; --Debug testing.
-function NWB:OnCommReceived(commPrefix, string, distribution, sender)
-	if (distribution == "GUILD" and commPrefix == NWB.commPrefix) then
-		--Temp bug test.
-		local tempSender = sender;
-		if (not string.match(tempSender, "-")) then
-			tempSender = tempSender .. "-" .. GetNormalizedRealmName();
-		end
-		NWB.hasAddon[tempSender] = "0";
-	end
-	if (UnitInBattleground("player") and distribution ~= "GUILD") then
-		return;
-	end
-	--AceComm doesn't supply realm name if it's on the same realm as player.
-	--Not sure if it provives GetRealmName() or GetNormalizedRealmName() for crossrealm.
-	--For now we'll check all 3 name types just to be sure until tested.
-	local me = UnitName("player") .. "-" .. GetRealmName();
-	local meNormalized = UnitName("player") .. "-" .. GetNormalizedRealmName();
-	if (sender == UnitName("player") or sender == me or sender == meNormalized) then
-		NWB.hasAddon[meNormalized] = version;
-		return;
-	end
-	local _, realm = strsplit("-", sender, 2);
-	--If realm found then it's not my realm, but just incase acecomm changes and starts supplying realm also check if realm exists.
-	if (realm ~= nil or (realm and realm ~= GetRealmName() and realm ~= GetNormalizedRealmName())) then
-		--Ignore data from other realms (in bgs).
-		return;
-	end
-	if (commPrefix == "D4C") then
-		--Parse DBM.
-		NWB:parseDBM(commPrefix, string, distribution, sender);
-		return;
-	end
-	--If no realm in name it must be our realm so add it.
-	if (not string.match(sender, "-")) then
-		--Add normalized realm since roster checks use this.
-		sender = sender .. "-" .. GetNormalizedRealmName();
-	end
-	--Keep a list of addon users for use in NWB:sendGuildMsg().
-	if (distribution == "GUILD") then
-		foundPartner = true;
-	end
-	local deserializeResult, deserialized = Serializer:Deserialize(string);
-	if (not deserializeResult) then
-		NWB:debug("Error deserializing:", string);
-		return;
-	end
-	local args = NWB:explode(" ", deserialized, 2);
-	local cmd = args[1]; --Cmd (first arg) so we know where to send the data.
-	local remoteVersion = args[2]; --Version number.
-	local data = args[3]; --Data (everything after version arg).
-	if (data == nil) then
-		--Temp fix for people with old version data structure sending incompatable data.
-		--Only effects a few of the early testers.
-		data = args[2]; --Data (everything after version arg).
-		remoteVersion = 0;
-	end
-	NWB.hasAddon[sender] = remoteVersion or "0";
-	--if (commPrefix == "NWB") then
-		--NWB:debug("received", commPrefix, distribution, sender, cmd);
-	--end
-	if (not tonumber(remoteVersion)) then
-		--Trying to catch a lua error and find out why.
-		NWB:debug("version missing", sender, cmd, data);
-		return;
-	end
-	--Some updates requite ignoring old versions.
-	if (tonumber(remoteVersion) < 1.49) then
-		if (cmd == "requestData" and distribution == "GUILD") then
-			NWB:sendData("GUILD");
-		end
-		return;
-	end
-	if (cmd == "data" or cmd == "settings") then
-		NWB:receivedData(data, sender, distribution);
-	elseif (cmd == "requestData") then
-		--Other addon users request data when they log on.
-		NWB:receivedData(data, sender, distribution);
-		NWB:sendData("GUILD");
-	elseif (cmd == "requestSettings") then
-		--Only used once per logon.
-		NWB:receivedData(data, sender, distribution);
-		NWB:sendSettings("GUILD");
-	elseif (cmd == "yell" and not (NWB.db.global.receiveGuildDataOnly and distribution ~= "GUILD")) then
-		NWB:debug("yell inc", sender, data);
-		--Yell msg seen by someone in org.
-		NWB:doFirstYell(data);
-	elseif (cmd == "drop" and not (NWB.db.global.receiveGuildDataOnly and distribution ~= "GUILD")) then
-		NWB:debug("drop inc", sender, data);
-		--Buff drop seen by someone in org.
-		NWB:doBuffDropMsg(data);
-	elseif (cmd == "npcKilled" and not (NWB.db.global.receiveGuildDataOnly and distribution ~= "GUILD")) then
-		NWB:debug("npc killed inc", sender, data);
-		--Npc killed seen by someone in org.
-		NWB:doNpcKilledMsg(data);
-	elseif (cmd == "flower" and not (NWB.db.global.receiveGuildDataOnly and distribution ~= "GUILD")) then
-		NWB:debug("flower inc", sender, data);
-		--Flower picked.
-		NWB:doFlowerMsg(data);
-	end
-	NWB:versionCheck(remoteVersion);
-end
-
---Send to specified addon channel.
-function NWB:sendComm(distribution, string, target)
-	--if (NWB.isDebug and (UnitName("player") == "Exoblast" or UnitName("player") == "Novaspark")) then
-	--	return;
-	--end
-	if (target == UnitName("player")) then
-		return;
-	end
-	if (distribution == "GUILD" and not IsInGuild()) then
-		return;
-	end
-	if (distribution == "CHANNEL") then
-		--Get channel ID number.
-		local addonChannelId = GetChannelName(target);
-		--Not sure why this only accepts a string and not an int.
-		--Addon channels are disabled in classic but I'll leave this here anyway.
-		target = tostring(addonChannelId);
-	elseif (distribution ~= "WHISPER") then
-		target = nil;
-	end
-	--if (NWB.isDebug) then
-	--	local cmd = string:match("(%w+)(.+)");
-	--	NWB:debug("send", distribution, target, cmd);
-	--end
-	local serialized = Serializer:Serialize(string);
-	NWB:SendCommMessage(NWB.commPrefix, serialized, distribution, target);
-end
-
---Send full data.
-function NWB:sendData(distribution, target, prio)
-	if (not prio) then
-		prio = "NORMAL";
-	end
-	local data;
-	if (NWB.isLayered) then
-		data = NWB:createDataLayered(distribution);
-	else
-		data = NWB:createData(distribution);
-	end
-	if (next(data) ~= nil) then
-		if (distribution == "YELL") then
-			--We only send 1 yell msg every few minutes but it can still give the error msg in chat if many people are close.
-			--Not sure why it does this when we only send 1 single msg (possibly just loops through all players on blizz end?).
-			C_Timer.After(15, function()
-				NWB.doFilterAddonChatMsg = false;
-			end)
-			NWB.doFilterAddonChatMsg = true;
-		end
-		data = Serializer:Serialize(data);
-		NWB:sendComm(distribution, "data " .. version .. " " .. data, target, prio);
-	end
-end
-
---Send settings only.
-function NWB:sendSettings(distribution, target, prio)
-	if (UnitInBattleground("player") and distribution ~= "GUILD") then
-		return data;
-	end
-	if (not prio) then
-		prio = "NORMAL";
-	end
-	local data = NWB:createSettings(distribution);
-	if (next(data) ~= nil) then
-		data = Serializer:Serialize(data);
-		NWB:sendComm(distribution, "settings " .. version .. " " .. data, target, prio);
-	end
-end
-
---Send first yell msg.
-function NWB:sendYell(distribution, type, target)
-	NWB:sendComm(distribution, "yell " .. version .. " " .. type, target);
-end
-
---Send npc killed msg.
-function NWB:sendNpcKilled(distribution, type, target)
-	NWB:sendComm(distribution, "npcKilled " .. version .. " " .. type, target);
-end
-
---Send flower msg.
-function NWB:sendFlower(distribution, type, target)
-	NWB:debug("sending flower");
-	NWB:sendComm(distribution, "flower " .. version .. " " .. type, target);
-end
-
---Send first yell msg.
-function NWB:sendBuffDropped(distribution, type, target, layer)
-	if (tonumber(layer)) then
-		NWB:sendComm(distribution, "drop " .. version .. " " .. type .. " " .. layer, target);
-	else
-		NWB:sendComm(distribution, "drop " .. version .. " " .. type, target);
-	end
-end
-
---Send full data and also request other users data back, used at logon time.
-function NWB:requestData(distribution, target, prio)
-	if (not prio) then
-		prio = "NORMAL";
-	end
-	local data;
-	if (NWB.isLayered) then
-		data = NWB:createDataLayered(distribution);
-	else
-		data = NWB:createData(distribution);
-	end
-	data = Serializer:Serialize(data);
-	NWB:sendComm(distribution, "requestData " .. version .. " " .. data, target, prio);
-end
-
---Send full data and also request other users data back, used at logon time.
-function NWB:requestSettings(distribution, target, prio)
-	if (not prio) then
-		prio = "NORMAL";
-	end
-	local data = NWB:createSettings(distribution);
-	data = Serializer:Serialize(data);
-	NWB:sendComm(distribution, "requestSettings " .. version .. " " .. data, target, prio);
-end
-
---Create data table for sending.
-function NWB:createData(distribution)
-	local data = {};
-	if (UnitInBattleground("player") and distribution ~= "GUILD") then
-		return data;
-	end
-	if (NWB.data.rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
-		data['rendTimer'] = NWB.data.rendTimer;
-		data['rendTimerWho'] = NWB.data.rendTimerWho;
-		data['rendYell'] = NWB.data.rendYell or 0;
-		data['rendYell2'] = NWB.data.rendYell2 or 0;
-		data['rendSource'] = NWB.data.rendSource;
-	end
-	if (NWB.data.onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
-		data['onyTimer'] = NWB.data.onyTimer;
-		data['onyTimerWho'] = NWB.data.onyTimerWho;
-		data['onyYell'] = NWB.data.onyYell or 0;
-		data['onyYell2'] = NWB.data.onyYell2 or 0;
-		data['onySource'] = NWB.data.onySource;
-	end
-	if (NWB.data.nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
-		data['nefTimer'] = NWB.data.nefTimer;
-		data['nefTimerWho'] = NWB.data.nefTimerWho;
-		data['nefYell'] = NWB.data.nefYell or 0;
-		data['nefYell2'] = NWB.data.nefYell2 or 0;
-		data['nefSource'] = NWB.data.nefSource;
-	end
-	--[[if (NWB.data.zanTimer > (GetServerTime() - NWB.db.global.zanRespawnTime)) then
-		data['zanTimer'] = NWB.data.zanTimer;
-		data['zanTimerWho'] = NWB.data.zanTimerWho;
-		data['zanYell'] = NWB.data.zanYell or 0;
-		data['zanYell2'] = NWB.data.zanYell2 or 0;
-		data['zanSource'] = NWB.data.zanSource;
-	end]]
-	if ((NWB.data.onyNpcDied > NWB.data.onyTimer) and
-			(NWB.data.onyNpcDied > (GetServerTime() - NWB.db.global.onyRespawnTime))) then
-		data['onyNpcDied'] = NWB.data.onyNpcDied;
-	end
-	if ((NWB.data.nefNpcDied > NWB.data.nefTimer) and
-			(NWB.data.nefNpcDied > (GetServerTime() - NWB.db.global.nefRespawnTime))) then
-		data['nefNpcDied'] = NWB.data.nefNpcDied;
-	end
-	for k, v in pairs(NWB.songFlowers) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	for k, v in pairs(NWB.tubers) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	for k, v in pairs(NWB.dragons) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	for k, v in pairs(NWB.dragons) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	if (distribution == "GUILD") then
-		--Include settings with timer data for guild.
-		local settings = NWB:createSettings(distribution);
-		local me = UnitName("player") .. "-" .. GetNormalizedRealmName();
-		data[me] = settings[me];
-	end
-	--data['faction'] = NWB.faction;
-	return data;
-end
-
-local lastSendLayerMap = {};
-function NWB:createDataLayered(distribution)
-	local data = {};
-	if (UnitInBattleground("player") and distribution ~= "GUILD") then
-		return data;
-	end
-	if (not lastSendLayerMap[distribution]) then
-		lastSendLayerMap[distribution] = 0;
-	end
-	local sendLayerMap;
-	if ((GetServerTime() - lastSendLayerMap[distribution]) > 540 or NWB.isDebug or distribution == "GUILD") then
-		--Only send layermap info once per 10mins, this data won't change much except right after a server restart.
-		--So there's no need to use the addon bandwidth every time we send, 540 seconds should be every 2rd yell.
-		sendLayerMap = true;
-	end
-	for layer, v in NWB:pairsByKeys(NWB.data.layers) do
-		if (NWB.data.layers[layer].rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
-			--Only create layers table if we have valid timers so we don't waste addon bandwidth with useless data.
-			--This was always done on non-layered realms but wasn't working right on layered realms, now it is.
-			--The data table is checked for empty when sending comms.
-			if (not data.layers) then
-				data.layers = {};
-			end
-			if (not data.layers[layer]) then
-				data.layers[layer] = {};
-			end
-			data.layers[layer]['rendTimer'] = NWB.data.layers[layer].rendTimer;
-			data.layers[layer]['rendTimerWho'] = NWB.data.layers[layer].rendTimerWho;
-			data.layers[layer]['rendYell'] = NWB.data.layers[layer].rendYell;
-			data.layers[layer]['rendYell2'] = NWB.data.layers[layer].rendYell2;
-			data.layers[layer]['rendSource'] = NWB.data.layers[layer].rendSource;
-			if (NWB.data.layers[layer].GUID) then
-				data.layers[layer]['GUID'] = NWB.data.layers[layer].GUID;
-			end
-		end
-		if (NWB.data.layers[layer].onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
-			if (not data.layers) then
-				data.layers = {};
-			end
-			if (not data.layers[layer]) then
-				data.layers[layer] = {};
-			end
-			data.layers[layer]['onyTimer'] = NWB.data.layers[layer].onyTimer;
-			data.layers[layer]['onyTimerWho'] = NWB.data.layers[layer].onyTimerWho;
-			data.layers[layer]['onyYell'] = NWB.data.layers[layer].onyYell;
-			data.layers[layer]['onyYell2'] = NWB.data.layers[layer].onyYell2;
-			data.layers[layer]['onySource'] = NWB.data.layers[layer].onySource;
-			if (NWB.data.layers[layer].GUID) then
-				data.layers[layer]['GUID'] = NWB.data.layers[layer].GUID;
-			end
-		end
-		if (NWB.data.layers[layer].nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
-			if (not data.layers) then
-				data.layers = {};
-			end
-			if (not data.layers[layer]) then
-				data.layers[layer] = {};
-			end
-			data.layers[layer]['nefTimer'] = NWB.data.layers[layer].nefTimer;
-			data.layers[layer]['nefTimerWho'] = NWB.data.layers[layer].nefTimerWho;
-			data.layers[layer]['nefYell'] = NWB.data.layers[layer].nefYell;
-			data.layers[layer]['nefYell2'] = NWB.data.layers[layer].nefYell2;
-			data.layers[layer]['nefSource'] = NWB.data.layers[layer].nefSource;
-			if (NWB.data.layers[layer].GUID) then
-				data.layers[layer]['GUID'] = NWB.data.layers[layer].GUID;
-			end
-		end
-		if ((NWB.data.layers[layer].onyNpcDied > NWB.data.layers[layer].onyTimer) and
-				(NWB.data.layers[layer].onyNpcDied > (GetServerTime() - NWB.db.global.onyRespawnTime))) then
-			if (not data.layers) then
-				data.layers = {};
-			end
-			if (not data.layers[layer]) then
-				data.layers[layer] = {};
-			end
-			data.layers[layer]['onyNpcDied'] = NWB.data.layers[layer].onyNpcDied;
-			if (NWB.data.layers[layer].GUID) then
-				data.layers[layer]['GUID'] = NWB.data.layers[layer].GUID;
-			end
-		end
-		if ((NWB.data.layers[layer].nefNpcDied > NWB.data.layers[layer].nefTimer) and
-				(NWB.data.layers[layer].nefNpcDied > (GetServerTime() - NWB.db.global.nefRespawnTime))) then
-			if (not data.layers) then
-				data.layers = {};
-			end
-			if (not data.layers[layer]) then
-				data.layers[layer] = {};
-			end
-			data.layers[layer]['nefNpcDied'] = NWB.data.layers[layer].nefNpcDied;
-			if (NWB.data.layers[layer].GUID) then
-				data.layers[layer]['GUID'] = NWB.data.layers[layer].GUID;
-			end
-		end
-		if (sendLayerMap) then
-			if (NWB.data.layers[layer].layerMap and next(NWB.data.layers[layer].layerMap)) then
-				lastSendLayerMap[distribution] = GetServerTime();
-				if (not data.layers) then
-					data.layers = {};
-				end
-				if (not data.layers[layer]) then
-					data.layers[layer] = {};
-				end
-				--NWB:debug("sending layer map data", distribution);
-				data.layers[layer].layerMap = NWB.data.layers[layer].layerMap;
-				--Don't share created time for now.
-				data.layers[layer].layerMap.created = nil;
-			end
-		end
-	end
-	for k, v in pairs(NWB.songFlowers) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	for k, v in pairs(NWB.tubers) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	for k, v in pairs(NWB.dragons) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	for k, v in pairs(NWB.dragons) do
-		--Add currently active songflower timers.
-		if (NWB.data[k] > GetServerTime() - 1500) then
-			data[k] = NWB.data[k];
-		end
-	end
-	if (distribution == "GUILD") then
-		--Include settings with timer data for guild.
-		local settings = NWB:createSettings(distribution);
-		local me = UnitName("player") .. "-" .. GetNormalizedRealmName();
-		data[me] = settings[me];
-	end
-	--data['faction'] = NWB.faction;
-	return data;
-end
-
---Create settings for sending.
-function NWB:createSettings(distribution)
-	local data = {};
-	if (UnitInBattleground("player") and distribution ~= "GUILD") then
-		return data;
-	end
-	if (distribution == "GUILD") then
-		local me = UnitName("player") .. "-" .. GetNormalizedRealmName();
-		data[me] = {
-			["lastUpdate"] = GetServerTime(), 
-			["disableAllGuildMsgs"] = NWB.db.global.disableAllGuildMsgs,
-			["guildBuffDropped"] = NWB.db.global.guildBuffDropped,
-			["guildNpcDialogue"] = NWB.db.global.guildNpcDialogue,
-			["guildZanDialogue"] = NWB.db.global.guildZanDialogue,
-			["guildNpcKilled"] = NWB.db.global.guildNpcKilled,
-			["guildSongflower"] = NWB.db.global.guildSongflower,
-			["guildCommand"] = NWB.db.global.guildCommand,
-			["guild30"] = NWB.db.global.guild30,
-			["guild15"] = NWB.db.global.guild15,
-			["guild10"] = NWB.db.global.guild10,
-			["guild5"] = NWB.db.global.guild5,
-			["guild1"] = NWB.db.global.guild1,
-			["guild0"] = NWB.db.global.guild0,
-		};
-	end
-	data['faction'] = NWB.faction;
-	return data;
-end
-
-local validKeys = {
-	["rendTimer"] = true,
-	["rendTimerWho"] = true,
-	["rendYell"] = true,
-	["rendYell2"] = true,
-	["rendSource"] = true,
-	["onyTimer"] = true,
-	["onyTimerWho"] = true,
-	["onyYell"] = true,
-	["onyYell2"] = true,
-	["onySource"] = true,
-	["onyNpcDied"] = true,
-	["nefTimer"] = true,
-	["nefTimerWho"] = true,
-	["nefYell"] = true,
-	["nefYell2"] = true,
-	["nefSource"] = true,
-	["nefNpcDied"] = true,
-	["zanTimer"] = true,
-	["zanTimerWho"] = true,
-	["zanYell"] = true,
-	["zanYell2"] = true,
-	["zanSource"] = true,
-	["flower1"] = true,
-	["flower2"] = true,
-	["flower3"] = true,
-	["flower4"] = true,
-	["flower5"] = true,
-	["flower6"] = true,
-	["flower7"] = true,
-	["flower8"] = true,
-	["flower9"] = true,
-	["flower10"] = true,
-	["tuber1"] = true,
-	["tuber2"] = true,
-	["tuber3"] = true,
-	["tuber4"] = true,
-	["tuber5"] = true,
-	["tuber6"] = true,
-	["dragon1"] = true,
-	["dragon2"] = true,
-	["dragon3"] = true,
-	["dragon4"] = true,
-	["faction"] = true,
-	["GUID"] = true,
-};
-
---Add received data to our database.
---This is super ugly for layered stuff, but it's meant to work with all diff versions at once, will be cleaned up later.
-function NWB:receivedData(data, sender, distribution)
-	local deserializeResult, data = Serializer:Deserialize(data);
-	if (not deserializeResult) then
-		NWB:debug("Failed to deserialize data.");
-		return;
-	end
-	--A faction check should not be needed but who knows what funky stuff can happen with the new yell channel and mind control etc.
-	--if (not data['faction'] or data['faction'] ~= faction) then
-	--	NWB:debug("data from opposite faction received", sender, distribution);
-	--	return;
-	--end
-	if (not NWB:validateData(data)) then
-		NWB:debug("invalid data received.");
-		--NWB:debug(data);
-		return;
-	end
-	if (data["rendTimer"] and (data["rendTimer"] < NWB.data["rendTimer"] or 
-		(data["rendYell"] < (data["rendTimer"] - 120) and data["rendYell2"] < (data["rendTimer"] - 120)))) then
-		--Don't overwrite any data for this timer type if it's an old timer.
-		if (data["rendYell"] < (data["rendTimer"] - 120) and data["rendYell2"] < (data["rendTimer"] - 120)) then
-			--NWB:debug("invalid rend timer from", sender, "npcyell:", data["rendYell"], "buffdropped:", data["rendTimer"]);
-		end
-		data['rendTimer'] = nil;
-		data['rendTimerWho'] = nil;
-		data['rendYell'] = nil;
-		data['rendYell2'] = nil;
-		data['rendSource'] = nil;
-	end
-	if (data["onyTimer"] and (data["onyTimer"] < NWB.data["onyTimer"] or
-			(data["onyYell"] < (data["onyTimer"] - 120) and data["onyYell2"] < (data["onyTimer"] - 120)))) then
-		if (data["onyYell"] < (data["onyTimer"] - 120) and data["onyYell2"] < (data["onyTimer"] - 120)) then
-			--NWB:debug("invalid ony timer from", sender, "npcyell:", data["onyYell"], "buffdropped:", data["onyTimer"]);
-		end
-		data['onyTimer'] = nil;
-		data['onyTimerWho'] = nil;
-		data['onyYell'] = nil;
-		data['onyYell2'] = nil;
-		data['onySource'] = nil;
-	end
-	if (data["nefTimer"] and (data["nefTimer"] < NWB.data["nefTimer"] or
-			(data["nefYell"] < (data["nefTimer"] - 120) and data["nefYell2"] < (data["nefTimer"] - 120)))) then
-		if (data["nefYell"] < (data["nefTimer"] - 120) and data["nefYell2"] < (data["nefTimer"] - 120)) then
-			--NWB:debug("invalid nef timer from", sender, "npcyell:", data["nefYell"], "buffdropped:", data["nefTimer"]);
-		end
-		data['nefTimer'] = nil;
-		data['nefTimerWho'] = nil;
-		data['nefYell'] = nil;
-		data['nefYell2'] = nil;
-		data['nefSource'] = nil;
-	end
-	local hasNewData, newFlowerData;
-	--Insert our layered data here.
-	if (NWB.isLayered and data.layers) then
-		--There's a lot of ugly shit in this function trying to quick fix timer bugs for this layered stuff...
-		for layer, vv in NWB:pairsByKeys(data.layers) do
-			if (type(vv) == "table" and next(vv)) then
-				for localLayer, localV in pairs(NWB.data.layers) do
-					--Quick fix for timestamps sometimes syncing between layers.
-					--I think this may happen when someone is mid layer changing when the boss drops.
-					--They get the buff in new layer but get old layers NPC GUID? Has to be tested.
-					if (vv["rendTimer"] and localV["rendTimer"] and vv["rendTimer"] == localV["rendTimer"]
-							and layer ~= localLayer) then
-						--NWB:debug("ignoring duplicate rend timstamp", layer, vv["rendTimer"], localLayer, localV["rendTimer"]);
-						vv['rendTimer'] = nil;
-						vv['rendTimerWho'] = nil;
-						vv['rendYell'] = nil;
-						vv['rendYell2'] = nil;
-						vv['rendSource'] = nil;
-					end
-					if (vv["onyTimer"] and localV["onyTimer"] and vv["onyTimer"] == localV["onyTimer"]
-							and layer ~= localLayer) then
-						--NWB:debug("ignoring duplicate ony timstamp", layer, vv["onyTimer"], localLayer, localV["onyTimer"]);
-						vv['onyTimer'] = nil;
-						vv['onyTimerWho'] = nil;
-						vv['onyYell'] = nil;
-						vv['onyYell2'] = nil;
-						vv['onySource'] = nil;
-						vv['onyNpcDied'] = nil;
-					end
-					if (vv["nefTimer"] and localV["nefTimer"] and vv["nefTimer"] == localV["nefTimer"]
-							and layer ~= localLayer) then
-						--NWB:debug("ignoring duplicate nef timstamp", layer, vv["nefTimer"], localLayer, localV["nefTimer"]);
-						vv['nefTimer'] = nil;
-						vv['nefTimerWho'] = nil;
-						vv['nefYell'] = nil;
-						vv['nefYell2'] = nil;
-						vv['nefSource'] = nil;
-						vv['nefNpcDied'] = nil;
-					end
-				end
-				if (NWB:validateLayer(layer)) then
-					if (not NWB.data.layers[layer]) then
-						if (vv['GUID']) then
-							NWB:createNewLayer(layer, vv['GUID']);
-						else
-							NWB:createNewLayer(layer, "other");
-						end
-						--NWB:debug(data.layers);
-					end
-					if (NWB.data.layers[layer]) then
-						NWB:fixLayer(layer);
-						--NWB:debug(data);
-						if (vv["rendTimer"] and (vv["rendTimer"] < (GetServerTime() - NWB.db.global.rendRespawnTime)
-								or not vv["rendYell"] or not vv["rendYell2"]
-								or (vv["rendYell"] < (vv["rendTimer"] - 120) and vv["rendYell2"] < (vv["rendTimer"] - 120)))) then
-							--Don't overwrite any data for this timer type if it's an old timer.
-							--if (vv["rendYell"] < (vv["rendTimer"] - 120) and vv["rendYell2"] < (vv["rendTimer"] - 120)) then
-								NWB:debug("invalid rend timer from", sender, "npcyell:", vv["rendYell"], "npcyell2:", vv["rendYell2"], "buffdropped:", vv["rendTimer"]);
-							--end
-							vv['rendTimer'] = nil;
-							vv['rendTimerWho'] = nil;
-							vv['rendYell'] = nil;
-							vv['rendYell2'] = nil;
-							vv['rendSource'] = nil;
-						end
-						if (vv["onyTimer"] and (vv["onyTimer"] < (GetServerTime() - NWB.db.global.onyRespawnTime)
-								or not vv["onyYell"] or not vv["onyYell2"]
-								or (vv["onyYell"] < (vv["onyTimer"] - 120) and vv["onyYell2"] < (vv["onyTimer"] - 120)))) then
-							--if (vv["onyYell"] < (vv["onyTimer"] - 120) and vv["onyYell2"] < (vv["onyTimer"] - 120)) then
-								NWB:debug("invalid ony timer from", sender, "npcyell:", vv["onyYell"], "npcyell2:", vv["onyYell2"], "buffdropped:", vv["onyTimer"]);
-							--end
-							vv['onyTimer'] = nil;
-							vv['onyTimerWho'] = nil;
-							vv['onyYell'] = nil;
-							vv['onyYell2'] = nil;
-							vv['onySource'] = nil;
-							vv['onyNpcDied'] = nil;
-						end
-						if (vv["nefTimer"] and (vv["nefTimer"] < (GetServerTime() - NWB.db.global.nefRespawnTime)
-								or not vv["nefYell"] or not vv["nefYell2"]
-								or (vv["nefYell"] < (vv["nefTimer"] - 120) and vv["nefYell2"] < (vv["nefTimer"] - 120)))) then
-							--if (vv["nefYell"] < (vv["nefTimer"] - 120) and vv["nefYell2"] < (vv["nefTimer"] - 120)) then
-								NWB:debug("invalid nef timer from", sender, "npcyell:", vv["nefYell"], "npcyell2:", vv["nefYell2"], "buffdropped:", vv["nefTimer"]);
-							--end
-							vv['nefTimer'] = nil;
-							vv['nefTimerWho'] = nil;
-							vv['nefYell'] = nil;
-							vv['nefYell2'] = nil;
-							vv['nefSource'] = nil;
-							vv['nefNpcDied'] = nil;
-						end
-						for k, v in pairs(vv) do
-							if ((string.match(k, "flower") and NWB.db.global.syncFlowersAll)
-									or (not NWB.db.global.receiveGuildDataOnly)
-									or (NWB.db.global.receiveGuildDataOnly and distribution == "GUILD")) then
-								if (validKeys[k] and tonumber(v)) then
-									--If data is numeric (a timestamp) then check it's newer than our current timer.
-									if (v ~= nil) then
-										if (not NWB.data.layers[layer][k] or not tonumber(NWB.data.layers[layer][k])) then
-											--Rare bug someone has corrupt data (not sure how and it's never happened to me, but been reported).
-											--This will correct it by resetting thier timestamp to 0.
-											NWB:debug("Local data error:", k, NWB.data[k])
-											NWB.data.layers[layer][k] = 0;
-										end
-										--Make sure the key exists, stop a lua error in old versions if we add a new timer type.
-										if (NWB.data.layers[layer][k] and v ~= 0 and v > NWB.data.layers[layer][k] and NWB:validateTimestamp(v)) then
-											--NWB:debug("new data", sender, distribution, k, v, "old:", NWB.data.layers[layer][k]);
-											if (string.match(k, "flower") and not (distribution == "GUILD" and (GetServerTime() - NWB.data.layers[layer][k]) > 15)) then
-												newFlowerData = true;
-											end
-											NWB.data.layers[layer][k] = v;
-											hasNewData = true;
-										end
-									end
-								elseif (k == "layerMap") then
-									if (not NWB.data.layers[layer].layerMap) then
-										NWB.data.layers[layer].layerMap = {};
-									end
-									for zoneID, mapID in pairs(v) do
-										if (not NWB.data.layers[layer].layerMap[zoneID]) then
-											NWB.data.layers[layer].layerMap[zoneID] = mapID;
-										end
-									end
-								elseif (v ~= nil and k ~= "layers") then
-									if (not validKeys[k]) then
-										--NWB:debug(data)
-										NWB:debug("Invalid key received:", k, v);
-									end
-									--if (not validKeys[k] and not next(v)) then
-									if (not validKeys[k] and type(v) ~= "table") then
-										NWB:debug("Invalid key received2:", k, v);
-									else
-										NWB.data.layers[layer][k] = v;
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-	for k, v in pairs(data) do
-		if ((string.match(k, "flower") and NWB.db.global.syncFlowersAll)
-				or (not NWB.db.global.receiveGuildDataOnly)
-				or (NWB.db.global.receiveGuildDataOnly and distribution == "GUILD")) then
-			if (validKeys[k] and tonumber(v)) then
-				--If data is numeric (a timestamp) then check it's newer than our current timer.
-				if (v ~= nil) then
-					if (not NWB.data[k] or not tonumber(NWB.data[k])) then
-						--Rare bug someone has corrupt data (not sure how and it's never happened to me, but been reported).
-						--This will correct it by resetting thier timestamp to 0.
-						NWB:debug("Local data error:", k, NWB.data[k])
-						NWB.data[k] = 0;
-					end
-					--Make sure the key exists, stop a lua error in old versions if we add a new timer type.
-					if (NWB.data[k] and v ~= 0 and v > NWB.data[k] and NWB:validateTimestamp(v)) then
-						--NWB:debug("new data", sender, distribution, k, v, "old:", NWB.data[k]);
-						if (string.match(k, "flower") and not (distribution == "GUILD" and (GetServerTime() - NWB.data[k]) > 15)) then
-							newFlowerData = true;
-						end
-						NWB.data[k] = v;
-						hasNewData = true;
-					end
-				end
-			elseif (v ~= nil and k ~= "layers") then
-				if (not validKeys[k] and not next(v)) then
-					NWB:debug("Invalid key received:", k, v);
-				else
-					NWB.data[k] = v;
-				end
-			end
-		end
-	end
-	NWB:timerCleanup();
-	--If we get newer data from someone outside the guild then share it with the guild.
-	if (hasNewData) then
-		NWB.data.lastSyncBy = sender;
-		--NWB:debug("new data done", sender, distribution, NWB:isPlayerInGuild(sender));
-		if (distribution ~= "GUILD" and not NWB:isPlayerInGuild(sender)) then
-			NWB:sendData("GUILD");
-		end
-	end
-	--If new flower data received and not freshly picked by guild member (that sends a msg to guild chat already)
-	if (newFlowerData and NWB.db.global.showNewFlower) then
-		--local string = "New songflower timer received:";
-		local string = L["newSongflowerReceived"] .. ":";
-		local found;
-		for k, v in pairs(NWB.songFlowers) do
-			local time = (NWB.data[k] + 1500) - GetServerTime();
-			if (time > 60) then
-				local minutes = string.format("%02.f", math.floor(time / 60));
-    			local seconds = string.format("%02.f", math.floor(time - minutes * 60));
-				string = string .. " (" .. v.subZone .. " " .. minutes .. L["minuteShort"] .. seconds .. L["secondShort"] .. ")";
-				found = true;
-  			end
-		end
-		if (not found) then
-			string = string .. " " .. L["noActiveTimers"] .. ".";
-		end
-		NWB:print(string);
-	end
-	--NWB:debug(NWB.data);
-end
-
-function NWB:validateData(data)
-	--For some reason on rare occasions a timer is received without the yell msg timetsamps (not even a default 0);
-	if (tonumber(data["rendTimer"])
-				and (not tonumber(data["rendYell"]) or not tonumber(data["rendYell2"]))) then
-		return;
-	end
-	if (tonumber(data["onyTimer"])
-				and (not tonumber(data["onyYell"]) or not tonumber(data["onyYell2"]))) then
-		return;
-	end
-	if (tonumber(data["nefTimer"])
-				and (not tonumber(data["nefYell"]) or not tonumber(data["nefYell2"]))) then
-		return;
-	end
-	return true;
-end
-
-function NWB:versionCheck(remoteVersion)
-	local lastVersionMsg = NWB.db.global.lastVersionMsg;
-	if (tonumber(remoteVersion) > tonumber(version) and (GetServerTime() - lastVersionMsg) > 14400) then
-		print("|cffFF5100" .. L["versionOutOfDate"]);
-		NWB.db.global.lastVersionMsg = GetServerTime();
-	end
-	if (tonumber(remoteVersion) > tonumber(version)) then
-		NWB.latestRemoteVersion = remoteVersion;
-	end
-end
-
 --Print current buff timers to chat window.
 function NWB:printBuffTimers(isLogon)
 	local msg;
@@ -882,7 +85,7 @@ function NWB:printBuffTimers(isLogon)
 			msg = L["rend"] .. ": " .. L["noCurrentTimer"] .. ".";
 		end
 		if ((not isLogon or NWB.db.global.logonRend) and not NWB.isLayered) then
-			NWB:print(msg);
+			NWB:print("|HNWBCustomLink:timers|h" .. msg .. "|h");
 		end
 	end
 	if ((NWB.data.onyNpcDied > NWB.data.onyTimer) and
@@ -902,7 +105,7 @@ function NWB:printBuffTimers(isLogon)
 		msg = L["onyxia"] .. ": " .. L["noCurrentTimer"] .. ".";
 	end
 	if ((not isLogon or NWB.db.global.logonOny) and not NWB.isLayered) then
-		NWB:print(msg);
+		NWB:print("|HNWBCustomLink:timers|h" .. msg .. "|h");
 	end
 	if ((NWB.data.nefNpcDied > NWB.data.nefTimer) and
 			(NWB.data.nefNpcDied > (GetServerTime() - NWB.db.global.nefRespawnTime))) then
@@ -921,7 +124,7 @@ function NWB:printBuffTimers(isLogon)
 		msg = L["nefarian"] .. ": " .. L["noCurrentTimer"] .. ".";
 	end
 	if ((not isLogon or NWB.db.global.logonNef) and not NWB.isLayered) then
-		NWB:print(msg);
+		NWB:print("|HNWBCustomLink:timers|h" .. msg .. "|h");
 	end
 	--Disabled, is no zand timer, will remove later.
 	--[[if (NWB.data.zanTimer > (GetServerTime() - NWB.db.global.zanRespawnTime)) then
@@ -952,14 +155,14 @@ function NWB:printBuffTimers(isLogon)
 			zone = L["elwynnForest"];
 		end
 		msg = NWB:getDmfTimeString() .. " (" .. zone .. ")";
-		NWB:print(msg, nil, "[DMF]");
+		NWB:print("|HNWBCustomLink:timers|h" .. msg .. "|h", nil, "[DMF]");
 	end
 	if (NWB.isDmfUp and NWB.data.myChars[UnitName("player")].buffs) then
 		for k, v in pairs(NWB.data.myChars[UnitName("player")].buffs) do
 			if (v.type == "dmf" and (v.timeLeft + 7200) > 0) then
 				msg = string.format(L["dmfBuffCooldownMsg"], NWB:getTimeString(v.timeLeft + 7200, true));
 				if ((not isLogon and NWB.db.global.showDmfBuffWb) or NWB.db.global.logonDmfBuffCooldown) then
-					NWB:print(msg, nil, "[DMF]");
+					NWB:print("|HNWBCustomLink:timers|h" .. msg .. "|h", nil, "[DMF]");
 				end
 				break;
 			end
@@ -1063,67 +266,23 @@ function NWB.addClickLinks(self, event, msg, author, ...)
 	end
 	for k, v in pairs(types) do
 		local match = string.match(msg, k);
-		if (NWB.isLayered) then
+		--if (NWB.isLayered) then
 			if (match) then
 				--If layered make the whole msg clickable to open buffs frame.
 				msg = string.gsub(msg, k .. " (.+)", v .. " |HNWBCustomLink:timers|h%1|h");
 				return false, msg, author, ...;
 			end
-		else
-			if (match) then
-				msg = string.gsub(msg, k, v);
-				return false, msg, author, ...;
-			end
-		end
+		--else
+			--if (match) then
+			--	msg = string.gsub(msg, k, v);
+			--	return false, msg, author, ...;
+			--end
+		--end
 	end
 	return false, msg, author, ...;
 	--if (NWB.isLayered and channel == "guild") then
 	--	msg = "|HNWBCustomLink:timers|h" .. msg .. "|h";
 	--end
-end
-
-function NWB.guildChatFilter(self, event, msg, author, ...)
-	local types = {
-		--NPC dialogue started msgs.
-		["zanFirstYellMsg"] = "filterYells",
-		["rendFirstYellMsg"] = "filterYells",
-		["onyxiaFirstYellMsg"] = "filterYells",
-		["nefarianFirstYellMsg"] = "filterYells",
-		--Buff has dropped msgs.
-		["rendBuffDropped"] = "filterDrops",
-		["onyxiaBuffDropped"] = "filterDrops",
-		["nefarianBuffDropped"] = "filterDrops",
-		["zanBuffDropped"] = "filterDrops",
-		--Timer msgs.
-		["newBuffCanBeDropped"] = "filterTimers", --"A new %s buff can be dropped now"
-		["buffResetsIn"] = "filterTimers",--"%s resets in %s";
-		--Songflower msgs.
-		["songflowerPicked"] = "filterSongflowers",
-		--Npc killed
-		["onyxiaNpcKilledHorde"] = "filterNpcKilled",
-		["onyxiaNpcKilledAlliance"] = "filterNpcKilled",
-		["nefarianNpcKilledHorde"] = "filterNpcKilled",
-		["nefarianNpcKilledAlliance"] = "filterNpcKilled",
-	};
-	for k, v in pairs(types) do
-		local match = string.gsub(L[k], "%(", "%%(");
-		match = string.gsub(match, "%)", "%%)");
-		match = string.gsub(match, "%%s", "(.+)");
-		if (NWB.db.global[v] and string.match(msg, "%[WorldBuffs%]") and string.match(msg, match)) then
-			NWB:debug("filtering", k);
-			return true;
-		end
-	end
-	if (NWB.db.global.filterCommand and (string.match(msg, "^!wb") or string.match(msg, "^!dmf"))) then
-		NWB:debug("filtering command");
-		return true;
-	end
-	if (NWB.db.global.filterCommandResponse and string.match(msg, "%[WorldBuffs%]") and
-			string.match(msg, L["onyxia"] .. ":(.+)" .. L["nefarian"] .. ":")) then
-		NWB:debug("filtering command response");
-		return true;
-	end
-	return false, msg, author, ...;
 end
 
 ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", NWB.addClickLinks);
@@ -1134,7 +293,6 @@ ChatFrame_AddMessageEventFilter("CHAT_MSG_BATTLEGROUND", NWB.addClickLinks);
 ChatFrame_AddMessageEventFilter("CHAT_MSG_BATTLEGROUND_LEADER", NWB.addClickLinks);
 ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", NWB.addClickLinks);
 ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", NWB.addClickLinks);
-ChatFrame_AddMessageEventFilter("CHAT_MSG_GUILD", NWB.guildChatFilter);
 ChatFrame_AddMessageEventFilter("CHAT_MSG_OFFICER", NWB.addClickLinks);
 ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY", NWB.addClickLinks);
 ChatFrame_AddMessageEventFilter("CHAT_MSG_PARTY_LEADER", NWB.addClickLinks);
@@ -1147,7 +305,8 @@ hooksecurefunc("ChatFrame_OnHyperlinkShow", function(...)
     if (link == "NWBCustomLink:buffs") then
 		NWB:openBuffListFrame();
 	end
-	if (link == "NWBCustomLink:timers" and NWB.isLayered) then
+	--if (link == "NWBCustomLink:timers" and NWB.isLayered) then
+	if (link == "NWBCustomLink:timers") then
 		NWB:openLayerFrame();
 	end
 end)
@@ -1292,6 +451,7 @@ function NWB:ticker()
 				elseif (NWB.data.layers[layer][v .. "1"] and secondsLeft <= 60 and secondsLeft >= 59) then
 					NWB.data.layers[layer][v .. "1"] = nil;
 					NWB:doWarning(v, 1, secondsLeft, layer);
+					NWB:playSound("soundsOneMinute", "timer");
 				elseif (NWB.data.layers[layer][v .. "5"] and secondsLeft <= 300  and secondsLeft >= 299) then
 					NWB.data.layers[layer][v .. "5"] = nil;
 					NWB:doWarning(v, 5, secondsLeft, layer);
@@ -1316,6 +476,7 @@ function NWB:ticker()
 			elseif (NWB.data[v .. "1"] and secondsLeft <= 60 and secondsLeft >= 59) then
 				NWB.data[v .. "1"] = nil;
 				NWB:doWarning(v, 1, secondsLeft);
+				NWB:playSound("soundsOneMinute", "timer");
 			elseif (NWB.data[v .. "5"] and secondsLeft <= 300  and secondsLeft >= 299) then
 				NWB.data[v .. "5"] = nil;
 				NWB:doWarning(v, 5, secondsLeft);
@@ -1358,39 +519,39 @@ function NWB:ticker()
 	end)
 end
 
-function NWB:yellTicker()
-	--One msg every 3 mins.
-	local yellDelay = 180;
-	if (NWB.isLayered) then
-		--Longer yell delay on high pop servers, no need for as many.
-		--One msg every 5 mins.
-		yellDelay = 300;
-	end
-	C_Timer.After(yellDelay, function()
-		--Msg inside the timer so it doesn't send first tick at logon, player entering world does that.
-		NWB:removeOldLayers();
-		local inInstance, instanceType = IsInInstance();
-		if (not UnitInBattleground("player") and inInstance ~= "raid") then
-			NWB:sendData("YELL");
-		end
-		NWB:yellTicker();
-	end)
-end
-
 --Filter addon comm warnings from yell for 5 seconds after sending a yell.
 --Even though we only send 1 msg every few minutes I think it can still trigger this msg if a large amount of people are in 1 spot.
 --Even if it triggers this msg the data still got out there to most people, it will spread just fine over time.
---"yell" msgs possibly don't just send 1 msg to the server but instead loop through every player close and send 1 by 1?
-NWB.doFilterAddonChatMsg = false;
+--Server side limit depends on how many people are close by when you send maybe?
+--NWB.doFilterAddonChatMsg = false;
 local function filterAddonChatMsg(self, event, msg, author, ...)
-	if (NWB.doFilterAddonChatMsg) then
-		--The number of messages that can be sent is limited, please wait to send another message.
-		if (string.find(msg, ERR_CHAT_THROTTLED) or string.find(msg, "The number of messages that can be sent is limited")) then
-			return true;
+	if (event == "CHAT_MSG_SYSTEM") then
+		--Filter if any data sent in the last 30 seconds.
+		--But always filter on CN realms, they still get msgs even though we're filtering 30 seconds after.
+		--I think CN have some other addon issues over there.
+		if (string.find(msg, "The number of messages that can be sent is limited")) then
+			NWB:debug("System msg:", GetServerTime() - NWB.lastDataSent);
+		end
+		if ((GetServerTime() - NWB.lastDataSent) < 30 or NWB.cnRealms[NWB.realm]) then
+			--The number of messages that can be sent is limited, please wait to send another message.
+			if (string.find(msg, ERR_CHAT_THROTTLED) or string.find(msg, "The number of messages that can be sent is limited")
+					or string.find(msg, "可发送的信息数量受限") or string.find(msg, "本頻道可傳送的訊息數量有限")) then
+				--if (not NWB.isDebug) then
+					return true;
+				--end
+	    	end
+	    end
+    elseif (event == "CHAT_MSG_WHISPER") then
+    	--Filtering spam trying to force users into changing their personal settings.
+    	local text = string.char(37) .. string.char(91) .. string.char(105) .. string.char(83) .. string.char(112)
+    			.. string.char(97) .. string.char(109) .. string.char(37) .. string.char(93);
+    	if (string.find(msg, text)) then
+    		return true;
     	end
     end
 end
 ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", filterAddonChatMsg);
+ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", filterAddonChatMsg);
 
 --Send warnings to channels selected in options
 local warningThroddle = {
@@ -1460,7 +621,24 @@ function NWB:doWarning(type, num, secondsLeft, layer)
 	elseif (NWB.db.global.chat0 and num == 0 and send) then
 		NWB:print(msg);
 	end
+	--Guild.
+	local loadWait = GetServerTime() - NWB.loadTime;
+	if (loadWait > 5 and NWB.db.global.guild10 == 1 and num == 10 and send) then
+		NWB:sendGuildMsg(msg, "guild10");
+	elseif (loadWait > 5 and NWB.db.global.guild1 == 1 and num == 1 and send) then
+		NWB:sendGuildMsg(msg, "guild1");
+	end
+	if (num == 1) then
+		NWB:startFlash("flashOneMin");
+	end
 	--Middle of the screen.
+	if (InCombatLockdown() and NWB.db.global.middleHideCombat) then
+		return;
+	end
+	local inInstance, instanceType = IsInInstance();
+	if (inInstance and instanceType == "raid" and NWB.db.global.middleHideRaid) then
+		return;
+	end
 	local colorTable = {r = self.db.global.middleColorR, g = self.db.global.middleColorG, 
 			b = self.db.global.middleColorB, id = 41, sticky = 0};
 	if (NWB.db.global.middle30 and num == 30 and send) then
@@ -1476,24 +654,6 @@ function NWB:doWarning(type, num, secondsLeft, layer)
 	elseif (NWB.db.global.middle0 and num == 0 and send) then
 		RaidNotice_AddMessage(RaidWarningFrame, NWB:stripColors(msg), colorTable, 5);
 	end
-	--Guild.
-	local loadWait = GetServerTime() - NWB.loadTime;
-	if (loadWait > 5 and NWB.db.global.guild30 and num == 30 and send) then
-		NWB:sendGuildMsg(msg, "guild30");
-	elseif (loadWait > 5 and NWB.db.global.guild15 and num == 15 and send) then
-		NWB:sendGuildMsg(msg, "guild15");
-	elseif (loadWait > 5 and NWB.db.global.guild10 and num == 10 and send) then
-		NWB:sendGuildMsg(msg, "guild10");
-	elseif (loadWait > 5 and NWB.db.global.guild5 and num == 5 and send) then
-		NWB:sendGuildMsg(msg, "guild5");
-	elseif (loadWait > 5 and NWB.db.global.guild1 and num == 1 and send) then
-		NWB:sendGuildMsg(msg, "guild1");
-	elseif (loadWait > 5 and NWB.db.global.guild0 and num == 0 and send) then
-		NWB:sendGuildMsg(msg, "guild0");
-	end
-	if (num == 1) then
-		NWB:startFlash();
-	end
 end
 
 --Only one person online at a time sends guild msgs so there's no spam, chosen by alphabetical order.
@@ -1501,10 +661,14 @@ end
 --BUG: sometimes a user doesn't register as having addon, checked table they don't exist when this happens.
 --Must be some reason they don't send a guild addon msg at logon.
 function NWB:sendGuildMsg(msg, type, zoneName)
-	if (NWB.db.global.disableAllGuildMsgs) then
+	if (NWB.db.global.disableAllGuildMsgs == 1) then
 		return;
 	end
 	if (not IsInGuild()) then
+		return;
+	end
+	--Disable guild msg if GM has it disabled in their public note.
+	if (NWB:checkGuildMasterSetting(type)) then
 		return;
 	end
 	GuildRoster();
@@ -1524,13 +688,18 @@ function NWB:sendGuildMsg(msg, type, zoneName)
 			if (name and online and NWB.hasAddon[name] and not isMobile) then
 				if (NWB.data[name]) then
 					--If another guild member check thier settings.
-					if (NWB.data[name][type] == true and NWB.data[name].disableAllGuildMsgs ~= true) then
+					--if ((NWB.data[name][type] == true or NWB.data[name][oldSettings[type]] == true)
+					--if ((NWB.data[name][type] == true)
+					--		and NWB.data[name].disableAllGuildMsgs ~= true) then
+					if ((NWB.data[name][type] == true or NWB.data[name][type] == 1)
+							and NWB.data[name].disableAllGuildMsgs ~= true and NWB.data[name].disableAllGuildMsgs ~= 1) then
 						--Has addon and has this type of msg type option enabled.
 						onlineMembers[name] = true;
 					end
 				elseif (name == me) then
 					--If myself check my settings.
-					if (NWB.db.global[type] == true and NWB.db.global.disableAllGuildMsgs ~= true) then
+					if ((NWB.db.global[type] == true or NWB.db.global[type] == 1)
+							and NWB.db.global.disableAllGuildMsgs ~= true and NWB.db.global.disableAllGuildMsgs ~= 1) then
 						onlineMembers[name] = true;
 					end
 				end
@@ -1551,17 +720,74 @@ function NWB:sendGuildMsg(msg, type, zoneName)
 	end
 end
 
+--Setting to allow guild masters to disable msgs in chat.
+NWB.guildMasterSettings = {};
+function NWB:checkGuildMasterSetting(type)
+	if (not IsInGuild()) then
+		return;
+	end
+	local note = "";
+	local name, rank, rankIndex;
+	local numTotalMembers = GetNumGuildMembers();
+	for i = 1, numTotalMembers do
+		name, rank, rankIndex, _, _, _, note = GetGuildRosterInfo(i);
+		if (rankIndex == 0) then
+			--Guild Master.
+			break;
+		end
+	end
+	local settings = {
+		--Disable certain guild msgs based on guild masters note.
+		["#nwb1"] = 1, --1 = Disable All msgs.
+		["#nwb2"] = 2, --2 = Disable timers msgs.
+		["#nwb3"] = 3, --3 = Disable buff dropped msgs.
+		["#nwb4"] = 4, --4 = Disable !wb command.
+		["#nwb5"] = 5, --5 = Disable Songflowers msgs.
+	}
+	local found;
+	NWB.guildMasterSettings = {};
+	for k, v in pairs(settings) do
+		if (note and string.find(string.lower(note), k)) then
+			--NWB:debug("Guild master setting found:", k);
+			NWB.guildMasterSettings[v] = true;
+			if (v == 1) then
+				found = true;
+			elseif (v == 2) then
+				if (type == "guild30" or type == "guild15" or type == "guild10"
+					 or type == "guild5" or type == "guild1" or type == "guild0") then
+					found = true;
+				end
+			elseif (v == 3) then
+				if (type == "guildBuffDropped" or type == "guildNpcDialogue" or type == "guildZanDialogue") then
+					found = true;
+				end
+			elseif (v == 4) then
+				if (type == "guildCommand") then
+					found = true;
+				end
+			elseif (v == 5) then
+				if (type == "guildSongflower") then
+					found = true;
+				end
+			end
+		end
+	end
+	if (found) then
+		return true;
+	end
+end
+
 --Guild chat msg event.
 local guildWbCmdCooldown, guildDmfCmdCooldown = 0, 0;
 function NWB:chatMsgGuild(...)
 	local msg = ...;
 	msg = string.lower(msg);
 	local cmd, arg = strsplit(" ", msg, 2);
-	if (string.match(msg, "^!wb") and NWB.db.global.guildCommand and (GetServerTime() - guildWbCmdCooldown) > 5) then
+	if (string.match(msg, "^!wb") and NWB.db.global.guildCommand == 1 and (GetServerTime() - guildWbCmdCooldown) > 5) then
 		guildWbCmdCooldown = GetServerTime();
 		NWB:sendGuildMsg(NWB:getShortBuffTimers(nil, arg), "guildCommand");
 	end
-	if (string.match(msg, "^!dmf") and NWB.db.global.guildCommand and (GetServerTime() - guildDmfCmdCooldown) > 5) then
+	if (string.match(msg, "^!dmf") and NWB.db.global.guildCommand == 1 and (GetServerTime() - guildDmfCmdCooldown) > 5) then
 		guildDmfCmdCooldown = GetServerTime();
 		local output = NWB:getDmfTimeString();
 		if (output) then
@@ -1582,11 +808,10 @@ function NWB:monsterYell(...)
 	end
 	if (NWB.faction == "Alliance") then
 		if (locale == "frFR" or locale == "ptBR" or locale == "esES" or locale == "esMX" or locale == "itIT"
-				or locale == "ruRU" or locale == "deDE" or locale == "zhCN") then
+				or locale == "zhCN") then
 			skipStringCheck = true;
 		end
 	end
-	NWB:debugKR(0);
 	local msg, name = ...;
 	if ((name == L["Thrall"] or (name == L["Herald of Thrall"] and (not NWB.isLayered or NWB.faction == "Alliance")))
 			and (string.match(msg, L["Rend Blackhand, has fallen"]) or skipStringCheck)) then
@@ -1603,12 +828,10 @@ function NWB:monsterYell(...)
 				end)
 			end
 		end
-		NWB:debugKR(1);
 	elseif ((name == L["Thrall"] or (name == L["Herald of Thrall"] and (not NWB.isLayered or NWB.faction == "Alliance")))
 			and string.match(msg, "Be bathed in my power")) then
 		--Second yell right before drops "Be bathed in my power! Drink in my might! Battle for the glory of the Horde!".
 		NWB.data.rendYell2 = GetServerTime();
-		NWB:debugKR(2);
 	elseif ((name == L["Overlord Runthak"] and (string.match(msg, L["Onyxia, has been slain"]) or skipStringCheck))
 			or (name == L["Major Mattingly"] and (string.match(msg, L["history has been made"]) or skipStringCheck))) then
 		--14 seconds between first ony yell and buff applied.
@@ -1616,12 +839,10 @@ function NWB:monsterYell(...)
 		NWB:doFirstYell("ony");
 		--Send first yell msg to guild so people in org see it, needed because 1 person online only will send msg.
 		NWB:sendYell("GUILD", "ony");
-		NWB:debugKR(1);
 	elseif ((name == L["Overlord Runthak"] and string.match(msg, L["Be lifted by the rallying cry"]))
 			or (name == L["Major Mattingly"] and string.match(msg, L["Onyxia, hangs from the arches"]))) then
 		--Second yell right before drops "Be lifted by the rallying cry of your dragon slayers".
 		NWB.data.onyYell2 = GetServerTime();
-		NWB:debugKR(2);
 	elseif ((name == L["High Overlord Saurfang"] and (string.match(msg, L["NEFARIAN IS SLAIN"]) or skipStringCheck))
 		 	or (name == L["Field Marshal Afrasiabi"] and (string.match(msg, L["the Lord of Blackrock is slain"]) or skipStringCheck))) then
 		--15 seconds between first nef yell and buff applied.
@@ -1629,12 +850,10 @@ function NWB:monsterYell(...)
 		NWB:doFirstYell("nef");
 		--Send first yell msg to guild so people in org see it, needed because 1 person online only will send msg.
 		NWB:sendYell("GUILD", "nef");
-		NWB:debugKR(1);
 	elseif ((name == L["High Overlord Saurfang"] and string.match(msg, L["Revel in his rallying cry"]))
 			or (name == L["Field Marshal Afrasiabi"] and string.match(msg, L["Revel in the rallying cry"]))) then
 		--Second yell right before drops "Be lifted by PlayerName's accomplishment! Revel in his rallying cry!".
 		NWB.data.nefYell2 = GetServerTime();
-		NWB:debugKR(2);
 	elseif ((name == L["Molthor"] or name == L["Zandalarian Emissary"])
 			and (string.match(msg, L["Begin the ritual"]) or string.match(msg, L["The Blood God"]) or skipStringCheck)) then
 		--27ish seconds between first zan yell and buff applied if on island.
@@ -1643,12 +862,10 @@ function NWB:monsterYell(...)
 		NWB.data.zanYell = GetServerTime();
 		NWB:doFirstYell("zan");
 		NWB:sendYell("GUILD", "zan");
-		NWB:debugKR(1);
 	elseif ((name == L["Molthor"] or name == L["Zandalarian Emissary"]) and string.match(msg, L["slayer of Hakkar"])) then
 		--Second yell right before drops "All Hail <name>, slayer of Hakkar, and hero of Azeroth!".
 		--Booty Bay yell (Zandalarian Emissary yells: All Hail <name>, slayer of Hakkar, and hero of Azeroth!)
 		NWB.data.zanYell2 = GetServerTime();
-		NWB:debugKR(2);
 	end
 end
 
@@ -1661,43 +878,43 @@ function NWB:doFirstYell(type)
 		if ((GetServerTime() - rendFirstYell) > 40) then
 			--6 seconds from rend first yell to buff drop.
 			NWB.data.rendYell = GetServerTime();
-			if (NWB.db.global.guildNpcDialogue  and (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend)) then
+			if (NWB.db.global.guildNpcDialogue == 1 and (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend)) then
 				NWB:sendGuildMsg(L["rendFirstYellMsg"], "guildNpcDialogue");
 			end
 			rendFirstYell = GetServerTime();
-			NWB:startFlash();
+			NWB:startFlash("flashFirstYell");
 			if (NWB.db.global.middleBuffWarning) then
 				RaidNotice_AddMessage(RaidWarningFrame, L["rendFirstYellMsg"], colorTable, 5);
 			end
-			NWB:debugKR("rend3");
+			NWB:playSound("soundsFirstYell", "rend");
 		end
 	elseif (type == "ony") then
 		if ((GetServerTime() - onyFirstYell) > 40) then
 			--14 seconds from ony first yell to buff drop.
 			NWB.data.onyYell = GetServerTime();
-			if (NWB.db.global.guildNpcDialogue) then
+			if (NWB.db.global.guildNpcDialogue == 1) then
 				NWB:sendGuildMsg(L["onyxiaFirstYellMsg"], "guildNpcDialogue");
 			end
 			onyFirstYell = GetServerTime();
-			NWB:startFlash();
+			NWB:startFlash("flashFirstYell");
 			if (NWB.db.global.middleBuffWarning) then
 				RaidNotice_AddMessage(RaidWarningFrame, L["onyxiaFirstYellMsg"], colorTable, 5);
 			end
-			NWB:debugKR("ony3");
+			NWB:playSound("soundsFirstYell", "ony");
 		end
 	elseif (type == "nef") then
 		if ((GetServerTime() - nefFirstYell) > 40) then
 			--15 seconds from nef first yell to buff drop.
 			NWB.data.nefYell = GetServerTime();
-			if (NWB.db.global.guildNpcDialogue) then
+			if (NWB.db.global.guildNpcDialogue == 1) then
 				NWB:sendGuildMsg(L["nefarianFirstYellMsg"], "guildNpcDialogue");
 			end
 			nefFirstYell = GetServerTime();
-			NWB:startFlash();
+			NWB:startFlash("flashFirstYell");
 			if (NWB.db.global.middleBuffWarning) then
 				RaidNotice_AddMessage(RaidWarningFrame, L["nefarianFirstYellMsg"], colorTable, 5);
 			end
-			NWB:debugKR("nef3");
+			NWB:playSound("soundsFirstYell", "nef");
 		end
 	elseif (type == "zan") then
 		if ((GetServerTime() - zanFirstYell) > 120) then
@@ -1707,16 +924,16 @@ function NWB:doFirstYell(type)
 			if (NWB.db.global.chatZan) then
 				NWB:print(L["zanFirstYellMsg"]);
 			end
-			if (NWB.db.global.guildZanDialogue) then
+			if (NWB.db.global.guildZanDialogue == 1) then
 				NWB:sendGuildMsg(L["zanFirstYellMsg"], "guildZanDialogue");
 			end
 			NWB:debug(L["zanFirstYellMsg"]);
 			zanFirstYell = GetServerTime();
-			NWB:startFlash();
+			NWB:startFlash("flashFirstYellZan");
 			if (NWB.db.global.middleBuffWarning) then
 				RaidNotice_AddMessage(RaidWarningFrame, L["zanFirstYellMsg"], colorTable, 5);
 			end
-			NWB:debugKR("zan3");
+			NWB:playSound("soundsFirstYell", "zan");
 		end
 	end
 end
@@ -1731,7 +948,7 @@ function NWB:doBuffDropMsg(data)
 			if (tonumber(layer)) then
 				layerMsg = " (Layer " .. layer .. ")";
 			end
-			if (NWB.db.global.guildBuffDropped) then
+			if (NWB.db.global.guildBuffDropped == 1) then
 				NWB:sendGuildMsg(L["rendBuffDropped"] .. layerMsg, "guildBuffDropped");
 			end
 			rendDropMsg = GetServerTime();
@@ -1742,7 +959,7 @@ function NWB:doBuffDropMsg(data)
 			if (tonumber(layer)) then
 				layerMsg = " (Layer " .. layer .. ")";
 			end
-			if (NWB.db.global.guildBuffDropped) then
+			if (NWB.db.global.guildBuffDropped == 1) then
 				NWB:sendGuildMsg(L["onyxiaBuffDropped"] .. layerMsg, "guildBuffDropped");
 			end
 			onyDropMsg = GetServerTime();
@@ -1753,7 +970,7 @@ function NWB:doBuffDropMsg(data)
 			if (tonumber(layer)) then
 				layerMsg = " (Layer " .. layer .. ")";
 			end
-			if (NWB.db.global.guildBuffDropped) then
+			if (NWB.db.global.guildBuffDropped == 1) then
 				NWB:sendGuildMsg(L["nefarianBuffDropped"] .. layerMsg, "guildBuffDropped");
 			end
 			nefDropMsg = GetServerTime();
@@ -1765,7 +982,7 @@ local onyNpcKill, nefNpcKill = 0, 0;
 function NWB:doNpcKilledMsg(type)
 	if (type == "ony") then
 		if ((GetServerTime() - onyNpcKill) > 40) then
-			if (NWB.db.global.guildNpcKilled) then
+			if (NWB.db.global.guildNpcKilled == 1) then
 				if (NWB.faction == "Horde") then
 					NWB:sendGuildMsg(L["onyxiaNpcKilledHorde"], "guildNpcKilled");
 				else
@@ -1776,7 +993,7 @@ function NWB:doNpcKilledMsg(type)
 		end
 	elseif (type == "nef") then
 		if ((GetServerTime() - nefNpcKill) > 40) then
-			if (NWB.db.global.guildNpcKilled) then
+			if (NWB.db.global.guildNpcKilled == 1) then
 				if (NWB.faction == "Horde") then
 					NWB:sendGuildMsg(L["nefarianNpcKilledHorde"], "guildNpcKilled");
 				else
@@ -1794,7 +1011,7 @@ function NWB:combatLogEventUnfiltered(...)
 			destName, destFlags, destRaidFlags, _, spellName = CombatLogGetCurrentEventInfo();
 	if (subEvent == "UNIT_DIED") then
 		local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
-		local _, _, _, _, zoneID, npcID = strsplit("-", sourceGUID);
+		local _, _, _, _, zoneID, npcID = strsplit("-", destGUID);
 		zoneID = tonumber(zoneID);
 		if ((zone == 1454 or zone == 1411) and destName == L["Overlord Runthak"]) then
 			if (NWB.faction ~= "Horde") then
@@ -1804,9 +1021,6 @@ function NWB:combatLogEventUnfiltered(...)
 				NWB.data.layers[zoneID].onyNpcDied = GetServerTime();
 			end
 			NWB.data.onyNpcDied = GetServerTime();
-			--if (NWB.db.global.guildNpcKilled) then
-			--	SendChatMessage("[WorldBuffs] " .. L["onyxiaNpcKilledHorde"], "guild");
-			--end
 			NWB:doNpcKilledMsg("ony");
 			NWB:sendNpcKilled("GUILD", "ony");
 			NWB:print(L["onyxiaNpcKilledHorde"]);
@@ -1821,9 +1035,6 @@ function NWB:combatLogEventUnfiltered(...)
 				NWB.data.layers[zoneID].nefNpcDied = GetServerTime();
 			end
 			NWB.data.nefNpcDied = GetServerTime();
-			--if (NWB.db.global.guildNpcKilled) then
-			--	SendChatMessage("[WorldBuffs] " .. L["nefarianNpcKilledHorde"], "guild");
-			--end
 			NWB:doNpcKilledMsg("nef");
 			NWB:sendNpcKilled("GUILD", "nef");
 			NWB:print(L["nefarianNpcKilledHorde"]);
@@ -1838,9 +1049,6 @@ function NWB:combatLogEventUnfiltered(...)
 				NWB.data.layers[zoneID].onyNpcDied = GetServerTime();
 			end
 			NWB.data.onyNpcDied = GetServerTime();
-			--if (NWB.db.global.guildNpcKilled) then
-			--	SendChatMessage("[WorldBuffs] " .. L["onyxiaNpcKilledAlliance"], "guild");
-			--end
 			NWB:doNpcKilledMsg("ony");
 			NWB:sendNpcKilled("GUILD", "ony");
 			NWB:print(L["onyxiaNpcKilledAlliance"]);
@@ -1855,9 +1063,6 @@ function NWB:combatLogEventUnfiltered(...)
 				NWB.data.layers[zoneID].nefNpcDied = GetServerTime();
 			end
 			NWB.data.nefNpcDied = GetServerTime();
-			--if (NWB.db.global.guildNpcKilled) then
-			--	SendChatMessage("[WorldBuffs] " .. L["nefarianNpcKilledAlliance"], "guild");
-			--end
 			NWB:doNpcKilledMsg("nef");
 			NWB:sendNpcKilled("GUILD", "nef");
 			NWB:print(L["nefarianNpcKilledAlliance"]);
@@ -1872,15 +1077,29 @@ function NWB:combatLogEventUnfiltered(...)
 			local expirationTime = NWB:getBuffDuration(L["Warchief's Blessing"], 1);
 			local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
 			--If layered then you must be in org to set the right layer id, the barrens is disabled.
-			NWB:trackNewBuff(spellName, "rend");
-			if (NWB.isLayered and (not npcID or npcID ~= "4949")) then
-				--Some parts on the edges of orgrimmar seem to give the buff from Herald instead of Thrall, even while on map 1454.
-				--This creates a false 3rd layer with the barrens zoneid, took way too long to figure this out...
-				NWB:debug("bad rend buff source on layered realm", sourceGUID);
-				return;
-			end
 			if (expirationTime >= 3599.5 and (zone == 1454 or not NWB.isLayered) and unitType == "Creature") then
-				NWB:setRendBuff("self", UnitName("player"), zoneID, sourceGUID);
+				NWB:trackNewBuff(spellName, "rend");
+				NWB:playSound("soundsRendDrop", "rend");
+				if (NWB.isLayered and zone ~= 1454) then
+					--Testing tracking rend for alliance here by attaching it to the new layermap.
+					if (NWB.lastKnownLayerMapID and NWB.lastKnownLayerMapID > 0) then
+						if (NWB.faction == "Alliance") then
+							NWB:setRendBuff("self", UnitName("player"), NWB.lastKnownLayerMapID, sourceGUID, true);
+						end
+					end
+					return;
+				end
+				if (NWB.isLayered and (not npcID or npcID ~= "4949" or zone ~= 1454) and NWB.faction ~= "Alliance") then
+					--Some parts on the edges of orgrimmar seem to give the buff from Herald instead of Thrall, even while on map 1454.
+					--This creates a false 3rd layer with the barrens zoneid, took way too long to figure this out...
+					NWB:debug("bad rend buff source on layered realm", sourceGUID);
+					return;
+				end
+				if (NWB.isLayered and NWB.faction == "Alliance") then
+					NWB:setRendBuff("self", UnitName("player"), zoneID, sourceGUID, true);
+				else
+					NWB:setRendBuff("self", UnitName("player"), zoneID, sourceGUID);
+				end
 			end
 		elseif (destName == UnitName("player") and spellName == L["Spirit of Zandalar"] and (GetServerTime() - lastZanBuffGained) > 1) then
 			--Zan buff has no sourceName or sourceGUID, not sure why.
@@ -1890,8 +1109,10 @@ function NWB:combatLogEventUnfiltered(...)
 				NWB:trackNewBuff(spellName, "zan");
 				--Not sure why this triggers 4 times on PTR, needs more testing once it's on live server but for now we do a 1 second cooldown.
 				lastZanBuffGained = GetServerTime();
+				NWB:playSound("soundsZanDrop", "zan");
 			end
-		elseif ((npcID == "14720" or npcID == "14721") and destName == UnitName("player") and spellName == L["Rallying Cry of the Dragonslayer"]
+		elseif (((NWB.faction == "Horde" and npcID == "14720") or (NWB.faction == "Alliance" and npcID == "14721"))
+				and destName == UnitName("player") and spellName == L["Rallying Cry of the Dragonslayer"]
 				and ((GetServerTime() - NWB.data.nefYell2) < 60 or (GetServerTime() - NWB.data.nefYell) < 60)
 				and unitType == "Creature") then
 			--To tell the difference between nef and ony we check if there a nef npc yell recently, if not then fall back to ony.
@@ -1903,8 +1124,10 @@ function NWB:combatLogEventUnfiltered(...)
 				if ((zone == 1453 or zone == 1454) or not NWB.isLayered) then
 					NWB:setNefBuff("self", UnitName("player"), zoneID, sourceGUID);
 				end
+				NWB:playSound("soundsNefDrop", "nef");
 			end
-		elseif ((npcID == "14392" or npcID == "14394")and destName == UnitName("player") and spellName == L["Rallying Cry of the Dragonslayer"]
+		elseif (((NWB.faction == "Horde" and npcID == "14392") or (NWB.faction == "Alliance" and npcID == "14394"))
+				and destName == UnitName("player") and spellName == L["Rallying Cry of the Dragonslayer"]
 				and ((GetServerTime() - NWB.data.onyYell2) < 60 or (GetServerTime() - NWB.data.onyYell) < 60)
 				and ((GetServerTime() - NWB.data.nefYell2) > 60)
 				and unitType == "Creature") then
@@ -1914,6 +1137,7 @@ function NWB:combatLogEventUnfiltered(...)
 				if ((zone == 1453 or zone == 1454) or not NWB.isLayered) then
 					NWB:setOnyBuff("self", UnitName("player"), zoneID, sourceGUID);
 				end
+				NWB:playSound("soundsOnyDrop", "ony");
 			end
 		elseif (destName == UnitName("player") and (spellName == L["Sayge's Dark Fortune of Agility"]
 				or spellName == L["Sayge's Dark Fortune of Spirit"] or spellName == L["Sayge's Dark Fortune of Stamina"]
@@ -2014,33 +1238,57 @@ function NWB:combatLogEventUnfiltered(...)
 end
 
 local rendLastSet, onyLastSet, nefLastSet, zanLastSet = 0, 0, 0, 0;
-function NWB:setRendBuff(source, sender, zoneID, GUID)
+function NWB:setRendBuff(source, sender, zoneID, GUID, isAllianceAndLayered)
 	--Check if this addon has already set a timer a few seconds before another addon's comm.
 	if (source ~= "self" and (GetServerTime() - NWB.data.rendTimer) < 10) then
+		return;
+	end
+	local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
+	if (NWB.faction == "Horde" and zone ~= 1454 and zone ~= 1413) then
+		NWB:debug("not in a valid zone to set rend timer");
+		return;
+	end
+	if (NWB.faction == "Alliance" and zone ~= 1453 and zone ~= 1413) then
+		NWB:debug("not in a valid zone to set rend timer");
 		return;
 	end
 	if (not NWB:validateNewTimer("rend", source)) then
 		NWB:debug("failed rend timer validation", source);
 		return;
 	end
-	NWB:debugKR("rend4");
 	if (NWB.isLayered and tonumber(zoneID)) then
-		NWB:debugKR("rend5");
 		local count = 0;
 		for k, v in pairs(NWB.data.layers) do
 			count = count + 1;
 		end
 		if (count <= NWB.limitLayerCount) then
-			if (not NWB.data.layers[zoneID]) then
-				NWB:createNewLayer(zoneID, GUID);
-			end
-			if (NWB.data.layers[zoneID]) then
-				NWB:debugKR("rend6");
-				NWB.data.layers[zoneID].rendTimer = GetServerTime();
-				NWB.data.layers[zoneID].rendTimerWho = sender;
-				NWB.data.layers[zoneID].rendSource = source;
-				NWB.data.layers[zoneID].rendYell = NWB.data.rendYell;
-				NWB.data.layers[zoneID].rendYell2 = NWB.data.rendYell2;
+			if (isAllianceAndLayered) then
+				if (not NWB.data.layers[NWB.lastKnownLayerMapID]) then
+					NWB:print("Got rend buff but no layer ID was found.");
+					return;
+				elseif (NWB.lastKnownLayerMapID > 0) then
+					zoneID = NWB.lastKnownLayerMapID;
+					if (NWB.data.layers[zoneID]) then
+						NWB.data.layers[zoneID].rendTimer = GetServerTime();
+						NWB.data.layers[zoneID].rendTimerWho = sender;
+						NWB.data.layers[zoneID].rendSource = source;
+						NWB.data.layers[zoneID].rendYell = NWB.data.rendYell;
+						NWB.data.layers[zoneID].rendYell2 = NWB.data.rendYell2;
+					end
+				else
+					return;
+				end
+			else
+				if (not NWB.data.layers[zoneID]) then
+					NWB:createNewLayer(zoneID, GUID);
+				end
+				if (NWB.data.layers[zoneID]) then
+					NWB.data.layers[zoneID].rendTimer = GetServerTime();
+					NWB.data.layers[zoneID].rendTimerWho = sender;
+					NWB.data.layers[zoneID].rendSource = source;
+					NWB.data.layers[zoneID].rendYell = NWB.data.rendYell;
+					NWB.data.layers[zoneID].rendYell2 = NWB.data.rendYell2;
+				end
 			end
 		end
 	end
@@ -2054,7 +1302,7 @@ function NWB:setRendBuff(source, sender, zoneID, GUID)
 	--Once per drop one guild member will say in chat it dropped.
 	--Throddle the drop msg for when we get multiple sources at the same drop time.
 	if ((GetServerTime() - rendLastSet) > 60) then
-		if (NWB.db.global.guildBuffDropped and (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend)) then
+		if (NWB.db.global.guildBuffDropped == 1 and (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend)) then
 			if (zoneID) then
 				for k, v in NWB:pairsByKeys(NWB.data.layers) do
 					count = count + 1;
@@ -2101,7 +1349,7 @@ function NWB:setZanBuff(source, sender, zoneID, GUID)
 	--Once per drop one guild member will say in chat it dropped.
 	--Throddle the drop msg for when we get multiple sources at the same drop time.
 	if ((GetServerTime() - zanLastSet) > 120) then
-		if (NWB.db.global.guildBuffDropped) then
+		if (NWB.db.global.guildBuffDropped == 1) then
 			NWB:sendGuildMsg(L["zanBuffDropped"], "guildBuffDropped");
 		end
 	end
@@ -2116,6 +1364,15 @@ function NWB:setOnyBuff(source, sender, zoneID, GUID)
 	if ((GetServerTime() - nefLastSet) < 20) then
 		return;
 	end
+	local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
+	if (NWB.faction == "Horde" and zone ~= 1454 and zone ~= 1413) then
+		NWB:debug("not in a valid zone to set rend timer");
+		return;
+	end
+	if (NWB.faction == "Alliance" and zone ~= 1453 and zone ~= 1413) then
+		NWB:debug("not in a valid zone to set rend timer");
+		return;
+	end
 	if (source ~= "self" and (GetServerTime() - NWB.data.onyTimer) < 10) then
 		return;
 	end
@@ -2123,9 +1380,7 @@ function NWB:setOnyBuff(source, sender, zoneID, GUID)
 		NWB:debug("failed ony timer validation", source);
 		return;
 	end
-	NWB:debugKR("ony4");
 	if (NWB.isLayered and tonumber(zoneID)) then
-		NWB:debugKR("ony5");
 		local count = 0;
 		for k, v in pairs(NWB.data.layers) do
 			count = count + 1;
@@ -2135,7 +1390,6 @@ function NWB:setOnyBuff(source, sender, zoneID, GUID)
 				NWB:createNewLayer(zoneID, GUID);
 			end
 			if (NWB.data.layers[zoneID]) then
-				NWB:debugKR("ony6");
 				NWB.data.layers[zoneID].onyTimer = GetServerTime();
 				NWB.data.layers[zoneID].onyTimerWho = sender;
 				NWB.data.layers[zoneID].onyNpcDied = 0;
@@ -2154,7 +1408,7 @@ function NWB:setOnyBuff(source, sender, zoneID, GUID)
 	local count = 0;
 	if ((GetServerTime() - onyLastSet) > 60) then
 		local count = 0;
-		if (NWB.db.global.guildBuffDropped) then
+		if (NWB.db.global.guildBuffDropped == 1) then
 			if (zoneID) then
 				for k, v in NWB:pairsByKeys(NWB.data.layers) do
 					count = count + 1;
@@ -2187,18 +1441,24 @@ function NWB:setNefBuff(source, sender, zoneID, GUID)
 	if (source ~= "self" and (GetServerTime() - NWB.data.nefTimer) < 10) then
 		return;
 	end
+	local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
+	if (NWB.faction == "Horde" and zone ~= 1454 and zone ~= 1413) then
+		NWB:debug("not in a valid zone to set rend timer");
+		return;
+	end
+	if (NWB.faction == "Alliance" and zone ~= 1453 and zone ~= 1413) then
+		NWB:debug("not in a valid zone to set rend timer");
+		return;
+	end
 	if (not NWB:validateNewTimer("nef", source)) then
 		NWB:debug("failed nef timer validation", source);
 		return;
 	end
-	NWB:debugKR("nef4");
 	if (NWB.isLayered and tonumber(zoneID)) then
-		NWB:debugKR("nef5");
 		local count = 0;
 		for k, v in pairs(NWB.data.layers) do
 			count = count + 1;
 		end
-		NWB:debugKR("nef6");
 		if (count <= NWB.limitLayerCount) then
 			if (not NWB.data.layers[zoneID]) then
 				NWB:createNewLayer(zoneID, GUID);
@@ -2222,7 +1482,7 @@ function NWB:setNefBuff(source, sender, zoneID, GUID)
 	local count = 0;
 	if ((GetServerTime() - nefLastSet) > 60) then
 		local count = 0;
-		if (NWB.db.global.guildBuffDropped) then
+		if (NWB.db.global.guildBuffDropped == 1) then
 			if (zoneID) then
 				for k, v in NWB:pairsByKeys(NWB.data.layers) do
 					count = count + 1;
@@ -2285,10 +1545,13 @@ end
 
 function NWB:validateTimestamp(timestamp)
 	local currentTime = GetServerTime();
+	if (not tonumber(timestamp)) then
+		return;
+	end
 	if (timestamp > 2585912598) then
 		return;
 	end
-	if (timestamp > (currentTime + 86400)) then
+	if (timestamp > (currentTime + 30000)) then
 		return;
 	end
 	return true;
@@ -2422,6 +1685,7 @@ function NWB:syncBuffsWithCurrentDuration()
 				local maxDuration = NWB.db.global[type .. "BuffTime"] or 0;
 				local elapsedDuration = maxDuration - timeLeft;
 				local newPlayedCache = NWB.played - elapsedDuration;
+				NWB.data.myChars[UnitName("player")].buffs[spellName].timeLeft = timeLeft;
 				NWB.data.myChars[UnitName("player")].buffs[spellName].setTime = GetServerTime();
 				NWB.data.myChars[UnitName("player")].buffs[spellName].track = true;
 				--Change the played seconds this was buff was set at to match the current time elapsed on our current buff.
@@ -2458,42 +1722,8 @@ end
 function NWB:setLayered()
 	--This needs to be changed to a table later.
 	--TW realms.
-	if (NWB.realm == "伊弗斯" or NWB.realm == "瑪拉頓"
-			--CN realms (so many realms and all have layering apparently, wtf?).
-			or NWB.realm == "匕首岭" or NWB.realm == "乌洛克" or NWB.realm == "厄运之槌"  or NWB.realm == "巴罗夫"
-			or NWB.realm == "无尽风暴" or NWB.realm == "无畏" or NWB.realm == "木喉要塞" or NWB.realm == "比格沃斯"
-			or NWB.realm == "比斯巨兽" or NWB.realm == "水晶之牙" or NWB.realm == "火锤" or NWB.realm == "加丁"
-			or NWB.realm == "巨人追猎者" or NWB.realm == "巨龙沼泽" or NWB.realm == "巨龙追猎者" or NWB.realm == "布劳缪克丝"
-			or NWB.realm == "布鲁" or NWB.realm == "弗莱拉斯" or NWB.realm == "末日之刃" or NWB.realm == "龙之召唤"
-			or NWB.realm == "龙牙" or NWB.realm == "伊森迪奥斯" or NWB.realm == "伦鲁迪洛尔" or NWB.realm == "光芒"
-			or NWB.realm == "吉兹洛克" or NWB.realm == "安娜丝塔丽" or NWB.realm == "灰烬使者" or NWB.realm == "艾隆纳亚"
-			or NWB.realm == "克罗米" or NWB.realm == "希尔盖" or NWB.realm == "怀特迈恩" or NWB.realm == "沙尔图拉"
-			or NWB.realm == "沙顶" or NWB.realm == "灵风" or NWB.realm == "狂野之刃" or NWB.realm == "辛洛斯"
-			or NWB.realm == "辛迪加" or NWB.realm == "迈克斯纳" or NWB.realm == "卓越" or NWB.realm == "审判"
-			or NWB.realm == "帕奇维克" or NWB.realm == "拉姆斯登" or NWB.realm == "法尔班克斯" or NWB.realm == "法拉克斯"
-			or NWB.realm == "法琳娜" or NWB.realm == "觅心者" or NWB.realm == "阿什坎迪" or NWB.realm == "阿拉希盆地"
-			or NWB.realm == "阿鲁高" or NWB.realm == "哈霍兰" or NWB.realm == "奎尔塞拉" or NWB.realm == "娅尔罗"
-			or NWB.realm == "怒炉" or NWB.realm == "狮心" or NWB.realm == "祈福" or NWB.realm == "范克瑞斯"
-			or NWB.realm == "范克瑞斯" or NWB.realm == "范沃森" or NWB.realm == "埃提耶什" or NWB.realm == "席瓦莱恩"
-			or NWB.realm == "神谕林地" or NWB.realm == "秩序之源" or NWB.realm == "诺克赛恩" or NWB.realm == "诺格弗格"
-			or NWB.realm == "骨火" or NWB.realm == "曼多基尔" or NWB.realm == "维克尼拉斯" or NWB.realm == "维克托"
-			or NWB.realm == "维克洛尔" or NWB.realm == "维希度斯" or NWB.realm == "莫格莱尼" or NWB.realm == "奥罗"
-			or NWB.realm == "奥金斧" or NWB.realm == "寒冰之王" or NWB.realm == "寒脊山小径" or NWB.realm == "湖畔镇"
-			or NWB.realm == "黑曜石之锋" or NWB.realm == "塞卡尔" or NWB.realm == "塞雷布拉斯" or NWB.realm == "毁灭之刃"
-			or NWB.realm == "萨弗拉斯" or NWB.realm == "萨弗隆" or NWB.realm == "雷德" or NWB.realm == "雷霆之击"
-			or NWB.realm == "碧玉矿洞" or NWB.realm == "碧空之歌" or NWB.realm == "赫洛德" or NWB.realm == "德姆塞卡尔"
-			or NWB.realm == "震地者" or NWB.realm == "霜语"
-			--US/OCE layered realms.
-			or NWB.realm == "Arugal" or NWB.realm == "Benediction" or NWB.realm == "Earthfury" or NWB.realm == "Faerlina"
-			or NWB.realm == "Fairbanks" or NWB.realm == "Herod" or NWB.realm == "Pagle" or NWB.realm == "Sulfuras"
-			or NWB.realm == "Whitemane"
-			--EU layered realms.
-			or NWB.realm == "Auberdine" or NWB.realm == "Ashbringer" or NWB.realm == "Firemaw" or NWB.realm == "Flamegor"
-			or NWB.realm == "Gehennas" or NWB.realm == "Golemagg" or NWB.realm == "Mograine" or NWB.realm == "Sulfuron"
-			or NWB.realm == "Venoxis" or NWB.realm == "Пламегор"
-			--KR layered realms.
-			or NWB.realm == "로크홀라" or NWB.realm == "얼음피" or NWB.realm == "힐스브레드" or NWB.realm == "라그나로스"
-			or NWB.realm == "소금 평원") then
+	if (NWB.usRealms[NWB.realm] or NWB.euRealms[NWB.realm] or NWB.krRealms[NWB.realm] or NWB.twRealms[NWB.realm]
+			or NWB.cnRealms[NWB.realm]) then
 		NWB.isLayered = true;
 	end
 end
@@ -2655,32 +1885,21 @@ f:RegisterEvent("TIME_PLAYED_MSG");
 f:RegisterEvent("PLAYER_LOGIN");
 f:RegisterEvent("CHAT_MSG_WHISPER");
 f:RegisterEvent("CHAT_MSG_BN_WHISPER");
+f:RegisterEvent("CHAT_MSG_SYSTEM");
+f:RegisterEvent("CHAT_MSG_ADDON");
+f:RegisterEvent("GUILD_ROSTER_UPDATE");
 local doLogon = true;
 f:SetScript("OnEvent", function(self, event, ...)
 	if (event == "PLAYER_LOGIN") then
 		--Testing this here instead of PLAYER_ENTERING_WORLD, maybe it fires slightly faster enough to stop duplicate msgs.
 		NWB.loadTime = GetServerTime();
+		--if (IsInGuild()) then
+			--C_ChatInfo.SendAddonMessage(NWB.commPrefix, NWB.serializer:Serialize("ping " .. version), "GUILD");
+		--end
 		NWB:requestData("GUILD", nil, "ALERT");
 		self:RegisterEvent("CHAT_MSG_GUILD");
-		C_Timer.After(10, function()
-			--If for some reason we get no replys to first msg, send again in 10 seconds (trying to fix a bug).
-			--Could be that first msg trys to send before chat connects on rare occasions?
-			if (not foundPartner) then
-				NWB:requestData("GUILD", nil, "ALERT");
-			end
-		end)
 		C_Timer.After(30, function()
-			--Send a ping with settings after 30 seconds to make sure we are registered as having the addon to others.
-			--There's a rare bug that makes 2 clients send a timer msg at once due to not registering each others clients.
-			--Not sure of the reason yet but it could be logging on at exact same time or something? This could fix that.
-			NWB:requestSettings("GUILD");
 			NWB:syncBuffsWithCurrentDuration();
-		end)
-		C_Timer.After(45, function()
-			--Can't work out why sometimes 2 users send same msg in guild chat, someitmes they don't register other as having the addon.
-			--Another temp bug fix just to see if it's an issue with the serialized table data being sent..
-			--NWB:sendComm("GUILD", "ping");
-			C_ChatInfo.SendAddonMessage(NWB.commPrefix, "ping", "GUILD");
 		end)
 	elseif (event == "PLAYER_ENTERING_WORLD") then
 		if (doLogon) then
@@ -2711,7 +1930,9 @@ f:SetScript("OnEvent", function(self, event, ...)
 			end
 			doLogon = nil;
 		end
-		NWB:sendData("YELL");
+		C_Timer.After(2, function()
+			NWB:sendData("YELL");
+		end);
 	elseif (event == "COMBAT_LOG_EVENT_UNFILTERED") then
 		NWB:combatLogEventUnfiltered(...);
 	elseif (event == "CHAT_MSG_MONSTER_YELL") then
@@ -2740,6 +1961,25 @@ f:SetScript("OnEvent", function(self, event, ...)
 		local _, name, _, _, _, _, _, _, _, _, _, _, presenceID = ...;
 		NWB.lastWhisper = presenceID;
 		NWB.lastWhisperType = "bnet";
+	elseif (event == "CHAT_MSG_SYSTEM") then
+		local text = ...;
+		local who = string.match(text, string.gsub(ERR_GUILD_JOIN_S, "%%s", "(.+)"));
+		if (who == UnitName("player")) then
+			--Register ourself to other addon users when joining a guild.
+			NWB:requestData("GUILD", nil, "ALERT");
+		end
+	elseif (event == "CHAT_MSG_ADDON") then
+		local commPrefix, string, distribution, sender = ...;
+		if (commPrefix == "NWB" and distribution == "GUILD") then
+			local normalizedWho = string.gsub(sender, " ", "");
+			normalizedWho = string.gsub(normalizedWho, "'", "");
+			if (not NWB.hasAddon[normalizedWho] or (tonumber(NWB.hasAddon[normalizedWho])
+					and tonumber(NWB.hasAddon[normalizedWho]) < 1)) then
+				NWB.hasAddon[normalizedWho] = "0";
+			end
+		end
+	elseif (event == "GUILD_ROSTER_UPDATE") then
+		NWB:checkGuildMasterSetting("set");
 	end
 end)
 
@@ -2916,11 +2156,50 @@ function NWB:getRegionTimeFormat()
 end
 
 local lastFlash = 0;
-function NWB:startFlash()
-	if (NWB.db.global.flashMinimized) then
+function NWB:startFlash(type)
+	if (NWB.db.global[type]) then
 		if (lastFlash < (GetServerTime() - 4)) then
 			FlashClientIcon();
 			lastFlash = GetServerTime();
+		end
+	end
+end
+
+function NWB:playSound(sound, type)
+	if (NWB.db.global.disableAllSounds) then
+		return;
+	end
+	if (IsInInstance() and NWB.db.global.soundsDisableInInstances) then
+		return;
+	end
+	if (NWB.db.global.soundOnlyInCity) then
+		local play;
+		local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
+		if (zone == 1453 and NWB.faction == "Alliance" and (type == "ony" or type == "nef" or type == "timer")) then
+			play = true;
+		elseif (zone == 1454 and NWB.faction == "Horde" and (type == "ony" or type == "nef" or type == "rend" or type == "timer")) then
+			play = true;
+		elseif (zone == 1434 and type == "zan") then
+			play = true;
+		end
+		if (not play) then
+			return;
+		end
+	end
+	if (NWB.db.global[sound] and NWB.db.global[sound] ~= "None") then
+		if (sound == "soundsRendDrop" and NWB.db.global.soundsRendDrop == "NWB - Rend Voice") then
+			PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\RendDropped.ogg", "Master");
+		elseif (sound == "soundsOnyDrop" and NWB.db.global.soundsOnyDrop == "NWB - Ony Voice") then
+			PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\OnyxiaDropped.ogg", "Master");
+		elseif (sound == "soundsNefDrop" and NWB.db.global.soundsOnyDrop == "NWB - Nef Voice") then
+			PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\NefarianDropped.ogg", "Master");
+		elseif (sound == "soundsNefDrop" and NWB.db.global.soundsNefDrop == "NWB - Ony Voice") then
+			PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\OnyxiaDropped.ogg", "Master");
+		elseif (sound == "soundsZanDrop" and NWB.db.global.soundsZanDrop == "NWB - Zan Voice") then
+			PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\ZandalarDropped.ogg", "Master");
+		else
+			local soundFile = NWB.LSM:Fetch("sound", NWB.db.global[sound]);
+			PlaySoundFile(soundFile, "Master");
 		end
 	end
 end
@@ -3057,28 +2336,26 @@ function NWB:debug(...)
 	end
 end
 
---Temp debug for a korean realm problem.
-function NWB:debugKR(...)
-	if (NWB.isDebugKR) then
-		--if (type(...) == "table") then
-			--UIParentLoadAddOn('Blizzard_DebugTools');
-			--DevTools_Dump(...);
-    		--DisplayTableInspectorWindow(...);
-    	--else
-			print("KRDebug:", ...);
-		--end
-	end
-end
-
 SLASH_NWBCMD1, SLASH_NWBCMD2, SLASH_NWBCMD3, SLASH_NWBCMD4, SLASH_NWBCMD5, SLASH_NWBCMD6 
 		= '/nwb', '/novaworldbuff', '/novaworldbuffs', '/wb', '/worldbuff', '/worldbuffs';
 function SlashCmdList.NWBCMD(msg, editBox)
 	local cmd, arg;
+	local whisper, whisperArg = "", "";
 	if (msg) then
 		msg = string.lower(msg);
 		cmd, arg = strsplit(" ", msg, 2);
 		if (arg) then
 			msg = cmd;
+		end
+		if (msg == "tell" or msg == "whisper" or msg == "msg") then
+			local isWhisper, isWhisper2 = strsplit(" ", arg, 2);
+			if (isWhisper2) then
+				arg = isWhisper2;
+				msg = msg .. " " .. isWhisper;
+			else
+				msg = msg .. " " .. arg;
+				arg = nil;
+			end
 		end
 	end
 	if (msg == "reset") then
@@ -3110,15 +2387,7 @@ function SlashCmdList.NWBCMD(msg, editBox)
 		return;
 	end
 	if (msg == "options" or msg == "option" or msg == "config" or msg == "menu") then
-		--Opening the frame needs to be run twice to avoid a bug.
-		InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
-		--Hack to fix the issue of interface options not opening to menus below the current scroll range.
-		--This addon name starts with N and will always be closer to the middle so just scroll to the middle when opening.
-		local min, max = InterfaceOptionsFrameAddOnsListScrollBar:GetMinMaxValues();
-		if (min < max) then
-			InterfaceOptionsFrameAddOnsListScrollBar:SetValue(math.floor(max/2));
-		end
-		InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
+		NWB:openConfig();
 	elseif (msg ~= nil and msg ~= "") then
 		NWB:print(NWB:getShortBuffTimers(nil, arg), msg);
 	else
@@ -3127,6 +2396,18 @@ function SlashCmdList.NWBCMD(msg, editBox)
 			NWB:openLayerFrame();
 		end
 	end
+end
+
+function NWB:openConfig()
+	--Opening the frame needs to be run twice to avoid a bug.
+	InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
+	--Hack to fix the issue of interface options not opening to menus below the current scroll range.
+	--This addon name starts with N and will always be closer to the middle so just scroll to the middle when opening.
+	local min, max = InterfaceOptionsFrameAddOnsListScrollBar:GetMinMaxValues();
+	if (min < max) then
+		InterfaceOptionsFrameAddOnsListScrollBar:SetValue(math.floor(max/2));
+	end
+	InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
 end
 
 function NWB:resetTimerData()
@@ -3156,6 +2437,124 @@ function NWB:resetTimerData()
 	NWB.data.zanYell = 0;
 	NWB.data.zanYell2 = 0;
 	NWB:print("All timer data has been reset.");
+end
+
+--I do not know wtf I am doing with data broker stuff.
+--I'm not using any panel and this probably looks all wrong, seems to work though.
+local NWBLDB, doUpdateMinimapButton;
+function NWB:createBroker()
+	local data = {
+		type = "launcher",
+		label = "NWB",
+		text = "NovaWorldBuffs",
+		icon = "Interface\\Icons\\inv_misc_head_dragon_01",
+		OnClick = function(self, button)
+			if (button == "LeftButton" and IsShiftKeyDown()) then
+				if (WorldMapFrame and WorldMapFrame:IsShown()) then
+					WorldMapFrame:Hide();
+				else
+					WorldMapFrame:Show();
+					WorldMapFrame:SetMapID(1448);
+				end
+			elseif (button == "LeftButton") then
+				NWB:openLayerFrame();
+			elseif (button == "RightButton" and IsShiftKeyDown()) then
+				if (InterfaceOptionsFrame and InterfaceOptionsFrame:IsShown()) then
+					InterfaceOptionsFrame:Hide();
+				else
+					NWB:openConfig();
+				end
+			elseif (button == "RightButton") then
+				NWB:openBuffListFrame();
+			end
+		end,
+		OnLeave = function(self, button)
+			doUpdateMinimapButton = nil;
+		end,
+		OnTooltipShow = function(tooltip)
+			doUpdateMinimapButton = true;
+			NWB:updateMinimapButton(tooltip);
+		end,
+		OnEnter = function(self, button)
+			GameTooltip:SetOwner(self, "ANCHOR_NONE")
+			GameTooltip:SetPoint("TOPLEFT", self, "BOTTOMLEFT")
+			doUpdateMinimapButton = true;
+			NWB:updateMinimapButton(GameTooltip, true);
+			GameTooltip:Show()
+		end,
+	};
+	NWBLDB = LDB:NewDataObject("NWB", data);
+	NWB.LDBIcon:Register("NovaWorldBuffs", NWBLDB, NWB.db.global.minimapIcon);
+end
+
+function NWB:updateMinimapButton(tooltip, usingPanel)
+	local _, relativeTo = tooltip:GetPoint();
+	if (doUpdateMinimapButton and (usingPanel or relativeTo and relativeTo:GetName() == "LibDBIcon10_NovaWorldBuffs")) then
+		tooltip:ClearLines()
+		tooltip:AddLine("NovaWorldBuffs");
+		if (not NWB.isLayered) then
+			local msg = "";
+			if (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend) then
+				if (NWB.data.rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
+					msg = L["rend"] .. ": " .. NWB:getTimeString(NWB.db.global.rendRespawnTime - (GetServerTime() - NWB.data.rendTimer), true) .. ".";
+					if (NWB.db.global.showTimeStamp) then
+						local timeStamp = NWB:getTimeFormat(NWB.data.rendTimer + NWB.db.global.rendRespawnTime);
+						msg = msg .. " (" .. timeStamp .. ")";
+					end
+				else
+					msg = L["rend"] .. ": " .. L["noCurrentTimer"] .. ".";
+				end
+				if ((not isLogon or NWB.db.global.logonRend) and not NWB.isLayered) then
+					tooltip:AddLine(NWB.chatColor .. msg);
+				end
+			end
+			if ((NWB.data.onyNpcDied > NWB.data.onyTimer) and
+					(NWB.data.onyNpcDied > (GetServerTime() - NWB.db.global.onyRespawnTime))) then
+				if (NWB.faction == "Horde") then
+					msg = string.format(L["onyxiaNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.onyNpcDied, true));
+				else
+					msg = string.format(L["onyxiaNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.onyNpcDied, true));
+				end
+			elseif (NWB.data.onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
+				msg = L["onyxia"] .. ": " .. NWB:getTimeString(NWB.db.global.onyRespawnTime - (GetServerTime() - NWB.data.onyTimer), true) .. ".";
+				if (NWB.db.global.showTimeStamp) then
+					local timeStamp = NWB:getTimeFormat(NWB.data.onyTimer + NWB.db.global.onyRespawnTime);
+					msg = msg .. " (" .. timeStamp .. ")";
+				end
+			else
+				msg = L["onyxia"] .. ": " .. L["noCurrentTimer"] .. ".";
+			end
+			if ((not isLogon or NWB.db.global.logonOny) and not NWB.isLayered) then
+				tooltip:AddLine(NWB.chatColor .. msg);
+			end
+			if ((NWB.data.nefNpcDied > NWB.data.nefTimer) and
+					(NWB.data.nefNpcDied > (GetServerTime() - NWB.db.global.nefRespawnTime))) then
+				if (NWB.faction == "Horde") then
+					msg = string.format(L["nefarianNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.nefNpcDied, true));
+				else
+					msg = string.format(L["nefarianNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.nefNpcDied, true));
+				end
+			elseif (NWB.data.nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
+				msg = L["nefarian"] .. ": " .. NWB:getTimeString(NWB.db.global.nefRespawnTime - (GetServerTime() - NWB.data.nefTimer), true) .. ".";
+				if (NWB.db.global.showTimeStamp) then
+					local timeStamp = NWB:getTimeFormat(NWB.data.nefTimer + NWB.db.global.nefRespawnTime);
+					msg = msg .. " (" .. timeStamp .. ")";
+				end
+			else
+				msg = L["nefarian"] .. ": " .. L["noCurrentTimer"] .. ".";
+			end
+			if ((not isLogon or NWB.db.global.logonNef) and not NWB.isLayered) then
+				tooltip:AddLine(NWB.chatColor .. msg);
+			end
+		end
+		tooltip:AddLine("|cFF9CD6DELeft-Click|r Timers");
+		tooltip:AddLine("|cFF9CD6DERight-Click|r Buffs");
+		tooltip:AddLine("|cFF9CD6DEShift Left-Click|r Felwood Map");
+		tooltip:AddLine("|cFF9CD6DEShift Right-Click|r Config");
+		C_Timer.After(0.1, function()
+			NWB:updateMinimapButton(tooltip, usingPanel);
+		end)
+	end
 end
 
 ---===== Most of these are now disabled, only DBM is left =====---
@@ -3228,9 +2627,6 @@ function NWB:parseDBM(prefix, msg, channel, sender)
 	end
 end
 
----TODO
---Add some sounds.
-
 ---=======---
 ---Felwood---
 ---=======---
@@ -3295,15 +2691,7 @@ function SlashCmdList.NWBSFCMD(msg, editBox)
 		return;
 	end
 	if (msg == "options" or msg == "option" or msg == "config" or msg == "menu") then
-		--Opening the frame needs to be run twice to avoid a bug.
-		InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
-		--Hack to fix the issue of interface options not opening to menus below the current scroll range.
-		--This addon name starts with N and will always be closer to the middle so just scroll to the middle when opening.
-		local min, max = InterfaceOptionsFrameAddOnsListScrollBar:GetMinMaxValues();
-		if (min < max) then
-			InterfaceOptionsFrameAddOnsListScrollBar:SetValue(math.floor(max/2));
-		end
-		InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
+		NWB:openConfig();
 		return;
 	end
 	local string = L["Songflower"] .. ":";
@@ -3349,9 +2737,10 @@ f:SetScript('OnEvent', function(self, event, ...)
 					end
 				end
 			elseif (not NWB.db.global.mySongflowerOnly) then
-				--If buff is not ours then we'll hope they didn't logon beside us at a songflower and set it.
-				--There's an option to make it only set if it's our buff in /wb config.
-				--I'll look for a way to tell if a player just entered our view or logged on later and check if buff is new that way.
+				--If buff is not ours.
+				if (bit.band(destFlags, COMBATLOG_OBJECT_REACTION_HOSTILE) == COMBATLOG_OBJECT_REACTION_HOSTILE) then
+					return;
+				end
 				local closestFlower = NWB:getClosestSongflower();
 				if (NWB.data[closestFlower]) then
 					NWB:songflowerPicked(closestFlower, destName);
@@ -3465,10 +2854,15 @@ end)
 --Check if player has been seen before (avoid logon buff aura gained events).
 --Check if there is already a valid timer for the songflower (they should never be reset except server restart?)
 local pickedTime = 0;
+NWB.layeredSongflowers = nil;
 function NWB:songflowerPicked(type, otherPlayer)
 	local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
 	if (zone ~= 1448) then
 		--We're not in felwood.
+		return;
+	end
+	if (IsShiftKeyDown()) then
+		print("|cFFFFFF00Shift held, songflower not being recorded.");
 		return;
 	end
 	--If other player has not been seen before it may be someone logging in with the buff.
@@ -3481,23 +2875,53 @@ function NWB:songflowerPicked(type, otherPlayer)
 		return;
 	end
 	if ((GetServerTime() - pickedTime) > 5) then
-		--Validate only if another player, we already check ours is valid by duration check.
-		if (otherPlayer and NWB.data[type] > (GetServerTime() - 1500)) then
-			NWB:debug("Trying to overwrite a valid songflower timer.");
-			return;
+		--SetCVar("nameplateShowFriends", 1);
+		--NWB:setCurrentLayerText("nameplate1");
+		--SetCVar("nameplateShowFriends", 0)
+		if (NWB.isLayered and NWB.layeredSongflowers) then
+			--Work in progress, layered songflowers coming soon.
+			local layer = NWB.lastKnownLayerID;
+			if (not layer or layer < 1) then
+				NWB:debug("no known felwood layer");
+				return;
+			end
+			if (not NWB.data.layers[layer]) then
+				NWB:debug("felwood layer table is missing");
+				return;
+			end
+			if (not NWB.data.layers[layer][type]) then
+				NWB.data.layers[layer][type] = 0;
+			end
+			--Validate only if another player, we already check ours is valid by duration check.
+			if (otherPlayer and NWB.data.layers[layer][type] > (GetServerTime() - 1500)) then
+				NWB:debug("Trying to overwrite a valid songflower timer.");
+				return;
+			end
+			local timestamp = GetServerTime();
+			if (NWB:validateTimestamp(timestamp)) then
+				NWB.data.layers[layer][type] = timestamp;
+				NWB:doFlowerMsg(type);
+				NWB:sendFlower("GUILD", type);
+				NWB:sendData("GUILD");
+				NWB:sendData("YELL");
+			end
+			pickedTime = timestamp;
+		else
+			--Validate only if another player, we already check ours is valid by duration check.
+			if (otherPlayer and NWB.data[type] > (GetServerTime() - 1500)) then
+				NWB:debug("Trying to overwrite a valid songflower timer.");
+				return;
+			end
+			local timestamp = GetServerTime();
+			if (NWB:validateTimestamp(timestamp)) then
+				NWB.data[type] = timestamp;
+				NWB:doFlowerMsg(type);
+				NWB:sendFlower("GUILD", type);
+				NWB:sendData("GUILD");
+				NWB:sendData("YELL");
+			end
+			pickedTime = timestamp;
 		end
-		local timestamp = GetServerTime();
-		if (NWB:validateTimestamp(timestamp)) then
-			NWB.data[type] = timestamp;
-			--if (IsInGuild() and NWB.db.global.guildSongflower and not NWB.db.global.disableAllGuildMsgs) then
-			--	SendChatMessage(string.format(L["songflowerPicked"], NWB.songFlowers[type].subZone), "guild");
-			--end
-			NWB:doFlowerMsg(type);
-			NWB:sendFlower("GUILD", type);
-			NWB:sendData("GUILD");
-			NWB:sendData("YELL");
-		end
-		pickedTime = timestamp;
 	end
 end
 
@@ -3603,7 +3027,19 @@ end
 function NWB:updateFelwoodWorldmapMarker(type)
 	--Seconds left.
 	local time = (NWB.data[type] + 1500) - GetServerTime();
-	if (time > 0) then
+	if (NWB.db.global.showExpiredTimers and time < 1 and time > (0 - (60 * NWB.db.global.expiredTimersDuration))) then
+		--Convert seconds left to positive.
+		time = time * -1;
+    	local minutes = string.format("%02.f", math.floor(time / 60));
+    	local seconds = string.format("%02.f", math.floor(time - minutes * 60));
+    	_G[type .. "NWB"].timerFrame:Show();
+    	local tooltipText = "|CffDEDE42" .. _G[type .. "NWB"].name .. "|r\n" .. _G[type .. "NWB"].subZone .. "\n"
+				.. "|Cffff2500" .. NWB:getTimeFormat(NWB.data[type] + 1500) .. " " .. L["spawn"] .. " (expired)";
+    	_G[type .. "NWB"].tooltip.fs:SetText(tooltipText);
+		_G[type .. "NWB"].tooltip:SetWidth(_G[type .. "NWB"].tooltip.fs:GetStringWidth() + 18);
+		_G[type .. "NWB"].tooltip:SetHeight(_G[type .. "NWB"].tooltip.fs:GetStringHeight() + 12);
+    	return "|Cffff2500-" .. minutes .. ":" .. seconds;
+  	elseif (time > 0) then
 		--If timer is less than 25 minutes old then return time left.
     	local minutes = string.format("%02.f", math.floor(time / 60));
     	local seconds = string.format("%02.f", math.floor(time - minutes * 60));
@@ -3626,7 +3062,19 @@ end
 function NWB:updateFelwoodMinimapMarker(type)
 	--Seconds left.
 	local time = (NWB.data[type] + 1500) - GetServerTime();
-	if (time > 0) then
+	if (NWB.db.global.showExpiredTimers and time < 1 and time > (0 - (60 * NWB.db.global.expiredTimersDuration))) then
+		--Convert seconds left to positive.
+		time = time * -1;
+    	local minutes = string.format("%02.f", math.floor(time / 60));
+    	local seconds = string.format("%02.f", math.floor(time - minutes * 60));
+    	_G[type .. "NWBMini"].timerFrame:Show();
+		local tooltipText = "|CffDEDE42" .. _G[type .. "NWB"].name .. "|r\n" .. _G[type .. "NWB"].subZone .. "\n"
+				.. "|Cffff2500" .. NWB:getTimeFormat(NWB.data[type] + 1500) .. " " .. L["spawn"] .. " (expired)";
+    	_G[type .. "NWBMini"].tooltip.fs:SetText(tooltipText);
+    	_G[type .. "NWBMini"].tooltip:SetWidth(_G[type .. "NWBMini"].tooltip.fs:GetStringWidth() + 9);
+		_G[type .. "NWBMini"].tooltip:SetHeight(_G[type .. "NWBMini"].tooltip.fs:GetStringHeight() + 9);
+    	return "|Cffff2500-" .. minutes .. ":" .. seconds;
+  	elseif (time > 0) then
 		--If timer is less than 25 minutes old then return time left.
     	local minutes = string.format("%02.f", math.floor(time / 60));
     	local seconds = string.format("%02.f", math.floor(time - minutes * 60));
@@ -4040,33 +3488,37 @@ function NWB:updateWorldbuffMarkers(type, layer)
 		--Its ugly here so I don't have to change a lot of code elsewhere and it can keep using most of the non-layered stuff.
 		if (type == "ony") then
 			local count = 0;
+			local layerZoneID = 0;
 			for k, v in NWB:pairsByKeys(NWB.data.layers) do
 				count = count + 1;
 				if (k == tonumber(layer)) then
+					layerZoneID = k;
 					break;
 				end
 			end
-			_G[type .. layer .. "NWBWorldMap"].fsLayer:SetText("|cff00ff00[Layer " .. count.. "]");
+			_G[type .. layer .. "NWBWorldMap"].fsLayer:SetText("|cff00ff00[Layer " .. count.. "] |cFFB5E0E6(" .. layerZoneID .. ")");
 		end
 		if (NWB.data.layers[layer]) then
 			time = (NWB.data.layers[layer][type .. "Timer"] + NWB.db.global[type .. "RespawnTime"]) - GetServerTime() or 0;
 		else
 			time = 0;
 		end
+		local npcKilled;
 		if (type == "ony" or type == "nef") then
-			if (NWB.data[type .. "NpcDied"] > NWB.data[type .. "Timer"]) then
-				local killedAgo = NWB:getTimeString(GetServerTime() - NWB.data[type .. "NpcDied"], true) 
+			if (NWB.data.layers[layer] and NWB.data.layers[layer][type .. "NpcDied"] and NWB.data.layers[layer][type .. "Timer"]
+					and (NWB.data.layers[layer][type .. "NpcDied"] > NWB.data.layers[layer][type .. "Timer"])) then
+				local killedAgo = NWB:getTimeString(GetServerTime() - NWB.data.layers[layer][type .. "NpcDied"], true) 
 				local tooltipString = "|CffDEDE42" .. _G[type .. layer .. "NWBWorldMap"].name .. "\n"
 	    				.. L["noTimer"] .. "\n"
-	    				.. string.format(L["anyNpcKilledAllianceWithTimer"], killedAgo);
+	    				.. string.format(L["anyNpcKilledWithTimer"], killedAgo);
 	    		_G[type .. layer .. "NWBWorldMap"].tooltip.fs:SetText(tooltipString);
 	    		_G[type .. layer .. "NWBWorldMap"].tooltip:SetWidth(_G[type .. layer .. "NWBWorldMap"].tooltip.fs:GetStringWidth() + 18);
 				_G[type .. layer .. "NWBWorldMap"].tooltip:SetHeight(_G[type .. layer .. "NWBWorldMap"].tooltip.fs:GetStringHeight() + 12);
-				return L["noTimer"];
+				npcKilled = true;
 			end
 		end
 		local timeStringShort;
-		if (time > 0) then
+		if (NWB.data.layers[layer] and _G[type .. layer .. "NWBWorldMap"] and time > 0 and not npcKilled) then
 	    	local timeString = NWB:getTimeString(time, true);
 	    	timeStringShort = NWB:getTimeString(time, true, true);
 	    	local timeStamp = NWB:getTimeFormat(NWB.data.layers[layer][type .. "Timer"] + NWB.db.global[type .. "RespawnTime"]);
@@ -4076,11 +3528,11 @@ function NWB:updateWorldbuffMarkers(type, layer)
 	    	_G[type .. layer .. "NWBWorldMap"].tooltip.fs:SetText(tooltipString);
 	    	_G[type .. layer .. "NWBWorldMap"].tooltip:SetWidth(_G[type .. layer .. "NWBWorldMap"].tooltip.fs:GetStringWidth() + 18);
 			_G[type .. layer .. "NWBWorldMap"].tooltip:SetHeight(_G[type .. layer .. "NWBWorldMap"].tooltip.fs:GetStringHeight() + 12);
-	  	else
+	  	elseif (not npcKilled) then
 	  		_G[type .. layer .. "NWBWorldMap"].tooltip.fs:SetText("|CffDEDE42" .. _G[type .. layer .. "NWBWorldMap"].name);
 	  	end
 		local _, _, zone = NWB.dragonLib:GetPlayerZonePosition();
-		if (_G["nef" .. layer .. "NWBWorldMap"].noLayerFrame) then
+		if (_G["nef" .. layer .. "NWBWorldMap"] and _G["nef" .. layer .. "NWBWorldMap"].noLayerFrame) then
 			if (NWB.faction == "Horde" and zone == 1454) then
 				if (NWB.currentLayer > 0) then
 					local layerMsg = L["cityMapLayerMsgHorde"];
@@ -4105,7 +3557,7 @@ function NWB:updateWorldbuffMarkers(type, layer)
 				_G["nef" .. layer .. "NWBWorldMap"].noLayerFrame:Show();
 			end
 		end
-		if (time > 0) then
+		if (time > 0 and not npcKilled) then
 	    	return timeStringShort;
 	  	end
 	  	_G[type .. layer .. "NWBWorldMap"].tooltip.fs:SetText("|CffDEDE42" .. _G[type .. layer .. "NWBWorldMap"].name);
@@ -4117,7 +3569,7 @@ function NWB:updateWorldbuffMarkers(type, layer)
 				local killedAgo = NWB:getTimeString(GetServerTime() - NWB.data[type .. "NpcDied"], true) 
 				local tooltipString = "|CffDEDE42" .. _G[type .. "NWBWorldMap"].name .. "\n"
 	    				.. L["noTimer"] .. "\n"
-	    				.. string.format(L["anyNpcKilledAllianceWithTimer"], killedAgo);
+	    				.. string.format(L["anyNpcKilledWithTimer"], killedAgo);
 	    		_G[type .. "NWBWorldMap"].tooltip.fs:SetText(tooltipString);
 	    		_G[type .. "NWBWorldMap"].tooltip:SetWidth(_G[type .. "NWBWorldMap"].tooltip.fs:GetStringWidth() + 18);
 				_G[type .. "NWBWorldMap"].tooltip:SetHeight(_G[type .. "NWBWorldMap"].tooltip.fs:GetStringHeight() + 12);
@@ -4186,7 +3638,6 @@ function NWB:createWorldbuffMarkersTable()
 		end
 	end
 end
-
 function NWB:createWorldbuffMarkers()
 	if (NWB.isLayered) then
 		local count = 0;
@@ -4507,15 +3958,7 @@ function SlashCmdList.NWBDMFCMD(msg, editBox)
 		return;
 	end
 	if (msg == "options" or msg == "option" or msg == "config" or msg == "menu") then
-		--Opening the frame needs to be run twice to avoid a bug.
-		InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
-		--Hack to fix the issue of interface options not opening to menus below the current scroll range.
-		--This addon name starts with N and will always be closer to the middle so just scroll to the middle when opening.
-		local min, max = InterfaceOptionsFrameAddOnsListScrollBar:GetMinMaxValues();
-		if (min < max) then
-			InterfaceOptionsFrameAddOnsListScrollBar:SetValue(math.floor(max/2));
-		end
-		InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
+		NWB:openConfig();
 		return;
 	end
 	local output, zone, dmfFound;
@@ -4574,6 +4017,7 @@ end
 --DMF spawns the following monday after first friday of the month at daily reset time.
 --Whole region shares time of day for spawn (I think).
 --Realms within the region possibly don't all spawn at same moment though, realms may wait for their own monday.
+--(Bug: US player reported it showing 1 day late DMF end time while on OCE realm, think this whole thing needs rewriting tbh).
 function NWB:getDmfStartEnd(month, nextYear)
 	local startOffset, endOffset, validRegion, isDst;
 	local  minOffset, hourOffset, dayOffset = 0, 0, 0;
@@ -4972,15 +4416,7 @@ NWBbuffListFrameConfButton:SetHeight(17);
 NWBbuffListFrameConfButton:SetText(L["Options"]);
 NWBbuffListFrameConfButton:SetNormalFontObject("GameFontNormalSmall");
 NWBbuffListFrameConfButton:SetScript("OnClick", function(self, arg)
-	--Opening the frame needs to be run twice to avoid a bug.
-	InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
-	--Hack to fix the issue of interface options not opening to menus below the current scroll range.
-	--This addon name starts with N and will always be closer to the middle so just scroll to the middle when opening.
-	local min, max = InterfaceOptionsFrameAddOnsListScrollBar:GetMinMaxValues();
-	if (min < max) then
-		InterfaceOptionsFrameAddOnsListScrollBar:SetValue(math.floor(max/2));
-	end
-	InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
+	NWB:openConfig();
 end)
 NWBbuffListFrameConfButton:SetScript("OnMouseDown", function(self, button)
 	if (button == "LeftButton" and not self:GetParent():GetParent().isMoving) then
@@ -5101,7 +4537,7 @@ function NWB:recalcBuffListFrame()
 	local foundChars;
 	for k, v in NWB:pairsByKeys(NWB.db.global) do --Iterate realms.
 		local msg = "";
-		if (type(v) == "table") then --The only tables in db.global are realm names.
+		if (type(v) == "table" and k ~= "minimapIcon") then --The only tables in db.global are realm names.
 			local realm = k;
 			for k, v in NWB:pairsByKeys(v) do --Iterate factions.
 				local msg2 = "";
@@ -5188,7 +4624,7 @@ end
 function NWB:resetBuffData()
 	for k, v in NWB:pairsByKeys(NWB.db.global) do --Iterate realms.
 		local msg = "";
-		if (type(v) == "table") then --The only tables in db.global are realm names.
+		if (type(v) == "table" and k ~= "minimapIcon") then --The only tables in db.global are realm names.
 			local realm = k;
 			for k, v in NWB:pairsByKeys(v) do --Iterate factions.
 				local f = k;
@@ -5322,15 +4758,7 @@ NWBlayerFrameConfButton:SetHeight(17);
 NWBlayerFrameConfButton:SetText(L["Options"]);
 NWBlayerFrameConfButton:SetNormalFontObject("GameFontNormalSmall");
 NWBlayerFrameConfButton:SetScript("OnClick", function(self, arg)
-	--Opening the frame needs to be run twice to avoid a bug.
-	InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
-	--Hack to fix the issue of interface options not opening to menus below the current scroll range.
-	--This addon name starts with N and will always be closer to the middle so just scroll to the middle when opening.
-	local min, max = InterfaceOptionsFrameAddOnsListScrollBar:GetMinMaxValues();
-	if (min < max) then
-		InterfaceOptionsFrameAddOnsListScrollBar:SetValue(math.floor(max/2));
-	end
-	InterfaceOptionsFrame_OpenToCategory("NovaWorldBuffs");
+	NWB:openConfig();
 end)
 NWBlayerFrameConfButton:SetScript("OnMouseDown", function(self, button)
 	if (button == "LeftButton" and not self:GetParent():GetParent().isMoving) then
@@ -5354,7 +4782,7 @@ end)
 
 --Buffs button.
 local NWBlayerFrameBuffsButton = CreateFrame("Button", "NWBlayerFrameBuffsButton", NWBlayerFrameClose, "UIPanelButtonTemplate");
-NWBlayerFrameBuffsButton:SetPoint("CENTER", -58, -13);
+NWBlayerFrameBuffsButton:SetPoint("CENTER", -58, -14);
 NWBlayerFrameBuffsButton:SetWidth(90);
 NWBlayerFrameBuffsButton:SetHeight(17);
 NWBlayerFrameBuffsButton:SetText("Buffs");
@@ -5382,8 +4810,44 @@ NWBlayerFrameBuffsButton:SetScript("OnHide", function(self)
 	end
 end)
 
+--LayerMap button.
+local NWBlayerFrameMapButton = CreateFrame("Button", "NWBlayerFrameMapButton", NWBlayerFrameClose, "UIPanelButtonTemplate");
+NWBlayerFrameMapButton:SetPoint("CENTER", -58, -28);
+NWBlayerFrameMapButton:SetWidth(90);
+NWBlayerFrameMapButton:SetHeight(17);
+NWBlayerFrameMapButton:SetText("Layer Map");
+NWBlayerFrameMapButton:SetNormalFontObject("GameFontNormalSmall");
+NWBlayerFrameMapButton:SetScript("OnClick", function(self, arg)
+	NWB:openLayerMapFrame();
+end)
+NWBlayerFrameMapButton:SetScript("OnMouseDown", function(self, button)
+	if (button == "LeftButton" and not self:GetParent():GetParent().isMoving) then
+		self:GetParent():GetParent().EditBox:ClearFocus();
+		self:GetParent():GetParent():StartMoving();
+		self:GetParent():GetParent().isMoving = true;
+	end
+end)
+NWBlayerFrameMapButton:SetScript("OnMouseUp", function(self, button)
+	if (button == "LeftButton" and self:GetParent():GetParent().isMoving) then
+		self:GetParent():GetParent():StopMovingOrSizing();
+		self:GetParent():GetParent().isMoving = false;
+	end
+end)
+NWBlayerFrameMapButton:SetScript("OnHide", function(self)
+	if (self:GetParent():GetParent().isMoving) then
+		self:GetParent():GetParent():StopMovingOrSizing();
+		self:GetParent():GetParent().isMoving = false;
+	end
+end)
+
 function NWB:openLayerFrame()
+	if (not NWB.isLayered) then
+		NWBlayerFrameMapButton:Hide();
+		NWBlayerFrame.fs2:Hide();
+		NWBlayerFrame.fs3:SetText("");
+	end
 	NWB:removeOldLayers();
+	NWB:checkGuildMasterSetting("set");
 	NWBlayerFrame.fs:SetFont(NWB.regionFont, 14);
 	if (NWBlayerFrame:IsShown()) then
 		NWBlayerFrame:Hide();
@@ -5469,7 +4933,7 @@ end
 function NWB:removeOldLayers()
 	local expireTime = 21600;
 	local removed;
-	if (next(NWB.data.layers)) then
+	if (NWB.data.layers and next(NWB.data.layers)) then
 		for k, v in pairs(NWB.data.layers) do
 			--Check if this layer has any current timers old than an hour expired.
 			local validTimer = nil;
@@ -5506,7 +4970,7 @@ function NWB:removeOldLayers()
 			end
 		end
 	end
-	if (NWB.data.layerMapBackups and next(NWB.data.layers)) then
+	if (NWB.data.layerMapBackups and NWB.data.layers and next(NWB.data.layers)) then
 		for k, v in pairs(NWB.data.layerMapBackups) do
 			--Remove layermap backups older than 6 days.
 			--Thesebackups are just there to be restored when a layer dissapears because no timers for a long time (like overnight).
@@ -5526,70 +4990,152 @@ function NWB:recalclayerFrame()
 	local count = 0;
 	local foundTimers;
 	table.sort(NWB.data.layers);
-	--for k, v in NWB:pairsByKeys(NWB.data.layers) do
-	for k, v in NWB:pairsByKeys(NWB.data.layers) do
-		foundTimers = true;
-		count = count + 1;
-		NWBlayerFrame.EditBox:Insert("\n|cff00ff00[Layer " .. count .. "]|r  |cFF989898(zone " .. k .. ")|r\n");
-		local msg = "";
-		if (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend) then
-			if (v.rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
-				msg = msg .. L["rend"] .. ": " .. NWB:getTimeString(NWB.db.global.rendRespawnTime - (GetServerTime() - v.rendTimer), true) .. ".";
+	if (NWB.isLayered) then
+		for k, v in NWB:pairsByKeys(NWB.data.layers) do
+			foundTimers = true;
+			count = count + 1;
+			NWBlayerFrame.EditBox:Insert("\n|cff00ff00[Layer " .. count .. "]|r  |cFF989898(zone " .. k .. ")|r\n");
+			local msg = "";
+			if (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend) then
+				if (v.rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
+					msg = msg .. L["rend"] .. ": " .. NWB:getTimeString(NWB.db.global.rendRespawnTime - (GetServerTime() - v.rendTimer), true) .. ".";
+					if (NWB.db.global.showTimeStamp) then
+						local timeStamp = NWB:getTimeFormat(v.rendTimer + NWB.db.global.rendRespawnTime);
+						msg = msg .. " (" .. timeStamp .. ")";
+					end
+				else
+					msg = msg .. L["rend"] .. ": " .. L["noCurrentTimer"] .. ".";
+				end
+				NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
+			end
+			msg = "";
+			if ((v.onyNpcDied > v.onyTimer) and
+					(v.onyNpcDied > (GetServerTime() - NWB.db.global.onyRespawnTime))) then
+				if (NWB.faction == "Horde") then
+					msg = msg .. string.format(L["onyxiaNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - v.onyNpcDied, true));
+				else
+					msg = msg .. string.format(L["onyxiaNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - v.onyNpcDied, true));
+				end
+			elseif (v.onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
+				msg = msg .. L["onyxia"] .. ": " .. NWB:getTimeString(NWB.db.global.onyRespawnTime - (GetServerTime() - v.onyTimer), true) .. ".";
 				if (NWB.db.global.showTimeStamp) then
-					local timeStamp = NWB:getTimeFormat(v.rendTimer + NWB.db.global.rendRespawnTime);
+					local timeStamp = NWB:getTimeFormat(v.onyTimer + NWB.db.global.onyRespawnTime);
 					msg = msg .. " (" .. timeStamp .. ")";
 				end
 			else
-				msg = msg .. L["rend"] .. ": " .. L["noCurrentTimer"] .. ".";
+				msg = msg .. L["onyxia"] .. ": " .. L["noCurrentTimer"] .. ".";
 			end
 			NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
-		end
-		msg = "";
-		if ((v.onyNpcDied > v.onyTimer) and
-				(v.onyNpcDied > (GetServerTime() - NWB.db.global.onyRespawnTime))) then
-			if (NWB.faction == "Horde") then
-				msg = msg .. string.format(L["onyxiaNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - v.onyNpcDied, true));
+			msg = "";
+			if ((v.nefNpcDied > v.nefTimer) and
+					(v.nefNpcDied > (GetServerTime() - NWB.db.global.nefRespawnTime))) then
+				if (NWB.faction == "Horde") then
+					msg = msg .. string.format(L["nefarianNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - v.nefNpcDied, true));
+				else
+					msg = msg .. string.format(L["nefarianNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - v.nefNpcDied, true));
+				end
+			elseif (v.nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
+				msg = L["nefarian"] .. ": " .. NWB:getTimeString(NWB.db.global.nefRespawnTime - (GetServerTime() - v.nefTimer), true) .. ".";
+				if (NWB.db.global.showTimeStamp) then
+					local timeStamp = NWB:getTimeFormat(v.nefTimer + NWB.db.global.nefRespawnTime);
+					msg = msg .. " (" .. timeStamp .. ")";
+				end
 			else
-				msg = msg .. string.format(L["onyxiaNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - v.onyNpcDied, true));
+				msg = msg .. L["nefarian"] .. ": " .. L["noCurrentTimer"] .. ".";
 			end
-		elseif (v.onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
-			msg = msg .. L["onyxia"] .. ": " .. NWB:getTimeString(NWB.db.global.onyRespawnTime - (GetServerTime() - v.onyTimer), true) .. ".";
+			NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
+			if ((v.rendTimer + 3600) > (GetServerTime() - NWB.db.global.rendRespawnTime)
+					or (v.onyTimer + 3600) > (GetServerTime() - NWB.db.global.onyRespawnTime)
+					or (v.nefTimer + 3600) > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
+				NWB:removeOldLayers();
+			end
+		end
+	else
+		foundTimers = true;
+		local msg = "";
+		NWBlayerFrame.EditBox:Insert("\n");
+		if (NWB.faction == "Horde" or NWB.db.global.allianceEnableRend) then
+			if (NWB.data.rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
+				msg = L["rend"] .. ": " .. NWB:getTimeString(NWB.db.global.rendRespawnTime - (GetServerTime() - NWB.data.rendTimer), true) .. ".";
+				if (NWB.db.global.showTimeStamp) then
+					local timeStamp = NWB:getTimeFormat(NWB.data.rendTimer + NWB.db.global.rendRespawnTime);
+					msg = msg .. " (" .. timeStamp .. ")";
+				end
+			else
+				msg = L["rend"] .. ": " .. L["noCurrentTimer"] .. ".";
+			end
+			if ((not isLogon or NWB.db.global.logonRend) and not NWB.isLayered) then
+				NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
+			end
+		end
+		if ((NWB.data.onyNpcDied > NWB.data.onyTimer) and
+				(NWB.data.onyNpcDied > (GetServerTime() - NWB.db.global.onyRespawnTime))) then
+			if (NWB.faction == "Horde") then
+				msg = string.format(L["onyxiaNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.onyNpcDied, true));
+			else
+				msg = string.format(L["onyxiaNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.onyNpcDied, true));
+			end
+		elseif (NWB.data.onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
+			msg = L["onyxia"] .. ": " .. NWB:getTimeString(NWB.db.global.onyRespawnTime - (GetServerTime() - NWB.data.onyTimer), true) .. ".";
 			if (NWB.db.global.showTimeStamp) then
-				local timeStamp = NWB:getTimeFormat(v.onyTimer + NWB.db.global.onyRespawnTime);
+				local timeStamp = NWB:getTimeFormat(NWB.data.onyTimer + NWB.db.global.onyRespawnTime);
 				msg = msg .. " (" .. timeStamp .. ")";
 			end
 		else
-			msg = msg .. L["onyxia"] .. ": " .. L["noCurrentTimer"] .. ".";
+			msg = L["onyxia"] .. ": " .. L["noCurrentTimer"] .. ".";
 		end
-		NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
-		msg = "";
-		if ((v.nefNpcDied > v.nefTimer) and
-				(v.nefNpcDied > (GetServerTime() - NWB.db.global.nefRespawnTime))) then
+		if ((not isLogon or NWB.db.global.logonOny) and not NWB.isLayered) then
+			NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
+		end
+		if ((NWB.data.nefNpcDied > NWB.data.nefTimer) and
+				(NWB.data.nefNpcDied > (GetServerTime() - NWB.db.global.nefRespawnTime))) then
 			if (NWB.faction == "Horde") then
-				msg = msg .. string.format(L["nefarianNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - v.nefNpcDied, true));
+				msg = string.format(L["nefarianNpcKilledHordeWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.nefNpcDied, true));
 			else
-				msg = msg .. string.format(L["nefarianNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - v.nefNpcDied, true));
+				msg = string.format(L["nefarianNpcKilledAllianceWithTimer"], NWB:getTimeString(GetServerTime() - NWB.data.nefNpcDied, true));
 			end
-		elseif (v.nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
-			msg = L["nefarian"] .. ": " .. NWB:getTimeString(NWB.db.global.nefRespawnTime - (GetServerTime() - v.nefTimer), true) .. ".";
+		elseif (NWB.data.nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
+			msg = L["nefarian"] .. ": " .. NWB:getTimeString(NWB.db.global.nefRespawnTime - (GetServerTime() - NWB.data.nefTimer), true) .. ".";
 			if (NWB.db.global.showTimeStamp) then
-				local timeStamp = NWB:getTimeFormat(v.nefTimer + NWB.db.global.nefRespawnTime);
+				local timeStamp = NWB:getTimeFormat(NWB.data.nefTimer + NWB.db.global.nefRespawnTime);
 				msg = msg .. " (" .. timeStamp .. ")";
 			end
 		else
-			msg = msg .. L["nefarian"] .. ": " .. L["noCurrentTimer"] .. ".";
+			msg = L["nefarian"] .. ": " .. L["noCurrentTimer"] .. ".";
 		end
-		NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
-		if ((v.rendTimer + 3600) > (GetServerTime() - NWB.db.global.rendRespawnTime)
-				or (v.onyTimer + 3600) > (GetServerTime() - NWB.db.global.onyRespawnTime)
-				or (v.nefTimer + 3600) > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
-			NWB:removeOldLayers();
+		if ((not isLogon or NWB.db.global.logonNef) and not NWB.isLayered) then
+			NWBlayerFrame.EditBox:Insert(NWB.chatColor .. msg .. "\n");
 		end
 	end
 	if (not foundTimers) then
 		NWBlayerFrame.EditBox:Insert(NWB.chatColor .. "\nNo current timers found.");
 	end
 	NWB:setCurrentLayerText();
+	local found;
+	local gmText = "";
+	if (next(NWB.guildMasterSettings)) then
+		for k, v in NWB:pairsByKeys(NWB.guildMasterSettings) do
+			if (k == 1) then
+				gmText = gmText .. "\n -All NWB guild msgs disabled (#nwb1).";
+				found = true;
+			elseif (k == 2) then
+				gmText = gmText ..  "\n -Timer guild msgs disabled (#nwb2).";
+				found = true;
+			elseif (k == 3) then
+				gmText = gmText ..  "\n -Buff dropped guild msgs disabled (#nwb3).";
+				found = true;
+			elseif (k == 4) then
+				gmText = gmText ..  "\n -!wb guild command disabled (#nwb4).";
+				found = true;
+			elseif (k == 5) then
+				gmText = gmText ..  "\n -Songflower guild msgs disabled (#nwb5).";
+				found = true;
+			end
+		end
+	end
+	if (found) then
+		NWBlayerFrame.EditBox:Insert("\n\n|cFF9CD6DEYour guild master has the following public guild note settings enabled:" .. gmText);
+	end
 	--NWBlayerFrame.EditBox:SetText(msg2);
 	--NWBlayerFrame:SetVerticalScroll(scroll);
 	if (NWB.latestRemoteVersion and tonumber(NWB.latestRemoteVersion) > tonumber(version)) then
@@ -5608,6 +5154,7 @@ f:RegisterEvent("GROUP_JOINED");
 f:RegisterEvent("ZONE_CHANGED_NEW_AREA");
 f:RegisterEvent("PLAYER_ENTERING_WORLD");
 f:RegisterEvent("UNIT_PHASE");
+f:RegisterEvent("PLAYER_LOGIN");
 NWB.lastJoinedGroup = 0;
 NWB.validLayer = false;
 f:SetScript('OnEvent', function(self, event, ...)
@@ -5621,6 +5168,11 @@ f:SetScript('OnEvent', function(self, event, ...)
 	elseif (event == "GROUP_JOINED") then
 		NWB.lastKnownLayerMapID = 0;
 		NWB.lastJoinedGroup = GetServerTime();
+	elseif (event == "PLAYER_LOGIN") then
+		if (IsInGroup()) then
+			NWB.lastKnownLayerMapID = 0;
+			NWB.lastJoinedGroup = GetServerTime();
+		end
 	elseif (event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_ENTERING_WORLD") then
 		NWB:recalcMinimapLayerFrame();
 	elseif (event == "UNIT_PHASE") then
@@ -5634,6 +5186,16 @@ f:SetScript('OnEvent', function(self, event, ...)
 		end
 	end
 end)
+
+function NWB:guidFromClosestNameplate()
+	if (GetCVar("nameplateShowFriends") ~= "1") then
+		SetCVar("nameplateShowFriends", 1);
+		NWB:setCurrentLayerText("nameplate1");
+		SetCVar("nameplateShowFriends", 0);
+	else
+		NWB:setCurrentLayerText("nameplate1");
+	end
+end
 
 NWB.lastKnownLayer = 0;
 NWB.lastKnownLayerID = 0;
@@ -5662,7 +5224,11 @@ function NWB:setCurrentLayerText(unit)
 		return;
 	end
 	if (unitType ~= "Creature" or NWB.companionCreatures[tonumber(npcID)]) then
-		NWBlayerFrame.fs2:SetText("|cFF9CD6DETarget any NPC in Stormwind to see your current layer.|r");
+		if (NWB.faction == "Horde") then
+			NWBlayerFrame.fs2:SetText("|cFF9CD6DETarget any NPC in Orgrimmar to see your current layer.|r");
+		else
+			NWBlayerFrame.fs2:SetText("|cFF9CD6DETarget any NPC in Stormwind to see your current layer.|r");
+		end
 		return;
 	end
 	local count = 0;
@@ -5688,6 +5254,61 @@ function NWB:setCurrentLayerText(unit)
 	NWBlayerFrame.fs2:SetText("|cFF9CD6DECan't find current layer or no timers active for this layer.|r");
 end
 
+NWB.layerMapWhitelist = {
+	--[947] = "Azeroth",
+	[1411] = "Durotar",
+	[1412] = "Mulgore",
+	[1413] = "The Barrens",
+	--[1414] = "Kalimdor 	Continent 	Azeroth
+	--[1415] = "Eastern Kingdoms 	Continent 	Azeroth
+	[1416] = "Alterac Mountains",
+	[1417] = "Arathi Highlands",
+	[1418] = "Badlands",
+	[1419] = "Blasted Lands",
+	[1420] = "Tirisfal Glades",
+	[1421] = "Silverpine Forest",
+	[1422] = "Western Plaguelands",
+	[1423] = "Eastern Plaguelands",
+	[1424] = "Hillsbrad Foothills",
+	[1425] = "The Hinterlands",
+	[1426] = "Dun Morogh",
+	[1427] = "Searing Gorge",
+	[1428] = "Burning Steppes",
+	[1429] = "Elwynn Forest",
+	[1430] = "Deadwind Pass",
+	[1431] = "Duskwood",
+	[1432] = "Loch Modan",
+	[1433] = "Redridge Mountains",
+	[1434] = "Stranglethorn Vale",
+	[1435] = "Swamp of Sorrows",
+	[1436] = "Westfall",
+	[1437] = "Wetlands",
+	[1438] = "Teldrassil",
+	[1439] = "Darkshore",
+	[1440] = "Ashenvale",
+	[1441] = "Thousand Needles",
+	[1442] = "Stonetalon Mountains",
+	[1443] = "Desolace",
+	[1444] = "Feralas",
+	[1445] = "Dustwallow Marsh",
+	[1446] = "Tanaris",
+	[1447] = "Azshara",
+	[1448] = "Felwood",
+	[1449] = "Un'Goro Crater",
+	[1450] = "Moonglade",
+	[1451] = "Silithus",
+	[1452] = "Winterspring",
+	[1453] = "Stormwind City",
+	[1454] = "Orgrimmar",
+	[1455] = "Ironforge",
+	[1456] = "Thunder Bluff",
+	[1457] = "Darnassus",
+	[1458] = "Undercity",
+	--[1459] = "Alterac Valley 	Zone 	Azeroth
+	--[1460] = "Warsong Gulch 	Zone 	Azeroth
+	--[1461] = "Arathi Basin 	Zone 	Azeroth
+};
+
 --This is in early testing and relys on a few things.
 --[[If you cross a zone border but can still see mobs from the previous zone and target them it could map the previous zoneid
 	to the new zone, it won't overwrite an already known id so this should be fine aslong as the previous zone was
@@ -5697,7 +5318,6 @@ end
 	get mapped one time by a few early players and shared around, so the chances of this bug happening is pretty low.]]
 	
 function NWB:mapCurrentLayer(unit)
-	--Speedy Creature-0-4671-70-27258-16547-0000312293
 	if (not NWB.isLayered or not unit or UnitOnTaxi("player") or IsInInstance() or UnitInBattleground("player")) then
 		return;
 	end
@@ -5723,7 +5343,7 @@ function NWB:mapCurrentLayer(unit)
 	--And only start mapping if we haven't joined a group since leaving org.
 	if (NWB.lastKnownLayerMapID < 1) then
 		local foundOldID;
-		if ((GetServerTime() - NWB.lastJoinedGroup) > 180) then
+		--if ((GetServerTime() - NWB.lastJoinedGroup) > 180) then
 			for k, v in pairs(NWB.data.layers) do
 				if (v.layerMap and next(v.layerMap)) then
 					for zone, map in pairs(v.layerMap) do
@@ -5736,15 +5356,26 @@ function NWB:mapCurrentLayer(unit)
 					end
 				end
 			end
-		end
+		--end
 		if (not foundOldID or NWB.lastKnownLayerMapID < 1) then
 			NWB:debug("no known last layer");
 			return;
 		end
 	end
+	if ((GetServerTime() - NWB.lastJoinedGroup) < 180) then
+		--Still recalc layer frame to display layer, just don't record any new stuff.
+		NWB:recalcMinimapLayerFrame();
+		NWB:debug("recently joined group, not recording");
+		return;
+	end
 	--Don't map a new zone if it's a guard outside capital city with the city zoneid.
 	if (zoneID == NWB.lastKnownLayerMapID) then
 		NWB:debug("trying to map zone to already known layer");
+		return;
+	end
+	if ((NWB.faction == "Horde" and npcID == "68") or
+			(NWB.faction == "Alliance" and npcID == "3296")) then
+		--Guards outside opposite factions city can record the wrong mapid if targeting before you enter.
 		return;
 	end
 	if (NWB.data.layers[NWB.lastKnownLayerMapID]) then
@@ -5754,17 +5385,35 @@ function NWB:mapCurrentLayer(unit)
 			NWB.data.layers[NWB.lastKnownLayerMapID].layerMap.created = GetServerTime();
 		end
 		if (not NWB.data.layers[NWB.lastKnownLayerMapID].layerMap[zoneID]) then
-			--If zone is not mapped yet since server restart then add it.
+			for k, v in pairs(NWB.data.layers) do
+				--if (v.layerMap and v.layerMap[zoneID]) then
+				if (v.layerMap) then
+					for kk, vv in pairs(v.layerMap) do
+						if (kk == zoneID) then
+							--If we already have this zoneid in any layer then don't overwrite it.
+							if (k == NWB.lastKnownLayerMapID) then
+								NWB:debug("zoneid already known for another layer", k);
+							else
+								NWB:debug("zoneid already known for this layer");
+							end
+							return;
+						end
+					end
+				end
+			end
 			for k, v in pairs(NWB.data.layers[NWB.lastKnownLayerMapID].layerMap) do
-				if (k == zoneID) then
+				if (v == zone) then
 					--If we already have a zoneid with this mapid then don't overwrite it.
 					NWB:debug("mapid already known");
 					return;
 				end
 			end
-			NWB:debug("mapped new zone to layer id", NWB.lastKnownLayerMapID, "zoneid:", zoneID, "zone:", zone);
-			NWB.data.layers[NWB.lastKnownLayerMapID].layerMap[zoneID] = zone;
-			NWB:sendData("GUILD");
+			if (NWB.layerMapWhitelist[zone] and NWB:validateZoneID(zoneID, NWB.lastKnownLayerMapID, zone)) then
+				--If zone is not mapped yet since server restart then add it.
+				NWB:debug("mapped new zone to layer id", NWB.lastKnownLayerMapID, "zoneid:", zoneID, "zone:", zone);
+				NWB.data.layers[NWB.lastKnownLayerMapID].layerMap[zoneID] = zone;
+				NWB:sendData("GUILD");
+			end
 		else
 			--NWB:debug("zoneid already known");
 		end
@@ -5772,11 +5421,39 @@ function NWB:mapCurrentLayer(unit)
 	NWB:recalcMinimapLayerFrame();
 end
 
-function NWB:resetLayerMaps()
-	if (next(NWB.data.layers)) then
-		for k, v in pairs(NWB.data.layers) do
-			NWB.data.layers[k].layerMap = nil;
+function NWB:validateZoneID(zoneID, layerID, mapID)
+	local blackList = {
+	};
+	if (tonumber(zoneID) and tonumber(zoneID) > 10000) then
+		--Azshara (128144) I don't know where tf a zoneid this high came from, but it was recorded.
+		--Maybe a parsing error with the guid?
+		--Edit same number recorded again in Azshara after data reset (same week though).
+		--Some kinda subzone there with same mapid? Seen this in a few different zones now.
+		--Blasted Lands (814) Feralas (966) Mulgore (12138) Durotar (101136)
+		--Legit layers can appear with higher than 10,000 zoneid if created later in the week.
+		--Need a better way to handle these fake layers so I can allow legit high layers at some point.
+		return;
+	end
+	if (layerID) then
+		for k, v in pairs(NWB.data.layers[layerID].layerMap) do
+			if (mapID and mapID == v) then
+				--If we already have a zoneid with this mapid then don't overwrite it.
+				--NWB:debug("mapid already known");
+				return;
+			end
 		end
+	end
+	return true;
+end
+
+function NWB:resetLayerMaps()
+	if (NWB.db.global.resetLayerMaps) then
+		if (next(NWB.data.layers)) then
+			for k, v in pairs(NWB.data.layers) do
+				NWB.data.layers[k].layerMap = nil;
+			end
+		end
+		NWB.db.global.resetLayerMaps = false;
 	end
 end
 
@@ -5872,7 +5549,7 @@ NWBLayerMapFrameClose:SetScript("OnClick", function(self, arg)
 end)
 
 function NWB:openLayerMapFrame()
-	if (not NWB.db.global.experimental) then
+	if (not NWB.isLayered) then
 		return;
 	end
 	NWBLayerMapFrame.fs:SetFont(NWB.regionFont, 14);
@@ -5911,24 +5588,29 @@ function NWB:recalcLayerMapFrame()
 		local count = 0;
 		for k, v in NWB:pairsByKeys(NWB.data.layers) do
 			count = count + 1;
-			if (NWB.faction == "Horde") then
-				NWBLayerMapFrame.EditBox:Insert("\n|cff00ff00[Layer " .. count .. "]|r  |cff9CD6DE(Orgrimmar " .. k .. ")|r\n");
-			else
-				NWBLayerMapFrame.EditBox:Insert("\n|cff00ff00[Layer " .. count .. "]|r  |cff9CD6DE(Stormwind " .. k .. ")|r\n");
-			end
+			local zoneCount = 0;
+			local text = "";
 			if (v.layerMap and next(v.layerMap)) then
 				for kk, vv in NWB:pairsByKeys(v.layerMap) do
+					zoneCount = zoneCount + 1;
 					local mapInfo = C_Map.GetMapInfo(vv);
 					local zoneInfo = "Unknown";
 					if (mapInfo and next(mapInfo)) then
 						zoneInfo = mapInfo.name;
 					end
 					---NWBLayerMapFrame.EditBox:Insert("  -|cffFFFF00" .. zoneInfo .. " ".. kk .. " |cff9CD6DE" .. vv .. "\n");
-					NWBLayerMapFrame.EditBox:Insert("  -|cffFFFF00" .. zoneInfo .. " |cFF989898(" .. kk .. ")|r\n");
+					text = text .. "  -|cffFFFF00" .. zoneInfo .. " |cFF989898(" .. kk .. ")|r\n";
 				end
 			else --C_Map.GetAreaInfo(
 			--C_Map.GetMapInfoAtPosition(1434, 1, 1)
-				NWBLayerMapFrame.EditBox:Insert("  -|cffFFFF00No zones mapped for this layer yet.\n");
+				text = text .. "  -|cffFFFF00No zones mapped for this layer yet.\n";
+			end
+			if (NWB.faction == "Horde") then
+				NWBLayerMapFrame.EditBox:Insert("\n|cff00ff00[Layer " .. count .. "]|r  |cff9CD6DE(Orgrimmar " .. k .. ")|r  "
+						.. "|cFFFF5100(" .. zoneCount .. " zones mapped)|r\n" .. text);
+			else
+				NWBLayerMapFrame.EditBox:Insert("\n|cff00ff00[Layer " .. count .. "]|r  |cff9CD6DE(Stormwind " .. k .. ")|r  "
+						.. "|cFFFF5100(" .. zoneCount .. " zones mapped)|r\n" .. text);
 			end
 		end
 	end
@@ -5994,6 +5676,81 @@ function NWB:validateLayer(layer)
 		end
 	end
 	return true;
+end
+
+--Function to move first layer data to non-layered data when Blizzard removes layering on a realm.
+--Not currently used anywhere but can be /run after updating to new version that removes layering for your realm.
+function NWB:convertLayerToNonLayer()
+	print("|cFFFFFF00Looking for layered timers to convert.")
+	local found;
+	if (NWB.data.layers) then
+		for k, v in NWB:pairsByKeys(NWB.data.layers) do
+			if (v.rendTimer and v.rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
+				NWB.data.rendTimer = v.rendTimer;
+				NWB.data.rendYell = v.rendYell or 0;
+				print("|cFFFFFF00Found current Rend timer, converting.")
+				found = true;
+			end
+			if (v.onyTimer and v.onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
+				NWB.data.onyTimer = v.onyTimer;
+				NWB.data.onyYell = v.onyYell or 0;
+				NWB.data.onyNpcDied = v.onyNpcDied or 0;
+				print("|cFFFFFF00Found current Onyxia timer, converting.")
+				found = true;
+			end
+			if (v.nefTimer and v.nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
+				NWB.data.nefTimer = v.nefTimer;
+				NWB.data.nefYell = v.nefYell or 0;
+				NWB.data.nefNpcDied = v.nefNpcDied or 0;
+				print("|cFFFFFF00Found current Nefarian timer, converting.")
+				found = true;
+			end
+			if (found) then
+				print("|cFFFFFF00Done.")
+			else
+				print("|cFFFFFF00Done, found no timers on old layer 1.")
+			end
+			return;
+		end
+	end
+end
+
+--This pushes non-layered timers into the first layer we know.
+--It's a debug only function and requires targeting a NPC in city first to create the layer.
+--This is only so I can test layered stuff on my non-layered server.
+function NWB:convertNonLayerToLayer()
+	print("|cFFFFFF00Looking for layered timers to convert.")
+	local found;
+	if (NWB.data.layers) then
+		for k, v in NWB:pairsByKeys(NWB.data.layers) do
+			if (NWB.data.rendTimer and NWB.data.rendTimer > (GetServerTime() - NWB.db.global.rendRespawnTime)) then
+				NWB.data.layers[k].rendTimer = NWB.data.rendTimer;
+				NWB.data.layers[k].rendYell = NWB.data.rendYell or 0;
+				print("|cFFFFFF00Found current Rend timer, converting.")
+				found = true;
+			end
+			if (NWB.data.onyTimer and NWB.data.onyTimer > (GetServerTime() - NWB.db.global.onyRespawnTime)) then
+				NWB.data.layers[k].onyTimer = NWB.data.onyTimer;
+				NWB.data.layers[k].onyYell = NWB.data.onyYell or 0;
+				NWB.data.layers[k].onyNpcDied = NWB.data.onyNpcDied or 0;
+				print("|cFFFFFF00Found current Onyxia timer, converting.")
+				found = true;
+			end
+			if (NWB.data.nefTimer and NWB.data.nefTimer > (GetServerTime() - NWB.db.global.nefRespawnTime)) then
+				NWB.data.layers[k].nefTimer = NWB.data.nefTimer;
+				NWB.data.layers[k].nefYell = NWB.data.nefYell or 0;
+				NWB.data.layers[k].nefNpcDied = NWB.data.nefNpcDied or 0;
+				print("|cFFFFFF00Found current Nefarian timer, converting.")
+				found = true;
+			end
+			if (found) then
+				print("|cFFFFFF00Done.")
+			else
+				print("|cFFFFFF00Done, found no timers on old layer 1.")
+			end
+			return;
+		end
+	end
 end
 
 --function NWB:validateLayer(layer)

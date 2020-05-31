@@ -41,22 +41,13 @@ NWB.options = {
 			get = "getShowWorldMapMarkers",
 			set = "setShowWorldMapMarkers",
 		},
-		disableAllGuildMsgs = {
-			type = "toggle",
-			name = "Disable Guild Msgs",
-			desc = "Disable all guild messages including timers and when buffs drop? Note: You can disable all msgs 1 by 1 below and "
-					.. "just leave certain things enabled such as the !wb command to help out your guild if you rather.",
-			order = 5,
-			get = "getDisableAllGuildMsgs",
-			set = "setDisableAllGuildMsgs",
-		},
 		receiveGuildDataOnly  = {
 			type = "toggle",
 			name = "Guild Data Only",
 			desc = "This will make it so you don't get timer data from anyone outside the guild. You should only enable this "
 					.. "if you think someone is spoofing wrong timer data on purpose because it will lower the accuracy of your timers "
 					.. "with less people to pull data from. It will make it especially hard to get songflower timers becaus "
-					.. "they are so short.",
+					.. "they are so short. Every single person in the guild needs this enabled for it to even work.",
 			order = 6,
 			get = "getReceiveGuildDataOnly",
 			set = "setReceiveGuildDataOnly",
@@ -126,16 +117,6 @@ NWB.options = {
 			get = "getTimeStampZone",
 			set = "setTimeStampZone",
 		},
-		guildCommand = {
-			type = "toggle",
-			name = "Guild Commands",
-			desc = "Reply with timer info to !wb and !dmf commands in guild chat? You should probably leave this enabled to help your guild, " 
-					.. "if you really want to disable all guild msgs and leave only this command then untick everything else in the "
-					.. "guild sectionand don't tick the Disable All Guild Msgs at the top.",
-			order = 14,
-			get = "getGuildCommand",
-			set = "setGuildCommand",
-		},
 		colorizePrefixLinks = {
 			type = "toggle",
 			name = "Colored Prefix Link",
@@ -153,25 +134,24 @@ NWB.options = {
 			get = "getShowAllAlts",
 			set = "setShowAllAlts",
 		},
-		flashMinimized = {
+		minimapButton = {
 			type = "toggle",
-			name = "Flash Minimized",
-			desc = "Flash the wow client when you have it minimized and a buff is about to drop? Flashes when  minute left on timer "
-					.. "and when a head is handed in a few seconds before buff drops.",
-			order = 17,
-			get = "getFlashMinimized",
-			set = "setFlashMinimized",
+			name = "Show Minimap Button",
+			desc = "Show the NWB button the minimap?",
+			order = 20,
+			get = "getMinimapButton",
+			set = "setMinimapButton",
 		},
 		logonHeader = {
 			type = "header",
 			name = "Logon Messages",
-			order = 20,
+			order = 23,
 		},
 		logonPrint = {
 			type = "toggle",
 			name = "Logon Timers",
 			desc = "Show timers in the chat window when you log on, you can disable all logon msgs with this setting.",
-			order = 21,
+			order = 24,
 			get = "getLogonPrint",
 			set = "setLogonPrint",
 		},
@@ -179,7 +159,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Rend",
 			desc = "Show Rend timer in the chat window when you log on.",
-			order = 22,
+			order = 25,
 			get = "getLogonRend",
 			set = "setLogonRend",
 		},
@@ -187,7 +167,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Onyxia",
 			desc = "Show Onyxia timer in the chat window when you log on.",
-			order = 23,
+			order = 26,
 			get = "getLogonOny",
 			set = "setLogonOny",
 		},
@@ -195,7 +175,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Nefarian",
 			desc = "Show Nefarian timer in the chat window when you log on.",
-			order = 24,
+			order = 27,
 			get = "getLogonNef",
 			set = "setLogonNef",
 		},
@@ -203,7 +183,7 @@ NWB.options = {
 			type = "toggle",
 			name = "DMF Spawn",
 			desc = "Show Darkmoon Faire spawn time, this will only show when there is less than 6 hours left until spawn or despawn.",
-			order = 25,
+			order = 28,
 			get = "getLogonDmfSpawn",
 			set = "setLogonDmfSpawn",
 		},
@@ -211,7 +191,7 @@ NWB.options = {
 			type = "toggle",
 			name = "DMF Buff Coooldown",
 			desc = "Show Darkmoon Faire buff 5 hour cooldown, this will only show when you have an ative cooldown and when DMF is up.",
-			order = 26,
+			order = 29,
 			get = "getLogonDmfBuffCooldown",
 			set = "setLogonDmfBuffCooldown",
 		},
@@ -338,26 +318,26 @@ NWB.options = {
 			get = "getMiddleBuffWarning",
 			set = "setMiddleBuffWarning",
 		},
+		middleHideCombat = {
+			type = "toggle",
+			name = "Hide In Combat",
+			desc = "Hide middle of the screen warnings in combat?",
+			order = 48,
+			get = "getMiddleHideCombat",
+			set = "settMiddleHideCombat",
+		},
+		middleHideRaid = {
+			type = "toggle",
+			name = "Hide In Raid",
+			desc = "Hide middle of the screen warnings in raid instances? (Doesn't hide in normal dungeons)",
+			order = 49,
+			get = "getMiddleHideRaid",
+			set = "setMiddleHideRaid",
+		},
 		guildWarningHeader = {
 			type = "header",
-			name = "Guild Message Timer Warnings",
+			name = "Guild Messages",
 			order = 50,
-		},
-		guild30 = {
-			type = "toggle",
-			name = "30 Minutes",
-			desc = "Send a message to guild chat when 30 minutes left.",
-			order = 51,
-			get = "getGuild30",
-			set = "setGuild30",
-		},
-		guild15 = {
-			type = "toggle",
-			name = "15 Minutes",
-			desc = "Send a message to guild chat when 15 minutes left.",
-			order = 52,
-			get = "getGuild15",
-			set = "setGuild15",
 		},
 		guild10 = {
 			type = "toggle",
@@ -367,14 +347,6 @@ NWB.options = {
 			get = "getGuild10",
 			set = "setGuild10",
 		},
-		guild5 = {
-			type = "toggle",
-			name = "5 Minutes",
-			desc = "Send a message to guild chat when 5 minutes left.",
-			order = 54,
-			get = "getGuild5",
-			set = "setGuild5",
-		},
 		guild1 = {
 			type = "toggle",
 			name = "1 Minute",
@@ -382,14 +354,6 @@ NWB.options = {
 			order = 55,
 			get = "getGuild1",
 			set = "setGuild1",
-		},
-		guildReset = {
-			type = "toggle",
-			name = "Buff Has Reset",
-			desc = "Send a message to guild chat when a buff has reset and a new one can be dropped.",
-			order = 56,
-			get = "getGuild0",
-			set = "setGuild0",
 		},
 		guildNpcDialogue = {
 			type = "toggle",
@@ -409,22 +373,41 @@ NWB.options = {
 			get = "getGuildBuffDropped",
 			set = "setGuildBuffDropped",
 		},
-		guildNpcKilled = {
-			type = "toggle",
-			name = "NPC Was Killed",
-			desc = "Send a message to guild when one of the buff NPC's were killed in Orgrimmar or Stormwind? (mind control reset).",
-			order = 59,
-			get = "getGuildNpcKilled",
-			set = "setGuildNpcKilled",
-		},
 		guildZanDialogue = {
 			type = "toggle",
 			name = "Zandalar Buff Warning",
 			desc = "Send a message to guild when Spirit of Zandalar buff is about to drop? (If you want no guild msgs at all "
 					.. "for this buff then everyone in guild needs to disable this).",
-			order = 60,
+			order = 59,
 			get = "getGuildZanDialogue",
 			set = "setGuildZanDialogue",
+		},
+		guildNpcKilled = {
+			type = "toggle",
+			name = "NPC Was Killed",
+			desc = "Send a message to guild when one of the buff NPC's were killed in Orgrimmar or Stormwind? (mind control reset).",
+			order = 60,
+			get = "getGuildNpcKilled",
+			set = "setGuildNpcKilled",
+		},
+		guildCommand = {
+			type = "toggle",
+			name = "Guild Commands",
+			desc = "Reply with timer info to !wb and !dmf commands in guild chat? You should probably leave this enabled to help your guild, " 
+					.. "if you really want to disable all guild msgs and leave only this command then untick everything else in the "
+					.. "guild sectionand don't tick the Disable All Guild Msgs at the top.",
+			order = 61,
+			get = "getGuildCommand",
+			set = "setGuildCommand",
+		},
+		disableAllGuildMsgs = {
+			type = "toggle",
+			name = "Disable All Guild Msgs",
+			desc = "Disable all guild messages including timers and when buffs drop? Note: You can disable all msgs one by one above and "
+					.. "just leave certain things enabled to help out your guild if you rather.",
+			order = 62,
+			get = "getDisableAllGuildMsgs",
+			set = "setDisableAllGuildMsgs",
 		},
 		songflowers = {
 			type = "header",
@@ -512,28 +495,50 @@ NWB.options = {
 			type = "toggle",
 			name = "Dragon Minimap",
 			desc = "Show Night Dragon's Breath icons on the mini map?.",
-			order = 71
+			order = 80
 			,
 			get = "getShowDragonMinimapMarkers",
 			set = "setShowDragonMinimapMarkers",
 		},
+		showExpiredTimers = {
+			type = "toggle",
+			name = "Show Expired Timers",
+			desc = "Show expired timers in Felwood? They will be shown in red text how long ago a timer expired, the default "
+					.. "time is 5 minutes (people say songflowers stay cleansed for 5 minutes after spawn?).",
+			order = 81,
+			get = "getShowExpiredTimers",
+			set = "setShowExpiredTimers",
+		},
+		expiredTimersDuration = {
+			type = "range",
+			name = "Expired Timers Duraton",
+			desc = "How long should Felwood timers show for after expiring on the world map?",
+			order = 82,
+			get = "getExpiredTimersDuration",
+			set = "setExpiredTimersDuration",
+			min = 1,
+			max = 60,
+			softMin = 1,
+			softMax = 60,
+			step = 1,
+		},
 		dmf = {
 			type = "header",
 			name = "Darkmoon Faire",
-			order = 80,
+			order = 90,
 		},
 		dmfDesc = {
 			type = "description",
 			name = "|CffDEDE42Your DMF damage buff cooldown will also show on the Darkmoon Faire map icon when you hover it, if you"
 					.. " have a cooldown and DMF is currently up.",
 			fontSize = "medium",
-			order = 81,
+			order = 91,
 		},
 		showDmfWb = {
 			type = "toggle",
 			name = "Show DMF with /wb",
 			desc = "Show DMF spawn timer together with /wb command?",
-			order = 82,
+			order = 92,
 			get = "getShowDmfWb",
 			set = "setShowDmfWb",
 		},
@@ -541,7 +546,7 @@ NWB.options = {
 			type = "toggle",
 			name = "DMF Spawn with /wb",
 			desc = "Show DMF spawn timer together with /wb command?",
-			order = 82,
+			order = 92,
 			get = "getShowDmfWb",
 			set = "setShowDmfWb",
 		},
@@ -550,7 +555,7 @@ NWB.options = {
 			name = "DMF Buff Cooldown /wb",
 			desc = "Show your DMF buff cooldown timer together with /wb command? Only shows when you are on an active cooldown"
 					.. " and DMF is currently up.",
-			order = 83,
+			order = 93,
 			get = "getShowDmfBuffWb",
 			set = "setShowDmfBuffWb",
 		},
@@ -558,7 +563,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Show Close To Spawn",
 			desc = "Show DMF spawn timer at logon and together with /wb command when it's within 12 hours of spawn or despawn.",
-			order = 83,
+			order = 93,
 			get = "getShowDmfWhenClose",
 			set = "setShowDmfWhenClose",
 		},]]
@@ -566,7 +571,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Show Always Logon",
 			desc = "Show DMF spawn timer at logon always, even if it's not close to spawn.",
-			order = 84,
+			order = 94,
 			get = "getShowDmfLogon",
 			set = "setShowDmfLogon",
 		},]]
@@ -575,27 +580,27 @@ NWB.options = {
 			name = "Show Map Marker",
 			desc = "Show DMF map marker with spawn timer and buff cooldown info in Mulgore and Elwynn Forest "
 					.. "world maps (whichever is next spawn). You can also type /dmf map to open the world map strait to this marker.",
-			order = 85,
+			order = 95,
 			get = "getShowDmfMap",
 			set = "setShowDmfMap",
 		},
 		guildChatFilter = {
 			type = "header",
 			name = "Guild Chat Filter",
-			order = 90,
+			order = 100,
 		},
 		guildChatFilterDesc = {
 			type = "description",
 			name = "|CffDEDE42This will block any guild msgs from this addon you choose so you don't see them. It will stop "
 					.. "you from seeing your own msgs and msgs from other addon users in guild chat.",
 			fontSize = "medium",
-			order = 91,
+			order = 101,
 		},
 		filterYells = {
 			type = "toggle",
 			name = "Filter Buff Warning",
 			desc = "Filter the msg when a buff is about to drop in a few seconds (Onyxia will drop in 14 seconds).",
-			order = 92,
+			order = 102,
 			get = "getFilterYells",
 			set = "setFilterYells",
 		},
@@ -603,7 +608,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Filter Buff Dropped",
 			desc = "Filter the msg when a buff has dropped (Rallying Cry of the Dragonslayer (Onyxia) has dropped).",
-			order = 93,
+			order = 103,
 			get = "getFilterDrops",
 			set = "setFilterDrops",
 		},
@@ -611,7 +616,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Filter Timer Msgs",
 			desc = "Filter timer msgs (Onyxia resets in 1 minute).",
-			order = 94,
+			order = 104,
 			get = "getFilterTimers",
 			set = "setFilterTimers",
 		},
@@ -619,7 +624,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Filter !wb command",
 			desc = "Filter the !wb and !dmf in guild chat when typed by players.",
-			order = 95,
+			order = 105,
 			get = "getFilterCommand",
 			set = "setFilterCommand",
 		},
@@ -627,7 +632,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Filter !wb reply",
 			desc = "Filter the reply msg with timers this addon does when !wb or !!dmf is used.",
-			order = 96,
+			order = 106,
 			get = "getFilterCommandResponse",
 			set = "setFilterCommandResponse",
 		},
@@ -635,7 +640,7 @@ NWB.options = {
 			type = "toggle",
 			name = "Filter Songflowers",
 			desc = "Filter the msg when a songflower is picked.",
-			order = 97,
+			order = 107,
 			get = "getFilterSongflowers",
 			set = "setFilterSongflowers",
 		},
@@ -643,9 +648,148 @@ NWB.options = {
 			type = "toggle",
 			name = "Filter NPC Killed",
 			desc = "Filter the msg when a buff hand in NPC is killed in your city.",
-			order = 98,
+			order = 108,
 			get = "getFilterNpcKilled",
 			set = "setFilterNpcKilled",
+		},
+		sounds = {
+			type = "header",
+			name = "Sounds",
+			order = 110,
+		},
+		soundsDesc = {
+			type = "description",
+			name = "|CffDEDE42Set sound to \"None\" to disable.",
+			fontSize = "medium",
+			order = 111,
+		},
+		disableAllSounds = {
+			type = "toggle",
+			name = "Disable All Sounds",
+			desc = "Disable all sounds from this addon.",
+			order = 112,
+			get = "getDisableAllSounds",
+			set = "setDisableAllSounds",
+		},
+		extraSoundOptions = {
+			type = "toggle",
+			name = "Extra Sound Options",
+			desc = "Enable this to display all the sounds from all your addons at once in the dropdown lists here.",
+			order = 113,
+			get = "getExtraSoundOptions",
+			set = "setExtraSoundOptions",
+			--width = "double",
+		},
+		soundOnlyInCity = {
+			type = "toggle",
+			name = "Only In City",
+			desc = "Only play buff sounds when you are in the main city where the buffs drop (Stranglethorn Vale included for Zandalar buff).",
+			order = 114,
+			get = "getSoundOnlyInCity",
+			set = "setSoundOnlyInCity",
+		},
+		soundsDisableInInstances = {
+			type = "toggle",
+			name = "Disable In Instances",
+			desc = "Disable sounds while in raids and instances.",
+			order = 115,
+			get = "getSoundsDisableInInstances",
+			set = "setSoundsDisableInInstances",
+		},
+		soundsFirstYell = {
+			type = "select",
+			name = "Buff Coming",
+			desc = "Sound to play when head is handed in and you have a few seconds before buff will drop (First NPC Yell).",
+			values = function()
+				return NWB:getSounds();
+			end,
+			order = 116,
+			get = "getSoundsFirstYell",
+			set = "setSoundsFirstYell",
+		},
+		soundsOneMinute = {
+			type = "select",
+			name = "One Minute Warning",
+			desc = "Sound to play for 1 minute left timer warning.",
+			values = function()
+				return NWB:getSounds();
+			end,
+			order = 117,
+			get = "getSoundsOneMinute",
+			set = "setSoundsOneMinute",
+		},
+		soundsRendDrop = {
+			type = "select",
+			name = "Rend Buff Gained",
+			desc = "Sound to play for Rend buff drops and you get the buff.",
+			values = function()
+				return NWB:getSounds("rend");
+			end,
+			order = 120,
+			get = "getSoundsRendDrop",
+			set = "setSoundsRendDrop",
+		},
+		soundsOnyDrop = {
+			type = "select",
+			name = "Ony Buff Gained",
+			desc = "Sound to play for Onyxia buff drops and you get the buff.",
+			values = function()
+				return NWB:getSounds("ony");
+			end,
+			order = 121,
+			get = "getSoundsOnyDrop",
+			set = "setSoundsOnyDrop",
+		},
+		soundsNefDrop = {
+			type = "select",
+			name = "Nef Buff Gained",
+			desc = "Sound to play for Nefarian buff drops and you get the buff.",
+			values = function()
+				return NWB:getSounds("nef");
+			end,
+			order = 122,
+			get = "getSoundsNefDrop",
+			set = "setSoundsNefDrop",
+		},
+		soundsZanDrop = {
+			type = "select",
+			name = "Zandalar Buff Gained",
+			desc = "Sound to play for Zandalar buff drops and you get the buff.",
+			values = function()
+				return NWB:getSounds("zan");
+			end,
+			order = 123,
+			get = "getSoundsZanDrop",
+			set = "setSoundsZanDrop",
+		},
+		flash = {
+			type = "header",
+			name = "Flash When Minimized",
+			order = 130,
+		},
+		flashOneMin = {
+			type = "toggle",
+			name = "Flash One Minute",
+			desc = "Flash the wow client when you have it minimized and 1 minute is left on timer?",
+			order = 131,
+			get = "getFlashOneMin",
+			set = "setFlashOneMin",
+		},
+		flashFirstYell = {
+			type = "toggle",
+			name = "Flash NPC Yell",
+			desc = "Flash the wow client when you have it minimized and the NPC's out a few seconds before buff drops?",
+			order = 132,
+			get = "getFlashFirstYell",
+			set = "setFlashFirstYell",
+		},
+		flashFirstYellZan = {
+			type = "toggle",
+			name = "Flash Zandalar",
+			desc = "Flash the wow client when you have it minimized and the Zandalar buff is about to go out?",
+			order = 133,
+			get = "getFlashFirstYellZan",
+			set = "setFlashFirstYellZan",
 		},
 	},
 };
@@ -705,12 +849,17 @@ NWB.optionDefaults = {
 		middle1 = true,
 		middle0 = true,
 		middleBuffWarning = true,
-		guild30 = false,
-		guild15 = false,
-		guild10 = true,
-		guild5 = false,
-		guild1 = true,
-		guild0 = false,
+		middleHideCombat = false,
+		middleHideRaid = false,
+		--These are 1/0 instead of true/false to be smaller via addon comms.
+		guild10 = 1,
+		guild1 = 1,
+		guildNpcKilled = 1,
+		guildBuffDropped = 1,
+		guildNpcDialogue = 1,
+		guildZanDialogue = 1,
+		guildCommand = 1,
+		disableAllGuildMsgs = 0,
 		rendRespawnTime = 10800,
 		rendBuffTime = 3600,
 		onyRespawnTime = 21600,
@@ -724,12 +873,6 @@ NWB.optionDefaults = {
 		showTimeStamp = true,
 		timeStampFormat = 12,
 		timeStampZone = "local",
-		guildNpcKilled = true,
-		guildBuffDropped = true,
-		guildNpcDialogue = true,
-		guildZanDialogue = true,
-		guildCommand = true,
-		disableAllGuildMsgs = false,
 		receiveGuildDataOnly = false,
 		guildSongflower = true,
 		mySongflowerOnly = false,
@@ -771,7 +914,6 @@ NWB.optionDefaults = {
 		logonDmfBuffCooldown = true,
 		showDmfBuffWb = true,
 		showAllAlts = false,
-		flashMinimized = true,
 		filterYells = false,
 		filterDrops = false,
 		filterTimers = false,
@@ -781,10 +923,28 @@ NWB.optionDefaults = {
 		filterNpcKilled = false,
 		minimapLayerFrame = true,
 		blackfathomBuffTime = 3600,
-		
+		disableAllSounds = false,
+		extraSoundOptions = false,
+		soundOnlyInCity = false,
+		soundsDisableInInstances = true,
+		soundsFirstYell = "NWB - Electronic",
+		soundsOneMinute = "None",
+		soundsRendDrop = "NWB - Zelda",
+		soundsOnyDrop = "NWB - Zelda",
+		soundsNefDrop = "NWB - Zelda",
+		soundsZanDrop = "NWB - Zelda",
+		showExpiredTimers = true,
+		expiredTimersDuration = 5,
+		minimapIcon = {["minimapPos"] = 165, ["hide"] = false},
+		minimapButton = true,
+		flashOneMin = true,
+		flashFirstYell = true,
+		flashFirstYellZan = true,
 		resetLayers3 = true, --Reset layers one time (sometimes needed when upgrading from old version.
 		resetSongflowers = true, --Reset songflowers one time.
 		experimental = true, --Enable features being tested on occasion.
+		resetLayerMaps = true,
+		convertSettings = true,
 	},
 };
 
@@ -874,6 +1034,52 @@ function NWB:buildRealmFactionData()
 	self.data = self.db.global[NWB.realm][NWB.faction];
 end
 
+function NWB:convertSettings()
+	if (NWB.db.global.convertSettings) then
+		if (NWB.db.global.guild10 == true or NWB.db.global.guild10 == 1) then
+			NWB.db.global.guild10 = 1;
+		else
+			NWB.db.global.guild10 = 0;
+		end
+		if (NWB.db.global.guild1 or NWB.db.global.guild1 == 1) then
+			NWB.db.global.guild1 = 1;
+		else
+			NWB.db.global.guild1 = 0;
+		end
+		if (NWB.db.global.guildNpcKilled == true or NWB.db.global.guildNpcKilled == 1) then
+			NWB.db.global.guildNpcKilled = 1;
+		else
+			NWB.db.global.guildNpcKilled = 0;
+		end
+		if (NWB.db.global.guildBuffDropped == true or NWB.db.global.guildBuffDropped == 1) then
+			NWB.db.global.guildBuffDropped = 1;
+		else
+			NWB.db.global.guildBuffDropped = 0;
+		end
+		if (NWB.db.global.guildNpcDialogue == true or NWB.db.global.guildNpcDialogue == 1) then
+			NWB.db.global.guildNpcDialogue = 1;
+		else
+			NWB.db.global.guildNpcDialogue = 0;
+		end
+		if (NWB.db.global.guildZanDialogue == true or NWB.db.global.guildZanDialogue == 1) then
+			NWB.db.global.guildZanDialogue = 1;
+		else
+			NWB.db.global.guildZanDialogue = 0;
+		end
+		if (NWB.db.global.guildCommand == true or NWB.db.global.guildCommand == 1) then
+			NWB.db.global.guildCommand = 1;
+		else
+			NWB.db.global.guildCommand = 0;
+		end
+		if (NWB.db.global.disableAllGuildMsgs == true or NWB.db.global.disableAllGuildMsgs == 1) then
+			NWB.db.global.disableAllGuildMsgs = 1;
+		else
+			NWB.db.global.disableAllGuildMsgs = 0;
+		end
+		NWB.db.global.convertSettings = false;
+	end
+end
+
 --Print timers to chat window at logon time.
 function NWB:setLogonPrint(info, value)
 	self.db.global.logonPrint = value;
@@ -928,16 +1134,6 @@ end
 
 function NWB:getAllianceEnableRend(info)
 	return self.db.global.allianceEnableRend;
-end
-
---Disable all guild msgs.
-function NWB:setDisableAllGuildMsgs(info, value)
-	self.db.global.disableAllGuildMsgs = value;
-	NWB:sendData("GUILD");
-end
-
-function NWB:getDisableAllGuildMsgs(info)
-	return self.db.global.disableAllGuildMsgs;
 end
 
 --Ignore data from outside the guild.
@@ -1002,13 +1198,56 @@ function NWB:getShowAllAlts(info)
 	return self.db.global.showAllAlts;
 end
 
---Show all alts in the buffs window.
+--Flash minimized.
 function NWB:setFlashMinimized(info, value)
 	self.db.global.flashMinimized = value;
 end
 
 function NWB:getFlashMinimized(info)
 	return self.db.global.flashMinimized;
+end
+
+--Flash minimized.
+function NWB:setFlashOneMin(info, value)
+	self.db.global.flashOneMin = value;
+end
+
+function NWB:getFlashOneMin(info)
+	return self.db.global.flashOneMin;
+end
+
+--Flash minimized.
+function NWB:setFlashFirstYell(info, value)
+	self.db.global.flashFirstYell = value;
+end
+
+function NWB:getFlashFirstYell(info)
+	return self.db.global.flashFirstYell;
+end
+
+--Flash minimized.
+function NWB:setFlashFirstYellZan(info, value)
+	self.db.global.flashFirstYellZan = value;
+end
+
+function NWB:getFlashFirstYellZan(info)
+	return self.db.global.flashFirstYellZan;
+end
+
+--Minimap button
+function NWB:setMinimapButton(info, value)
+	self.db.global.minimapButton = value;
+	if (value) then
+		NWB.LDBIcon:Show("NovaWorldBuffs");
+		self.db.global.minimapIcon.hide = false;
+	else
+		NWB.LDBIcon:Hide("NovaWorldBuffs");
+		self.db.global.minimapIcon.hide = true;
+	end
+end
+
+function NWB:getMinimapButton(info)
+	return self.db.global.minimapButton;
 end
 
 --Chat 30 minute warning.
@@ -1137,108 +1376,166 @@ function NWB:getMiddleBuffWarning(info)
 	return self.db.global.middleBuffWarning;
 end
 
---Guild 30 minute warning.
-function NWB:setGuild30(info, value)
-	self.db.global.guild30 = value;
+--Middle of the screen hide in combat.
+function NWB:setMiddleHideCombat(info, value)
+	self.db.global.middleHideCombat = value;
 end
 
-function NWB:getGuild30(info)
-	return self.db.global.guild30;
+function NWB:getMiddleHideCombat(info)
+	return self.db.global.middleHideCombat;
 end
 
---Guild 15 minute warning.
-function NWB:setGuild15(info, value)
-	self.db.global.guild15 = value;
+--Middle of the screen hide in raid.
+function NWB:setMiddleHideRaid(info, value)
+	self.db.global.middleHideRaid = value;
 end
 
-function NWB:getGuild15(info)
-	return self.db.global.guild15;
+function NWB:getMiddleHideRaid(info)
+	return self.db.global.middleHideRaid;
 end
-
+		
 --Guild 10 minute warning.
 function NWB:setGuild10(info, value)
-	self.db.global.guild10 = value;
+	if (value) then
+		self.db.global.guild10 = 1;
+	else
+		self.db.global.guild10 = 0;
+	end
+	NWB:sendSettings("GUILD");
 end
 
 function NWB:getGuild10(info)
-	return self.db.global.guild10;
-end
-
---Guild 5 minute warning.
-function NWB:setGuild5(info, value)
-	self.db.global.guild5 = value;
-end
-
-function NWB:getGuild5(info)
-	return self.db.global.guild5;
+	if (self.db.global.guild10 == 1) then
+		return true;
+	else
+		return false;
+	end
 end
 
 --Guild 1 minute warning.
 function NWB:setGuild1(info, value)
-	self.db.global.guild1 = value;
+	if (value) then
+		self.db.global.guild1 = 1;
+	else
+		self.db.global.guild1 = 0;
+	end
+	NWB:sendSettings("GUILD");
 end
 
 function NWB:getGuild1(info)
-	return self.db.global.guild1;
-end
-
---Guild 0 minute warning.
-function NWB:setGuild0(info, value)
-	self.db.global.guild0 = value;
-end
-
-function NWB:getGuild0(info)
-	return self.db.global.guild0;
-end
-
---Guild NPC dialogue started.
-function NWB:setGuildNpcDialogue(info, value)
-	self.db.global.guildNpcDialogue = value;
-	NWB:sendData("GUILD");
-end
-
-function NWB:getGuildNpcDialogue(info)
-	return self.db.global.guildNpcDialogue;
-end
-
---Guild Zan dialogue started.
-function NWB:setGuildZanDialogue(info, value)
-	self.db.global.guildZanDialogue = value;
-	NWB:sendData("GUILD");
-end
-
-function NWB:getGuildZanDialogue(info)
-	return self.db.global.guildZanDialogue;
-end
-
---Guild buff dropped.
-function NWB:setGuildBuffDropped(info, value)
-	self.db.global.guildBuffDropped = value;
-	NWB:sendData("GUILD");
-end
-
-function NWB:getGuildBuffDropped(info)
-	return self.db.global.guildBuffDropped;
+	if (self.db.global.guild1 == 1) then
+		return true;
+	else
+		return false;
+	end
 end
 
 --Guild NPC killed.
 function NWB:setGuildNpcKilled(info, value)
-	self.db.global.guildNpcKilled = value;
-	NWB:sendData("GUILD");
+	if (value) then
+		self.db.global.guildNpcKilled = 1;
+	else
+		self.db.global.guildNpcKilled = 0;
+	end
+	NWB:sendSettings("GUILD");
 end
 
 function NWB:getGuildNpcKilled(info)
-	return self.db.global.guildNpcKilled;
+	if (self.db.global.guildNpcKilled == 1) then
+		return true;
+	else
+		return false;
+	end
+end
+
+--Guild buff dropped.
+function NWB:setGuildBuffDropped(info, value)
+	if (value) then
+		self.db.global.guildBuffDropped = 1;
+	else
+		self.db.global.guildBuffDropped = 0;
+	end
+	NWB:sendSettings("GUILD");
+end
+
+function NWB:getGuildBuffDropped(info)
+	if (self.db.global.guildBuffDropped == 1) then
+		return true;
+	else
+		return false;
+	end
+end
+
+--Guild NPC dialogue started.
+function NWB:setGuildNpcDialogue(info, value)
+	if (value) then
+		self.db.global.guildNpcDialogue = 1;
+	else
+		self.db.global.guildNpcDialogue = 0;
+	end
+	NWB:sendSettings("GUILD");
+end
+
+function NWB:getGuildNpcDialogue(info)
+	if (self.db.global.guildNpcDialogue == 1) then
+		return true;
+	else
+		return false;
+	end
+end
+
+--Guild Zan dialogue started.
+function NWB:setGuildZanDialogue(info, value)
+	if (value) then
+		self.db.global.guildZanDialogue = 1;
+	else
+		self.db.global.guildZanDialogue = 0;
+	end
+	NWB:sendSettings("GUILD");
+end
+
+function NWB:getGuildZanDialogue(info)
+	if (self.db.global.guildZanDialogue == 1) then
+		return true;
+	else
+		return false;
+	end
 end
 
 --Guild !wb command.
 function NWB:setGuildCommand(info, value)
-	self.db.global.guildCommand = value;
-	NWB:sendData("GUILD");
+	if (value) then
+		self.db.global.guildCommand = 1;
+	else
+		self.db.global.guildCommand = 0;
+	end
+	NWB:sendSettings("GUILD");
 end
 
 function NWB:getGuildCommand(info)
-	return self.db.global.guildCommand;
+	if (self.db.global.guildCommand == 1) then
+		return true;
+	else
+		return false;
+	end
+end
+
+--Disable all guild msgs.
+function NWB:setDisableAllGuildMsgs(info, value)
+	if (value) then
+		self.db.global.disableAllGuildMsgs = 1;
+	else
+		self.db.global.disableAllGuildMsgs = 0;
+	end
+	NWB:sendSettings("GUILD");
+end
+
+function NWB:getDisableAllGuildMsgs(info)
+	if (self.db.global.disableAllGuildMsgs == 1) then
+		return true;
+	else
+		return false;
+	end
 end
 
 --Guild songflower picked announce.
@@ -1335,6 +1632,24 @@ end
 
 function NWB:getShowDragonMinimapMarkers(info)
 	return self.db.global.showDragonMinimapMarkers;
+end
+
+--Show expired timers.
+function NWB:setShowExpiredTimers(info, value)
+	self.db.global.showExpiredTimers = value;
+end
+
+function NWB:getShowExpiredTimers(info)
+	return self.db.global.showExpiredTimers;
+end
+
+--Expired timers duration.
+function NWB:setExpiredTimersDuration(info, value)
+	self.db.global.expiredTimersDuration = value;
+end
+
+function NWB:getExpiredTimersDuration(info)
+	return self.db.global.expiredTimersDuration;
 end
 
 --Show DMF at logon always.
@@ -1499,4 +1814,170 @@ end
 
 function NWB:getMinimapLayerFrame(info)
 	return self.db.global.minimapLayerFrame;
+end
+
+------------
+---Sounds---
+------------
+
+local sounds = {
+	--Random snipets from youtube.
+	["NWB - Zelda"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\Zelda.ogg",
+	["NWB - FF7"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\FF7.ogg",
+	["NWB - Bell"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\Bell.ogg",
+	["NWB - Alarm"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\Alarm.ogg",
+	["NWB - Alien"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\Alien.ogg",
+	["NWB - Clock"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\Clock.ogg",
+	["NWB - Electronic"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\Electronic.ogg",
+	["NWB - Pop"] = "Interface\\AddOns\\NovaWorldBuffs\\Media\\Pop.ogg",
+}
+function NWB:registerSounds()
+	for k, v in pairs(sounds) do
+		NWB.LSM:Register("sound", k, v);
+	end
+end
+
+function NWB:getSounds(type)
+	NWB.sounds = {};
+	if (self.db.global.extraSoundOptions) then
+		for _, v in pairs(NWB.LSM:List("sound")) do
+			NWB.sounds[v] = v;
+		end
+	else
+		for k, v in NWB:pairsByKeys(sounds) do
+			NWB.sounds[k] = k;
+		end
+		NWB.sounds["None"] = "None";
+	end
+	if (type == "rend") then
+		NWB.sounds["NWB - Rend Voice"] = "NWB - Rend Voice";
+	elseif (type == "ony") then
+		NWB.sounds["NWB - Ony Voice"] = "NWB - Ony Voice";
+	elseif (type == "nef") then
+		NWB.sounds["NWB - Nef Voice"] = "NWB - Nef Voice";
+		NWB.sounds["NWB - Ony Voice"] = "NWB - Ony Voice";
+	elseif (type == "zan") then
+		NWB.sounds["NWB - Zandalar Voice"] = "NWB - Zandalar Voice";
+	end
+	return NWB.sounds;
+end
+
+--Disable all sounds.
+function NWB:setDisableAllSounds(info, value)
+	self.db.global.disableAllSounds = value;
+end
+
+function NWB:getDisableAllSounds(info)
+	return self.db.global.disableAllSounds;
+end
+
+--Enable extra sounds.
+function NWB:setExtraSoundOptions(info, value)
+	self.db.global.extraSoundOptions = value;
+end
+
+function NWB:getExtraSoundOptions(info)
+	return self.db.global.extraSoundOptions;
+end
+
+--Only plays sounds in city.
+function NWB:setSoundOnlyInCity(info, value)
+	self.db.global.soundOnlyInCity = value;
+end
+
+function NWB:getSoundOnlyInCity(info)
+	return self.db.global.soundOnlyInCity;
+end
+
+--Only plays sounds in city.
+function NWB:setSoundsDisableInInstances(info, value)
+	self.db.global.soundsDisableInInstances = value;
+end
+
+function NWB:getSoundsDisableInInstances(info)
+	return self.db.global.soundsDisableInInstances;
+end
+
+--First yell sound.
+function NWB:setSoundsFirstYell(info, value)
+	self.db.global.soundsFirstYell = value;
+	local soundFile = NWB.LSM:Fetch("sound", value);
+	PlaySoundFile(soundFile);
+end
+
+function NWB:getSoundsFirstYell(info)
+	return self.db.global.soundsFirstYell;
+end
+
+--One minute warning sound.
+function NWB:setSoundsOneMinute(info, value)
+	self.db.global.soundsOneMinute = value;
+	local soundFile = NWB.LSM:Fetch("sound", value);
+	PlaySoundFile(soundFile);
+end
+
+function NWB:getSoundsOneMinute(info)
+	return self.db.global.soundsOneMinute;
+end
+
+--Rend drop sound.
+function NWB:setSoundsRendDrop(info, value)
+	self.db.global.soundsRendDrop = value;
+	if (value == "NWB - Rend Voice") then
+		PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\RendDropped.ogg", "Master");
+	else
+		local soundFile = NWB.LSM:Fetch("sound", value);
+		PlaySoundFile(soundFile);
+	end
+end
+
+function NWB:getSoundsRendDrop(info)
+	return self.db.global.soundsRendDrop;
+end
+
+--Ony drop sound.
+function NWB:setSoundsOnyDrop(info, value)
+	self.db.global.soundsOnyDrop = value;
+	if (value == "NWB - Ony Voice") then
+		PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\OnyxiaDropped.ogg", "Master");
+	else
+		local soundFile = NWB.LSM:Fetch("sound", value);
+		PlaySoundFile(soundFile);
+	end
+end
+
+function NWB:getSoundsOnyDrop(info)
+	return self.db.global.soundsOnyDrop;
+end
+
+--Nef drop sound.
+function NWB:setSoundsNefDrop(info, value)
+	self.db.global.soundsNefDrop = value;
+	if (value == "NWB - Nef Voice") then
+		PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\NefarianDropped.ogg", "Master");
+	elseif (value == "NWB - Ony Voice") then
+		PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\OnyxiaDropped.ogg", "Master");
+	else
+		local soundFile = NWB.LSM:Fetch("sound", value);
+		PlaySoundFile(soundFile);
+	end
+end
+
+function NWB:getSoundsNefDrop(info)
+	return self.db.global.soundsNefDrop;
+end
+
+--Zan drop sound.
+function NWB:setSoundsZanDrop(info, value)
+	self.db.global.soundsZanDrop = value;
+	if (value == "NWB - Zandalar Voice") then
+		PlaySoundFile("Interface\\AddOns\\NovaWorldBuffs\\Media\\ZandalarDropped.ogg", "Master");
+	else
+		local soundFile = NWB.LSM:Fetch("sound", value);
+		PlaySoundFile(soundFile);
+	end
+end
+
+function NWB:getSoundsZanDrop(info)
+	return self.db.global.soundsZanDrop;
 end

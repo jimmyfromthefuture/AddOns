@@ -29,5 +29,5 @@ function SlashCmdList.BCTSC(msg)
 	end
 	
 	InterfaceOptionsFrame_OpenToCategory(BCT.optionsFrames.BCT)
-	InterfaceOptionsFrame_OpenToCategory(BCT.optionsFrames.BCT)
+	InterfaceOptionsFrame_OpenToCategory(BCT.optionsFrames.Setup)
 end

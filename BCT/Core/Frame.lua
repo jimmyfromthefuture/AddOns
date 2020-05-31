@@ -5,34 +5,43 @@ SM:Register("font", "Expressway", [[Interface\AddOns\BCT\Fonts\Expressway.ttf]])
 SM:Register("font", "PT Sans Narrow", [[Interface\AddOns\BCT\Fonts\PTSansNarrow.ttf]])
 
 local function UpdateFont()
-	BCT.Window.text:SetFont(SM:Fetch("font",BCT.session.db.window.font), BCT.session.db.window.font_size, "OUTLINE")
-	BCT.Anchor.text:SetFont(SM:Fetch("font",BCT.session.db.window.font), BCT.session.db.window.font_size, "OUTLINE")
+	BCT.Window.text:SetFont(SM:Fetch("font",BCT.session.db.window.body.font), BCT.session.db.window.body.font_size, BCT.session.db.window.body.font_style)
+	BCT.Anchor.text:SetFont(SM:Fetch("font",BCT.session.db.window.anchor.font), BCT.session.db.window.anchor.font_size, BCT.session.db.window.anchor.font_style)
 end
 BCT.UpdateFont = UpdateFont
 
+-- Inefficient implementation (calls)
 local function UpdateFrameState()
-	local _, _, _, _, maxPlayers = GetInstanceInfo()
+	local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
 	local groupState = (not IsInGroup()) and "Solo" or 
 		((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
 		
-	if BCT.session.db.window.show and
+	if BCT.session.db.window.enable and
 		BCT.session.db.loading.instanceState[tonumber(maxPlayers)] and
-		BCT.session.db.loading.groupState[groupState] then
+		BCT.session.db.loading.groupState[(instanceType == "pvp" and "Battleground" or groupState)] then
 		BCT.Anchor:Show()
 		BCT.Window:Show()
 	else
 		BCT.Anchor:Hide()
 		BCT.Window:Hide()
 	end
-	if BCT.session.db.window.mouseover then
+	if BCT.session.db.window.body.mouseover then
 		BCT.Window:Hide()
 	end
 	if BCT.session.db.window.lock then
 		BCT.Anchor:SetScript("OnDragStart", nil)
 		BCT.Anchor:SetScript("OnDragStop", nil)
+		BCT.Anchor:SetBackdropColor(0,0,0,0)
 	else
 		BCT.Anchor:SetScript("OnDragStart", BCT.Anchor.StartMoving)
 		BCT.Anchor:SetScript("OnDragStop", BCT.Anchor.StopMovingOrSizing)
+		BCT.Anchor:SetBackdropColor(0,0,0,1)
+	end
+	BCT.Window.text:ClearAllPoints()
+	if BCT.session.db.window.body.growup then
+		BCT.Window.text:SetPoint("BOTTOMLEFT", BCT.Window, "TOPLEFT", BCT.session.db.window.body.x_offset, BCT.session.db.window.body.y_offset)
+	else
+		BCT.Window.text:SetPoint("TOPLEFT", BCT.Window, "BOTTOMLEFT", BCT.session.db.window.body.x_offset, BCT.session.db.window.body.y_offset)
 	end
 end
 BCT.UpdateFrameState = UpdateFrameState
@@ -42,60 +51,84 @@ BCT.Anchor:SetMovable(true)
 BCT.Anchor:EnableMouse(true)
 BCT.Anchor:RegisterForDrag("LeftButton")
 BCT.Anchor:SetWidth(200)
-BCT.Anchor:SetHeight(50)
+BCT.Anchor:SetHeight(35)
 BCT.Anchor:SetAlpha(1.)
 BCT.Anchor:SetPoint("CENTER",0,0)
 BCT.Anchor.text = BCT.Anchor:CreateFontString(nil,"ARTWORK") 
 BCT.Anchor.text:SetFont(SM:Fetch("font","Expressway"), 13, "OUTLINE")
-BCT.Anchor.text:SetPoint("TOPLEFT", BCT.Anchor, "TOPLEFT", 0)
+BCT.Anchor.text:SetPoint("LEFT", BCT.Anchor, "LEFT", 0, 0)
 BCT.Anchor.text:SetJustifyH("LEFT")
 BCT.Anchor.text:SetText("BUFF CAP TRACKER")
 BCT.Anchor:SetUserPlaced(true)
 
+BCT.Anchor:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
+	--edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
+	tile = true, tileSize = 16, edgeSize = 16, 
+	insets = { left = 4, right = 4, top = 4, bottom = 4 }})
+BCT.Anchor:SetBackdropColor(0,0,0,1)
+
 BCT.Anchor:SetScript("OnUpdate", function(self) 
-	if GetMouseFocus() ~= nil and BCT.session.db.window.mouseover then
-		if GetMouseFocus():GetName() == "BCTAnchor" then
-			BCT.Window:Show()
-		else
-			BCT.Window:Hide()
+	if not TradeFrame:IsVisible() then
+		if GetMouseFocus() ~= nil and BCT.session.db.window.body.mouseover then
+			if GetMouseFocus():GetName() == "BCTAnchor" then
+				BCT.Window:Show()
+			else
+				BCT.Window:Hide()
+			end
 		end
 	end
-	if BCT.session.db.window.mouseover then
-		self.text:SetText("BUFF CAP TRACKER - " .. BCT.buffsTotal + BCT.enchantsTotal + BCT.hiddenTotal .. "/32")
-	else
-		self.text:SetText("BUFF CAP TRACKER")
+	
+	local title = BCT.session.db.window.anchor.value
+	local counter = BCT.session.db.window.anchor.counter
+	local buffs = BCT.buffsTotal + BCT.enchantsTotal + BCT.hiddenTotal
+	
+	if string.len(title) > 0 and counter ~= "None" then
+		title = title .. " - "
 	end
+	
+	if counter == "3/32" then
+		title = title .. buffs .. "/32"
+	elseif counter == "3" then
+		title = title .. buffs
+	end
+	
+	self.text:SetText(title)
 end)
 
 BCT.Window = CreateFrame("Frame","BCTTxtFrame",UIParent)
 BCT.Window:SetWidth(200)
-BCT.Window:SetHeight(50)
+BCT.Window:SetHeight(35)
 BCT.Window:SetAlpha(1.)
-BCT.Window:SetPoint("CENTER", BCT.Anchor, "CENTER", 0, -8)
+BCT.Window:SetPoint("CENTER", BCT.Anchor, "CENTER", 0, 0)
 BCT.Window.text = BCT.Window:CreateFontString(nil,"ARTWORK") 
 BCT.Window.text:SetFont(SM:Fetch("font","Expressway"), 13, "OUTLINE")
-BCT.Window.text:SetPoint("TOPLEFT", BCT.Window, "TOPLEFT", 0)
+BCT.Window.text:SetPoint("TOPLEFT", BCT.Window, "BOTTOMLEFT", 0, 0)
 BCT.Window.text:SetJustifyH("LEFT")
 BCT.Window.text:SetText("Something is wrong")
 
-BCT.Window:SetScript("OnUpdate", function(self) 
+local StringBuildTicker = C_Timer.NewTicker(0.1, function() 
 	BCT.BuildBuffString()
 	BCT.BuildEnchantString()
 	BCT.BuildTrackedString()
 	BCT.BuildNextFiveString()
-	
+end)
+
+BCT.Window:SetScript("OnUpdate", function(self) 
+
+	local enchantsLine = (BCT.session.db.window.text["enchants"] and "ENCHANTS: " .. BCT.enchantsStr .. "/" .. BCT.enchantsTotal .. "\n" or "")
+	local buffsLine = (BCT.session.db.window.text["buffs"] and "BUFFS: " .. BCT.buffStr .. "/" .. BCT.aurasMax .. "\n" or "")
+	local nextLine = (BCT.session.db.window.text["nextone"] and "NEXT: " ..  BCT.nextAura .. "\n" or "")
+	local trackedLine = (BCT.session.db.window.text["tracking"] and BCT.trackedStr .. "\n" or "")
+	local profileLine = (BCT.session.db.window.text["profile"] and "PROFILE: |cff0080ff" .. BCT.profileStr .. "\n" ..  "|r" or "")
+
     local txt = (
-		(BCT.session.db.window.enchants and 
-			"\nENCHANTS: " .. BCT.enchantsStr .. "/" .. BCT.enchantsTotal or "") ..
-        "\nBUFFS: " .. BCT.buffStr .. "/" .. BCT.aurasMax ..
-        --"\nAUTO REMOVAL: " .. GetBuffRemovalString() ..
-        "\n\nNEXT: " .. BCT.nextAura ..
-		(BCT.session.db.window.nextfive and 
-			"\n" .. BCT.nextFiveStr or "\n") ..
-		BCT.trackedStr ..
-		(BCT.session.db.window.profileTxt and "PROFILE: |cff0080ff" .. BCT.profileStr or "|r")
+		enchantsLine ..
+        buffsLine ..
+        nextLine ..
+		trackedLine ..
+		profileLine
 	)
-	self.text:SetText(txt)
 	
+	self.text:SetText(txt)
 end)
 

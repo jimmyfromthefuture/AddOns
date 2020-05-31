@@ -1,5 +1,35 @@
 local BCT = LibStub("AceAddon-3.0"):GetAddon("BCT")
 
+local function CleanUp()
+
+	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
+		for t, b in pairs(BCT.session.db.auras["auras_visible"]) do
+			if k ~= t and (v[6] == BCT.PLAYERBUFF or v[6] == BCT.PERSONALS) 
+				and (b[6] == BCT.PLAYERBUFF or b[6] == BCT.PERSONALS) 
+				and GetSpellInfo(k) == GetSpellInfo(t) then
+				BCT.session.db.auras["auras_visible"][k] = nil
+				BCT.session.db.auras["auras_visible"][t] = nil
+				print("BCT: " .. GetSpellInfo(k) .. " was removed from the aura list because of duplicates, please reload UI and confirm availability and setup of the removed buff.")
+			end
+		end
+	end
+	
+	return false, false, false
+end
+BCT.CleanUp = CleanUp
+
+local function GetAura(name)
+
+	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
+		if name == GetSpellInfo(k) then
+			return true, v[5], v[3]
+		end
+	end
+	
+	return false, false, false
+end
+BCT.GetAura = GetAura
+
 CreateFrame("GameTooltip", "BCTTooltip", nil, "GameTooltipTemplate")
 
 ----------------------------
@@ -35,7 +65,6 @@ local function scanHand(hand)
 			else 
 				buffname = strfound;
 			end
-			--if buffname then VFL.print(buffname); VFL.print(a); end
 		end
 		if not buffname then
 			buffname = "unknown parse";
@@ -160,40 +189,34 @@ end
 BCT.SetDefensiveState = SetDefensiveState
 
 local function SetHidden()
-
 	local i = GetTime() + 1 -- (BCT.aurasSorted[#BCT.aurasSorted] or GetTime()) + 1
-
-	local function addHidden(j, tree, talent)
-		local currentRank = 1
+	local _, _, classIndex = UnitClass(UnitName("player"))
+	
+	local function addHidden(j, tree, talent, DefState)
 		if tree ~= nil then	_, _, _, _, currentRank = GetTalentInfo(tree, talent) end
-		
 		local arr = BCT.session.db.auras["auras_hidden"]
+		local isCounted = arr[j][4]
+		local talentChk = tree == nil and true or tonumber(currentRank or 0) > 0
+		local dsChk = DefState == nil and true or BCT.session.state.DefensiveState
 
-		if arr[j][4] and tonumber(currentRank) > 0 then 
+		if talentChk and dsChk and isCounted then 
 			BCT.hidden[i] = arr[j][1]
 			i = i + 1
 		end
 	end
 	
-	local _, _, classIndex = UnitClass(UnitName("player"))
-	
 	local classFuncs = {
-	  [1] = function() 					---- Warrior
-			addHidden(2)				-- Stance
-			
-			-- Defensive State
-			local arr = BCT.session.db.auras["auras_hidden"]
-			if BCT.session.state.DefensiveState == true and arr[1][4] then 
-				BCT.hidden[i] = arr[1][1]
-				i = i + 1
-			end
+		[1] = function() 					---- Warrior
+			addHidden(1, nil, nil, true)	-- Defensive State
+			addHidden(2)					-- Stance
 		end,
-	  [11] = function() 				---- Druid
-			addHidden(4, 2, 10)			-- Predatory Strikes
-			addHidden(5, 3, 2)			-- Furor
-			addHidden(6, 2, 15)			-- Heart of the Wild
+		[11] = function() 					---- Druid
+			addHidden(4, 2, 10)				-- Predatory Strikes
+			addHidden(5, 3, 2)				-- Furor
+			addHidden(6, 2, 15)				-- Heart of the Wild
 		end,
 	}
+	
 	local classFunc = classFuncs[tonumber(classIndex)]
 
 	-- reset state
@@ -268,12 +291,17 @@ local function SetAurasSorted()
 		end
 	else
 		BCT.nextAura = "                 " -- Prevents auto linebreak in enchants line (lua ecksdee)
-   end
+	end
+   
+	local found, blacklisted, tracked = BCT.GetAura(BCT.nextAura:gsub("^%s*(.-)%s*$", "%1"))
+
+	if found and tracked then
+		BCT.nextAura = "|cffff0000" .. BCT.nextAura .. "|r"
+	end
 
 	-- count pushed enchants
     local counter = 32 - (BCT.buffsTotal + BCT.enchantsTotal)
-    BCT.enchantsPushed = 0
-    if counter < 0 then BCT.enchantsPushed = abs(counter) end
+	BCT.enchantsPushed = counter < 0 and abs(counter) or 0
 	
 	BCT.aurasMax = 32 - BCT.enchantsTotal + BCT.enchantsPushed
 
@@ -421,20 +449,20 @@ local function BuildNextFiveString()
 			if BCT.buffs[t] ~= nil then
 				local search = BCT.session.db.auras["auras_visible"]
 				if search[BCT.buffs[t]] ~= nil then
-					return Nth (n) .. ": " .. search[BCT.buffs[t]][1] .. "\n"
+					return Nth (n) .. ": " .. search[BCT.buffs[t]][1]
 				else
-					return Nth (n) .. ": " .. GetSpellInfo(BCT.buffs[t]) .. "\n"
+					return Nth (n) .. ": " .. GetSpellInfo(BCT.buffs[t])
 				end
 				BCT.nextAuraId = t
 			elseif BCT.hidden[t] ~=	 nil then
-				return Nth (n) .. ": " .. BCT.hidden[t] .. "\n"
+				return Nth (n) .. ": " .. BCT.hidden[t]
 			else
 				-- enchant
 				for i=1,19,1 do
 					if BCT.items[i] ~= nil then
 						if BCT.items[i][3] == t then
 							
-							return Nth (n) .. ": " .. BCT.session.db.auras["auras_enchants"][BCT.items[i][2]][1] .. "\n"
+							return Nth (n) .. ": " .. BCT.session.db.auras["auras_enchants"][BCT.items[i][2]][1]
 						end
 					end
 				end
@@ -464,7 +492,7 @@ local function BuildTrackedString()
 		end
 	end
 	if nl then 
-		tmp = BCT.session.db.window.group_lines and tmp or (tmp .. "\n" )
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
 		nl = false
 	end
 	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
@@ -474,17 +502,17 @@ local function BuildTrackedString()
 		end
 	end
 	if nl then 
-		tmp = BCT.session.db.window.group_lines and tmp or (tmp .. "\n" )
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
 		nl = false
 	end
 	for k, v in pairs(BCT.session.db.auras["auras_debuffs"]) do
-		if v[3] and v[6] == BCT.GOODDEBUFF then 
+		if v[3] and v[6] == BCT.DEBUFF then 
 			tmp = tmp .. "\n" .. v[2] .. ": " .. FindDebuff(k) .. GetAuraDur(k, false)
 			nl = true
 		end
 	end
 	if nl then 
-		tmp = BCT.session.db.window.group_lines and tmp or (tmp .. "\n" )
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
 		nl = false
 	end
 	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
@@ -494,7 +522,7 @@ local function BuildTrackedString()
 		end
 	end
 	if nl then 
-		tmp = BCT.session.db.window.group_lines and tmp or (tmp .. "\n" )
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
 		nl = false
 	end
 	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
@@ -503,7 +531,11 @@ local function BuildTrackedString()
 			nl = true
 		end
 	end
+	
+	if BCT.session.db.window.text["profile"] and BCT.session.db.window.body.group_lines then
+		tmp = tmp .. "\n"
+	end
 
-    BCT.trackedStr = tmp .. "\n"
+    BCT.trackedStr = tmp
 end
 BCT.BuildTrackedString = BuildTrackedString

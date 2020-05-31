@@ -1,5 +1,5 @@
 ## Interface: 11304
-## Version: v1.9.8
+## Version: v2.0.4
 
 ## Title: Plexus
 ## Notes: A compact plexus of party/raid unit frames.

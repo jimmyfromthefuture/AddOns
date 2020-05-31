@@ -83,6 +83,7 @@ function PlexusStatusPhase:OnStatusEnable(status)
 
     self:RegisterEvent("UNIT_PHASE")
     self:RegisterEvent("GROUP_ROSTER_UPDATE", "GroupChanged")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD", "GroupChanged")
     self:RegisterMessage("Plexus_PartyTransition", "GroupChanged")
     self:RegisterMessage("Plexus_UnitJoined")
 end
@@ -92,6 +93,7 @@ function PlexusStatusPhase:OnStatusDisable(status)
 
     self:UnregisterEvent("UNIT_PHASE")
     self:UnregisterEvent("GROUP_ROSTER_UPDATE")
+    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
     self:UnregisterMessage("Plexus_PartyTransition")
     self:UnregisterMessage("Plexus_UnitJoined")
 
@@ -116,8 +118,8 @@ function PlexusStatusPhase:GainStatus(guid, key, settings)
     )
 end
 
-function PlexusStatusPhase:UpdateAllUnits(event)
-    for guid, unitid in PlexusRoster:IterateRoster() do
+function PlexusStatusPhase:UpdateAllUnits()
+    for _, unitid in PlexusRoster:IterateRoster() do
         self:UpdateUnit(unitid)
     end
 end
@@ -135,6 +137,7 @@ function PlexusStatusPhase:UpdateUnit(unitid)
 end
 
 function PlexusStatusPhase:UNIT_PHASE(event, unitid)
+    self:Debug("UNIT_PHASE event: ", event)
     if unitid and self.db.profile.phase_status.enable then
         self:UpdateUnit(unitid)
     end
@@ -147,6 +150,9 @@ function PlexusStatusPhase:GroupChanged()
 end
 
 function PlexusStatusPhase:Plexus_UnitJoined(event, guid, unitid)
+    if (not event) or (not guid) or (not unitid) then return end
+    self:Debug("Plexus_UnitJoined event: ", event)
+    self:Debug("Plexus_UnitJoined guid: ", guid)
     if unitid and self.db.profile.phase_status.enable then
         self:UpdateUnit(unitid)
     end
