@@ -1,8 +1,8 @@
 ## Interface: 11304
 ## Author: Ryts
-## Version: 1.25
+## Version: 1.29
 ## Title: BCT
-## Notes: v1.25
+## Notes: v1.29
 ## SavedVariables: BCTDB
 
 Libs\LibStub\LibStub.lua

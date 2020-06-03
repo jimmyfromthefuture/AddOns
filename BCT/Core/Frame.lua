@@ -10,15 +10,15 @@ local function UpdateFont()
 end
 BCT.UpdateFont = UpdateFont
 
--- Inefficient implementation (calls)
-local function UpdateFrameState()
-	local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
-	local groupState = (not IsInGroup()) and "Solo" or 
-		((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
-		
-	if BCT.session.db.window.enable and
-		BCT.session.db.loading.instanceState[tonumber(maxPlayers)] and
-		BCT.session.db.loading.groupState[(instanceType == "pvp" and "Battleground" or groupState)] then
+local function UpdateWindowState()
+	if BCT.Anchor:GetWidth() ~= BCT.session.db.window.anchor.width or
+		BCT.Anchor:GetHeight() ~= BCT.session.db.window.anchor.height then
+		BCT.Anchor:SetWidth(BCT.session.db.window.anchor.width)
+		BCT.Anchor:SetHeight(BCT.session.db.window.anchor.height)
+		BCT.Window:SetWidth(BCT.session.db.window.body.width)
+		BCT.Window:SetHeight(BCT.session.db.window.body.height)
+	end
+	if BCT.session.db.window.enable and BCT.session.db.loading.enabled and BCT.session.db.loading.enabledFrames then
 		BCT.Anchor:Show()
 		BCT.Window:Show()
 	else
@@ -43,8 +43,15 @@ local function UpdateFrameState()
 	else
 		BCT.Window.text:SetPoint("TOPLEFT", BCT.Window, "BOTTOMLEFT", BCT.session.db.window.body.x_offset, BCT.session.db.window.body.y_offset)
 	end
+	BCT.Anchor.text:SetPoint("LEFT", BCT.Anchor, "LEFT", BCT.session.db.window.anchor.x_offset, BCT.session.db.window.anchor.y_offset)
+	
+	if BCT.session.db.window.anchor.clickthrough and BCT.session.db.window.lock then
+		BCT.Anchor:EnableMouse(false)
+	else
+		BCT.Anchor:EnableMouse(true)
+	end
 end
-BCT.UpdateFrameState = UpdateFrameState
+BCT.UpdateWindowState = UpdateWindowState
 
 BCT.Anchor = CreateFrame("Frame","BCTAnchor",UIParent)
 BCT.Anchor:SetMovable(true)

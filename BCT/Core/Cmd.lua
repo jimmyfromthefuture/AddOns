@@ -24,7 +24,7 @@ function SlashCmdList.BCTSC(msg)
 		return
 	end
 	if cmd == "profile" then
-		ChangeProfile(args)
+		BCT.Anchor:ChangeProfile(args)
 		return
 	end
 	

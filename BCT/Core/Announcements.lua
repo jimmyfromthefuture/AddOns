@@ -7,11 +7,11 @@ local function Announce(spellName)
 	local blacklist = (blacklisted and BCT.session.db.announcer.enabledBl)
 	local track = (tracked and BCT.session.db.announcer.enabledTrck)
 	
-	if found and (blacklist or track) then
+	if found and (blacklist or track) and BCT.session.db.loading.enabled and BCT.session.db.loading.enabledAnn then
 		local hex = "|cff00ff00"
 		if track then hex = "|cffff0000" end
 
-		BCT.Announcer.text:SetText(hex .. "÷" .. spellName:upper() .. "|r" )
+		BCT.Announcer.text:SetText(hex .. spellName:upper() .. "|r" )
 		BCT.Announcer:Show()
 		timer:Cancel()
 		timer = C_Timer.NewTimer(3, function() BCT.Announcer:Hide() end)

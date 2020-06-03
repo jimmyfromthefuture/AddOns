@@ -2,13 +2,16 @@ local BCT = LibStub("AceAddon-3.0"):GetAddon("BCT")
 
 local function CleanUp()
 
-	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
-		for t, b in pairs(BCT.session.db.auras["auras_visible"]) do
+	BCT.session.state.cleanedup = true
+
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
+		for t, b in pairs(BCT.session.db.auras[BCT.BUFF]) do
 			if k ~= t and (v[6] == BCT.PLAYERBUFF or v[6] == BCT.PERSONALS) 
 				and (b[6] == BCT.PLAYERBUFF or b[6] == BCT.PERSONALS) 
-				and GetSpellInfo(k) == GetSpellInfo(t) then
-				BCT.session.db.auras["auras_visible"][k] = nil
-				BCT.session.db.auras["auras_visible"][t] = nil
+				and GetSpellInfo(k) == GetSpellInfo(t)
+				and	v[8] == b[8] then
+				BCT.session.db.auras[BCT.BUFF][k] = nil
+				BCT.session.db.auras[BCT.BUFF][t] = nil
 				print("BCT: " .. GetSpellInfo(k) .. " was removed from the aura list because of duplicates, please reload UI and confirm availability and setup of the removed buff.")
 			end
 		end
@@ -20,7 +23,7 @@ BCT.CleanUp = CleanUp
 
 local function GetAura(name)
 
-	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
 		if name == GetSpellInfo(k) then
 			return true, v[5], v[3]
 		end
@@ -190,11 +193,11 @@ BCT.SetDefensiveState = SetDefensiveState
 
 local function SetHidden()
 	local i = GetTime() + 1 -- (BCT.aurasSorted[#BCT.aurasSorted] or GetTime()) + 1
-	local _, _, classIndex = UnitClass(UnitName("player"))
+	local _, _, classIndex = UnitClass("player")
 	
 	local function addHidden(j, tree, talent, DefState)
 		if tree ~= nil then	_, _, _, _, currentRank = GetTalentInfo(tree, talent) end
-		local arr = BCT.session.db.auras["auras_hidden"]
+		local arr = BCT.session.db.auras[BCT.OTHER]
 		local isCounted = arr[j][4]
 		local talentChk = tree == nil and true or tonumber(currentRank or 0) > 0
 		local dsChk = DefState == nil and true or BCT.session.state.DefensiveState
@@ -209,6 +212,9 @@ local function SetHidden()
 		[1] = function() 					---- Warrior
 			addHidden(1, nil, nil, true)	-- Defensive State
 			addHidden(2)					-- Stance
+		end,
+		[7] = function() 					---- Shaman
+			addHidden(7, 1, 11)				-- Elemental Devastation
 		end,
 		[11] = function() 					---- Druid
 			addHidden(4, 2, 10)				-- Predatory Strikes
@@ -243,7 +249,7 @@ local function SetAurasSorted()
 	-- add enchants
 	for i=1,19,1 do
 		if BCT.items[i] ~= nil then
-			local arr = BCT.session.db.auras["auras_enchants"]
+			local arr = BCT.session.db.auras[BCT.ENCHANT]
 			local search = arr[BCT.items[i][2]]
 			if search ~= nil then
 				if search[4] then 
@@ -269,7 +275,7 @@ local function SetAurasSorted()
 		end
         local t = BCT.aurasSorted[1]
 		if BCT.buffs[t] ~= nil then
-			local search = BCT.session.db.auras["auras_visible"]
+			local search = BCT.session.db.auras[BCT.BUFF]
 			if search[BCT.buffs[t]] ~= nil then
 				BCT.nextAura = fill(search[BCT.buffs[t]][1])
 			else
@@ -284,7 +290,7 @@ local function SetAurasSorted()
 				if BCT.items[i] ~= nil then
 					if BCT.items[i][3] == t then
 						
-						BCT.nextAura = fill(BCT.session.db.auras["auras_enchants"][BCT.items[i][2]][1])
+						BCT.nextAura = fill(BCT.session.db.auras[BCT.ENCHANT][BCT.items[i][2]][1])
 					end
 				end
 			end
@@ -313,7 +319,7 @@ BCT.SetAurasSorted = SetAurasSorted
 ---- tracked string
 
 local function isNextTracked()
-	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
         if BCT.nextAuraId == k and v[3] then 
             return true 
         end
@@ -410,9 +416,13 @@ local function GetAuraDur(name, buff, hasRank)
 		else
 			buffname, _, _, _, _, expTime, _, _,  _, spellId = UnitDebuff("player", i)
 		end
+
 		if buffname ~= nil then
 			if (hasRank and GetSpellInfo(tonumber(spellId)) == GetSpellInfo(tonumber(name))
 				or tonumber(spellId) == name) then
+				if expTime == 0 then
+					return "" 
+				end
 				etime = expTime
 				break
 			end
@@ -447,7 +457,7 @@ local function BuildNextFiveString()
 		if next(BCT.aurasSorted) ~= nil and BCT.aurasSorted[n] ~= nil then
 			local t = BCT.aurasSorted[n]
 			if BCT.buffs[t] ~= nil then
-				local search = BCT.session.db.auras["auras_visible"]
+				local search = BCT.session.db.auras[BCT.BUFF]
 				if search[BCT.buffs[t]] ~= nil then
 					return Nth (n) .. ": " .. search[BCT.buffs[t]][1]
 				else
@@ -462,7 +472,7 @@ local function BuildNextFiveString()
 					if BCT.items[i] ~= nil then
 						if BCT.items[i][3] == t then
 							
-							return Nth (n) .. ": " .. BCT.session.db.auras["auras_enchants"][BCT.items[i][2]][1]
+							return Nth (n) .. ": " .. BCT.session.db.auras[BCT.ENCHANT][BCT.items[i][2]][1]
 						end
 					end
 				end
@@ -485,37 +495,7 @@ local function BuildTrackedString()
     local tmp = ""
 	local nl = false
 	
-	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
-		if v[3] and v[6] == BCT.WORLDBUFF then 
-			tmp = tmp .. "\n" .. v[2] .. ": " .. FindBuff(k) .. GetAuraDur(k, true) 
-			nl = true
-		end
-	end
-	if nl then 
-		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
-		nl = false
-	end
-	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
-		if v[3] and v[6] == BCT.PLAYERBUFF then 
-			tmp = tmp .. "\n" .. v[2] .. ": " .. FindBuff(k, true) .. GetAuraDur(k, true, true) 
-			nl = true
-		end
-	end
-	if nl then 
-		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
-		nl = false
-	end
-	for k, v in pairs(BCT.session.db.auras["auras_debuffs"]) do
-		if v[3] and v[6] == BCT.DEBUFF then 
-			tmp = tmp .. "\n" .. v[2] .. ": " .. FindDebuff(k) .. GetAuraDur(k, false)
-			nl = true
-		end
-	end
-	if nl then 
-		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
-		nl = false
-	end
-	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
 		if v[3] and v[6] == BCT.CONSUMABLE then 
 			tmp = tmp .. "\n" .. v[2] .. ": " .. FindBuff(k) .. GetAuraDur(k, true) 
 			nl = true
@@ -525,9 +505,49 @@ local function BuildTrackedString()
 		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
 		nl = false
 	end
-	for k, v in pairs(BCT.session.db.auras["auras_visible"]) do
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
+		if v[3] and v[6] == BCT.WORLDBUFF then 
+			tmp = tmp .. "\n" .. v[2] .. ": " .. FindBuff(k, true) .. GetAuraDur(k, true, true) 
+			nl = true
+		end
+	end
+	if nl then 
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
+		nl = false
+	end
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
+		if v[3] and v[6] == BCT.PERSONALS then 
+			tmp = tmp .. "\n" .. v[2] .. ": " .. FindBuff(k) .. GetAuraDur(k, true) 
+			nl = true
+		end
+	end
+	if nl then 
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
+		nl = false
+	end
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
 		if v[3] and v[6] == BCT.HOLIDAY then 
 			tmp = tmp .. "\n" .. v[2] .. ": " .. FindBuff(k) .. GetAuraDur(k, true) 
+			nl = true
+		end
+	end
+	if nl then 
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
+		nl = false
+	end
+	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
+		if v[3] and v[6] == BCT.PLAYERBUFF then 
+			tmp = tmp .. "\n" .. v[2] .. ": " .. FindBuff(k) .. GetAuraDur(k, true) 
+			nl = true
+		end
+	end
+	if nl then 
+		tmp = BCT.session.db.window.body.group_lines and tmp or (tmp .. "\n" )
+		nl = false
+	end
+	for k, v in pairs(BCT.session.db.auras[BCT.DEBUFF]) do
+		if v[3] and v[6] == BCT.DEBUFF then 
+			tmp = tmp .. "\n" .. v[2] .. ": " .. FindDebuff(k) .. GetAuraDur(k, false)
 			nl = true
 		end
 	end

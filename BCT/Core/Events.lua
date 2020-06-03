@@ -9,13 +9,57 @@ local function Refresh()
 end
 BCT.Refresh = Refresh
 
+local function ZoneChange()
+
+	if BCT.session.state.zone ~= GetInstanceInfo() then
+		local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+		local groupState = (not IsInGroup()) and "Solo" or 
+			((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+
+		if BCT.session.db.loading.instanceStateFrames[tonumber(maxPlayers)] and
+			BCT.session.db.loading.groupStateFrames[(instanceType == "pvp" and "Battleground" or groupState)] then
+			BCT.session.db.loading.enabledFrames = true
+		else
+			BCT.session.db.loading.enabledFrames = false
+		end
+		
+		if BCT.session.db.loading.instanceStateAnn[tonumber(maxPlayers)] and
+			BCT.session.db.loading.groupStateAnn[(instanceType == "pvp" and "Battleground" or groupState)] then
+			BCT.session.db.loading.enabledAnn = true
+		else
+			BCT.session.db.loading.enabledAnn = false
+		end
+		
+		if BCT.session.db.loading.instanceStateBL[tonumber(maxPlayers)] and
+			BCT.session.db.loading.groupStateBL[(instanceType == "pvp" and "Battleground" or groupState)] then
+			BCT.session.db.loading.enabledBL = true
+		else
+			BCT.session.db.loading.enabledBL = false
+		end
+		
+		if BCT.session.db.loading.instanceState[tonumber(maxPlayers)] and
+			BCT.session.db.loading.groupState[(instanceType == "pvp" and "Battleground" or groupState)] then
+			BCT.session.db.loading.enabled = true
+		else
+			BCT.session.db.loading.enabled = false
+		end
+		
+		BCT.SetInCombatBlacklistingMacro()
+		BCT.UpdateWindowState()
+		BCT.session.state.zone = GetInstanceInfo()
+	end
+end
+BCT.ZoneChange = ZoneChange
+
+local FrameStateTicker = C_Timer.NewTicker(0.1, function() BCT.ZoneChange() end)
+
 BCT.Events:RegisterUnitEvent("UNIT_AURA", "player")
 BCT.Events:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 BCT.Events:RegisterEvent("PLAYER_LOGIN")
 BCT.Events:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 BCT.Events:SetScript("OnEvent", function(self, event, ...)
-	local _, _, classIndex = UnitClass(UnitName("player"))
+	local _, _, classIndex = UnitClass("player")
 	if event == "COMBAT_LOG_EVENT_UNFILTERED" then
 		local _, subEvent, _, _, sourceName, _, _, _, destName, _, _, spellId, spellName, _, missType = CombatLogGetCurrentEventInfo()
 		if classIndex == 1 then BCT.SetDefensiveState(subEvent, spellId, spellName, sourceName, destName, missType) end
@@ -26,6 +70,7 @@ BCT.Events:SetScript("OnEvent", function(self, event, ...)
 	if event == "PLAYER_LOGIN" then
 		BCT.UpdateFont()
 		BCT.UpdateFontAnnouncer()
+		BCT.UpdateWindowState()
 		BCT.SetInCombatBlacklistingMacro()
 		BCT.profileStr = BCT.db:GetCurrentProfile()
 		return
@@ -36,5 +81,3 @@ BCT.Events:SetScript("OnEvent", function(self, event, ...)
 		return
 	end
 end)
-
-local FrameStateTicker = C_Timer.NewTicker(0.1, function() BCT.UpdateFrameState() end)

@@ -14,9 +14,11 @@ local GetAuraAdd = {
 	order = 6, 
 	name = "Add ID",
 	type = 'input',
+	desc = "Make sure you are adding a spell ID and not an item ID",
 	get = function(info) return "" end,
 	set = function(info, value)
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
+		local _, _, classId = UnitClass("player")
 		if BCT.session.state.aurasTypeSelected == BCT.ENCHANT then
 			arr[tonumber(value)] = {"", "", BCT.HIDE, BCT.COUNT, BCT.WHITELISTED, BCT.ENCHANT, BCT.UNLISTED}
 		elseif BCT.session.state.aurasTypeSelected == BCT.DEBUFF then
@@ -29,7 +31,7 @@ local GetAuraAdd = {
 				elseif BCT.session.state.aurasSourceSelected == 0 then
 					print("BCT: Choose a source.")
 				else
-					arr[tonumber(value)] = {GetSpellInfo(tonumber(value)), GetSpellInfo(tonumber(value)), BCT.HIDE, BCT.COUNT, BCT.WHITELISTED, BCT.session.state.aurasSourceSelected, BCT.UNLISTED}
+					arr[tonumber(value)] = {GetSpellInfo(tonumber(value)), GetSpellInfo(tonumber(value)), BCT.HIDE, BCT.COUNT, BCT.WHITELISTED, BCT.session.state.aurasSourceSelected, BCT.UNLISTED, (BCT.session.state.aurasSourceSelected == BCT.PERSONALS and classId or nil)}
 				end
 			end
 		end
@@ -50,11 +52,13 @@ local GetSource = {
 		[BCT.PERSONALS] = "Personal",
 	},
 	get = function(info, value)
-		return BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]][tonumber(info[#info-1])][6]
+		return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][6]
 	end, 
 	set = function(info, value) 
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
+		local _, _, classId = UnitClass("player")
 		arr[tonumber(info[#info-1])][6] = value
+		arr[tonumber(info[#info-1])][8] = (BCT.session.state.aurasSourceSelected == BCT.PERSONALS and classId or nil)
 	end,
 }
 
@@ -62,9 +66,9 @@ local GetListName = {
 	order = 1,
 	type = "input",
 	name = "List Text",
-	get = function(info) return BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]][tonumber(info[#info-1])][1] end,
+	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][1] end,
 	set = function(info, value) 
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		arr[tonumber(info[#info-1])][1] = value
 	end,
 }
@@ -74,9 +78,9 @@ local GetAssigned = {
 	type = "toggle",
 	name = "Assign",
 	width = "normal",
-	get = function(info) return BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]][tonumber(info[#info-1])][7] end,
+	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][7] end,
 	set = function(info, value) 
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		arr[tonumber(info[#info-1])][7] = value
 	end,
 }
@@ -86,12 +90,11 @@ local GetDisplayName = {
 	type = "input",
 	name = "Display Text",
 	get = function(info) 
-		local key = BCT.AURASMAP[BCT.session.state.aurasTypeSelected]
 		local id = tonumber(info[#info-1])
-		return BCT.session.db.auras[key][id][2] 
+		return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][id][2] 
 	end,
 	set = function(info, value) 
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		arr[tonumber(info[#info-1])][2] = value
 	end,
 }
@@ -101,9 +104,9 @@ local GetTracked = {
 	type = "toggle",
 	name = "Track",
 	width = "full",
-	get = function(info) return BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]][tonumber(info[#info-1])][3] end,
+	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][3] end,
 	set = function(info, value) 
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		arr[tonumber(info[#info-1])][3] = value
 	end,
 }
@@ -113,9 +116,9 @@ local GetBlacklisted = {
 	type = "toggle",
 	name = "Blacklist",
 	width = "full",
-	get = function(info) return BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]][tonumber(info[#info-1])][5] end,
+	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][5] end,
 	set = function(info, value) 
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		arr[tonumber(info[#info-1])][5] = value
 		BCT.SetInCombatBlacklistingMacro()
 	end,
@@ -126,7 +129,7 @@ local GetRemoveSpell = {
 	name = "Remove",
 	type = 'execute',
 	func = function(info)
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		arr[tonumber(info[#info-1])] = nil
 	end,
 }
@@ -136,9 +139,9 @@ local GetCounts = {
 	type = "toggle",
 	name = "Count towards cap",
 	width = "full",
-	get = function(info) return BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]][tonumber(info[#info-1])][4] end,
+	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][4] end,
 	set = function(info, value)
-		local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		arr[tonumber(info[#info-1])][4] = value
 		BCT.Refresh()
 	end,
@@ -186,7 +189,7 @@ local groups = {
 }
 
 local function GetOptionsTable()
-	BCT.CleanUp()
+	if not BCT.session.state.cleanedup then BCT.CleanUp() end
 
 	local optionsTbl = {
 		type = "group",
@@ -208,7 +211,7 @@ local function GetOptionsTable()
 			Setup = {
 				order = 2,
 				type = "group",
-				name = "General",
+				name = "Settings",
 				desc = "",
 				childGroups = "tab",
 				get = function(info) end,
@@ -227,6 +230,7 @@ local function GetOptionsTable()
 						width = "normal",
 						func = function()
 							BCT.session.db.window.lock = not BCT.session.db.window.lock
+							BCT.UpdateWindowState()
 						end,
 					},
 					reset = {
@@ -243,46 +247,111 @@ local function GetOptionsTable()
 						confirmText = "Resets Window Position (Reloads UI)",
 						confirm = true
 					},
-					enable = {
+					enableWindow = {
 						name = function()
 							if BCT.session.db.window.enable then
-								return "Disable"
+								return "Hide"
 							else
-								return "Enable"
+								return "Show"
 							end
 						end,
 						type = 'execute',
 						order = 3,	
-						width = "normal",					
+						width = .6,					
 						func = function()
 							BCT.session.db.window.enable = not BCT.session.db.window.enable
+							BCT.UpdateWindowState()
+						end,
+					},
+					enableBCT = {
+						name = function()
+							if BCT.session.db.loading.enabled then
+								return "Disable"
+							else
+								return "Enable"
+							end
+							BCT.UpdateWindowState()
+						end,
+						type = 'execute',
+						order = 3,	
+						width = .6,					
+						func = function()
+							BCT.session.db.loading.enabled = not BCT.session.db.loading.enabled
+							BCT.UpdateWindowState()
 						end,
 					},
 					txt = {
 						order = 4,
 						type = "group",
-						name = "General",
+						name = "Frames",
+						childGroups = "tab",
 						args = {
-							titleGroup = {
+							anchorGroup = {
 								name = "Anchor",
 								desc = "",
 								type = 'group',
+								order = 0,					
+								args = {
+									width = {
+										order = 4,
+										name = "Width",
+										desc = "",
+										type = "range",
+										min = 1, max = 2140, step = 1,
+										get = function(info) return BCT.session.db.window.anchor.width end,
+										set = function(info, value) 
+											BCT.session.db.window.anchor.width = tonumber(value)
+											BCT.session.db.window.body.width = tonumber(value)
+											BCT.UpdateWindowState()
+										end,
+									},
+									height = {
+										order = 5,
+										name = "Height",
+										desc = "",
+										type = "range",
+										min = 1, max = 1200, step = 1,
+										get = function(info) return BCT.session.db.window.anchor.height end,
+										set = function(info, value) 
+											BCT.session.db.window.anchor.height = tonumber(value)
+											BCT.session.db.window.body.height = tonumber(value)
+											BCT.UpdateWindowState()
+										end,
+									},
+									clickthrough = {
+										name = "Click-through",
+										desc = "Enabling will break Mouse Over",
+										type = 'toggle',
+										order = 6,					
+										width = "normal",			
+										get = function(info) return BCT.session.db.window.anchor.clickthrough end,
+										set = function(info, value) 
+											BCT.session.db.window.anchor.clickthrough = not BCT.session.db.window.anchor.clickthrough
+											BCT.UpdateWindowState()
+										end,
+									},
+								},
+							},
+							titleGroup = {
+								name = "Title",
+								desc = "",
+								type = 'group',
 								order = 1,					
-								guiInline = true,
 								args = {
 									Text = {
 										name = "Text",
 										type = "input",
-										order = 3,
+										order = 11,
 										width = "normal",	
 										get = function(info) return BCT.session.db.window.anchor.value end,
 										set = function(info, value) 
 											BCT.session.db.window.anchor.value = value
+											BCT.UpdateWindowState()
 										end,
 									},	
 									counter = {
 										type = "select",
-										order = 4,
+										order = 12,
 										name = "Counter",									
 										values = {
 											["None"] = "None",
@@ -292,6 +361,7 @@ local function GetOptionsTable()
 										get = function(_, value) return BCT.session.db.window.anchor.counter end, 
 										set = function(_, value) 
 											BCT.session.db.window.anchor.counter = value
+											BCT.UpdateWindowState()
 										end,
 									},
 									fontSize = {
@@ -344,6 +414,31 @@ local function GetOptionsTable()
 											BCT.UpdateFont()
 										end,
 									},
+									spacer = GetSpacer(10),
+									xoff = {
+										order = 8,
+										name = "X Offset",
+										desc = "",
+										type = "range",
+										min = -2140, max = 2140, step = 1,
+										get = function(info) return BCT.session.db.window.anchor.x_offset end,
+										set = function(info, value) 
+											BCT.session.db.window.anchor.x_offset = tonumber(value)
+											BCT.UpdateWindowState()
+										end,
+									},
+									yoff = {
+										order = 9,
+										name = "Y Offset",
+										desc = "",
+										type = "range",
+										min = -2140, max = 1200, step = 1,
+										get = function(info) return BCT.session.db.window.anchor.y_offset end,
+										set = function(info, value) 
+											BCT.session.db.window.anchor.y_offset = tonumber(value)
+											BCT.UpdateWindowState()
+										end,
+									},
 								},
 							},
 							bodyGroup = {
@@ -351,7 +446,6 @@ local function GetOptionsTable()
 								desc = "",
 								type = 'group',
 								order = 2,					
-								guiInline = true,
 								args = {
 									fontSize = {
 										order = 1,
@@ -405,39 +499,42 @@ local function GetOptionsTable()
 									},
 									mouseover = {
 										name = "Mouse Over",
-										desc = "",
+										desc = "Does not work with Click-through",
 										type = 'toggle',
-										order = 4,					
+										order = 7,					
 										width = "normal",			
 										get = function(info) return BCT.session.db.window.body.mouseover end,
 										set = function(info, value) 
 											BCT.session.db.window.body.mouseover = not BCT.session.db.window.body.mouseover
+											BCT.UpdateWindowState()
 										end,
 									},
 									growup = {
 										name = "Grow Up",
 										desc = "",
 										type = 'toggle',
-										order = 5,					
+										order = 8,					
 										width = "normal",			
 										get = function(info) return BCT.session.db.window.body.growup end,
 										set = function(info, value) 
 											BCT.session.db.window.body.growup = not BCT.session.db.window.body.growup
+											BCT.UpdateWindowState()
 										end,
 									},
 									grouplines = {
 										name = "Group Tracking",
 										desc = "",
 										type = 'toggle',
-										order = 6,					
+										order = 9,					
 										width = "normal",			
 										get = function(info) return BCT.session.db.window.body.group_lines end,
 										set = function(info, value) 
 											BCT.session.db.window.body.group_lines = not BCT.session.db.window.body.group_lines
+											BCT.UpdateWindowState()
 										end,
 									},
 									xoff = {
-										order = 7,
+										order = 4,
 										name = "X Offset",
 										desc = "",
 										type = "range",
@@ -445,116 +542,119 @@ local function GetOptionsTable()
 										get = function(info) return BCT.session.db.window.body.x_offset end,
 										set = function(info, value) 
 											BCT.session.db.window.body.x_offset = tonumber(value)
+											BCT.UpdateWindowState()
 										end,
 									},
 									yoff = {
-										order = 8,
+										order = 5,
 										name = "Y Offset",
 										desc = "",
 										type = "range",
-										min = -2140, max = 2140, step = 1,
+										min = -2140, max = 1200, step = 1,
 										get = function(info) return BCT.session.db.window.body.y_offset end,
 										set = function(info, value) 
 											BCT.session.db.window.body.y_offset = tonumber(value)
+											BCT.UpdateWindowState()
+										end,
+									},
+									spacer = GetSpacer(6),
+									text = {
+										name = "Texts",
+										desc = "",
+										type = 'multiselect',
+										order = 10,
+										values = {
+											["enchants"] = "Enchants",
+											["buffs"] = "Buffs",
+											["nextone"] = "Next",
+											["tracking"] = "Tracking",
+											["profile"] = "Profile",
+										},	
+										get = function(_, value) return BCT.session.db.window.text[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.window.text[value] = state
 										end,
 									},
 								},
 							},
-							text = {
-								name = "Body (Text)",
-								desc = "",
-								type = 'multiselect',
-								order = 3,
-								values = {
-									["enchants"] = "Enchants",
-									["buffs"] = "Buffs",
-									["nextone"] = "Next",
-									["tracking"] = "Tracking",
-									["profile"] = "Profile",
-								},	
-								get = function(_, value) return BCT.session.db.window.text[value] end, 
-								set = function(_, value, state) 
-									BCT.session.db.window.text[value] = state
-								end,
-							},
-						},
-					},
-					announce = {
-						order = 5,
-						type = "group",
-						name = "Announcements",
-						args = {
-							announceBl = {
-								name = "Blacklisted",
-								desc = "Announce when blacklisted buffs are removed/lost",
-								type = 'toggle',
-								order = 4,					
-								width = "normal",			
-								get = function(info) return BCT.session.db.announcer.enabledBl end,
-								set = function(info, value) 
-									BCT.session.db.announcer.enabledBl = not BCT.session.db.announcer.enabledBl
-								end,
-							},
-							announceTrck = {
-								name = "Tracked",
-								desc = "Announce when tracked buffs are removed/lost",
-								type = 'toggle',
-								order = 5,					
-								width = "double",			
-								get = function(info) return BCT.session.db.announcer.enabledTrck end,
-								set = function(info, value) 
-									BCT.session.db.announcer.enabledTrck = not BCT.session.db.announcer.enabledTrck
-								end,
-							},
-							fontSize = {
-								order = 1,
-								name = "Font Size",
-								desc = "",
-								type = "range",
-								min = 4, max = 60, step = 1,
-								get = function(info) return tonumber(BCT.session.db.announcer.font_size) end,
-								set = function(info, value) 
-									local inp = tonumber(value)
-									if 'number' == type(inp) and inp > 0 then
-										BCT.session.db.announcer.font_size = inp
-										BCT.UpdateFontAnnouncer()
-									else
-										print("BCT: You must input a positive number higher than 0")
-									end
-								end,
-							},
-							font = {
-								type = "select",
-								order = 2,
-								name = "Font",
-								values = fonts,
-								get = function()
-									for info, value in next, fonts do
-										if value == BCT.session.db.announcer.font then
-											return info
-										end
-									end
-								end, 
-								set = function(_, value)
-									BCT.session.db.announcer.font = fonts[value]
-									BCT.UpdateFontAnnouncer()
-								end,
-							},
-							fontStyle = {
-								type = "select",
-								order = 3,
-								name = "Font Outline",
-								values = {
-									["None"] = "None",
-									["MONOCHROMEOUTLINE"] = "MONOCHROMEOUTLINE",
-									["OUTLINE"] = "OUTLINE",
-									["THICKOUTLINE"] = "THICKOUTLINE",
+							announcer = {
+								order = 5,
+								type = "group",
+								name = "Announcer",
+								args = {
+									announceBl = {
+										name = "Blacklisted",
+										desc = "Announce when blacklisted buffs are removed/lost",
+										type = 'toggle',
+										order = 4,					
+										width = "normal",			
+										get = function(info) return BCT.session.db.announcer.enabledBl end,
+										set = function(info, value) 
+											BCT.session.db.announcer.enabledBl = not BCT.session.db.announcer.enabledBl
+										end,
+									},
+									announceTrck = {
+										name = "Tracked",
+										desc = "Announce when tracked buffs are removed/lost",
+										type = 'toggle',
+										order = 5,					
+										width = "double",			
+										get = function(info) return BCT.session.db.announcer.enabledTrck end,
+										set = function(info, value) 
+											BCT.session.db.announcer.enabledTrck = not BCT.session.db.announcer.enabledTrck
+										end,
+									},
+									fontSize = {
+										order = 1,
+										name = "Font Size",
+										desc = "",
+										type = "range",
+										min = 4, max = 60, step = 1,
+										get = function(info) return tonumber(BCT.session.db.announcer.font_size) end,
+										set = function(info, value) 
+											local inp = tonumber(value)
+											if 'number' == type(inp) and inp > 0 then
+												BCT.session.db.announcer.font_size = inp
+												BCT.UpdateFontAnnouncer()
+											else
+												print("BCT: You must input a positive number higher than 0")
+											end
+										end,
+									},
+									font = {
+										type = "select",
+										order = 2,
+										name = "Font",
+										values = fonts,
+										get = function()
+											for info, value in next, fonts do
+												if value == BCT.session.db.announcer.font then
+													return info
+												end
+											end
+										end, 
+										set = function(_, value)
+											BCT.session.db.announcer.font = fonts[value]
+											BCT.UpdateFontAnnouncer()
+										end,
+									},
+									fontStyle = {
+										type = "select",
+										order = 3,
+										name = "Font Outline",
+										values = {
+											["None"] = "None",
+											["MONOCHROMEOUTLINE"] = "MONOCHROMEOUTLINE",
+											["OUTLINE"] = "OUTLINE",
+											["THICKOUTLINE"] = "THICKOUTLINE",
+										},
+										get = function() return BCT.session.db.announcer.font_style end,
+										set = function(info, value) 
+											BCT.session.db.announcer.font_style = value
+											BCT.UpdateFontAnnouncer()
+										end,
+									},
 								},
-								get = function() return BCT.session.db.announcer.font_style end,
-								set = function(info, value) 
-									BCT.session.db.announcer.font_style = value
-									BCT.UpdateFontAnnouncer()
-								end,
 							},
 						},
 					},
@@ -651,38 +751,271 @@ local function GetOptionsTable()
 						type = "group",
 						name = "Loading",
 						args = {
-							State = {
-								name = "Group Type",
-								desc = "Group Type",
-								type = 'multiselect',
-								order = 18,					
-								values = {
-									["Solo"] = "Solo",
-									["Group"] = "Group",
-									["Raid"] = "Raid",
-									["Battleground"] = "Battleground",
-								},	
-								get = function(_, value) return BCT.session.db.loading.groupState[value] end, 
-								set = function(_, value, state) 
-									BCT.session.db.loading.groupState[value] = state
-								end,
+							overall = {
+								order = 1,
+								type = "group",
+								name = "Addon",
+								desc = "Enable/Disable BCT",
+								args = {
+									State = {
+										name = "Group Type",
+										desc = "Group Type",
+										type = 'multiselect',
+										order = 1,					
+										values = {
+											["Solo"] = "Solo",
+											["Group"] = "Group",
+											["Raid"] = "Raid",
+											["Battleground"] = "Battleground",
+										},	
+										get = function(_, value) return BCT.session.db.loading.groupState[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.groupState[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceState[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupState[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabled = true
+											else
+												BCT.session.db.loading.enabled = false
+											end
+											
+											BCT.SetInCombatBlacklistingMacro()
+											BCT.UpdateWindowState()
+										end,
+									},
+									instanceState = {
+										name = "Instance Type",
+										desc = "Instance Type",
+										type = 'multiselect',
+										order = 2,	
+										values = {
+											[0] = "Outside",
+											[5] = "5 Man Instance",
+											[10] = "10 Man Instance",
+											[20] = "20 Man Instance",
+											[40] = "40 Man Instance",
+										},	
+										get = function(_, value) return BCT.session.db.loading.instanceState[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.instanceState[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceState[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupState[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabled = true
+											else
+												BCT.session.db.loading.enabled = false
+											end
+											
+											BCT.SetInCombatBlacklistingMacro()
+											BCT.UpdateWindowState()
+										end,
+									},
+								},
 							},
-							instanceState = {
-								name = "Instance Type",
-								desc = "Instance Type",
-								type = 'multiselect',
-								order = 19,	
-								values = {
-									[0] = "Outside",
-									[5] = "5 Man Instance",
-									[10] = "10 Man Instance",
-									[20] = "20 Man Instance",
-									[40] = "40 Man Instance",
-								},	
-								get = function(_, value) return BCT.session.db.loading.instanceState[value] end, 
-								set = function(_, value, state) 
-									BCT.session.db.loading.instanceState[value] = state
-								end,
+							blacklisting = {
+								order = 3,
+								type = "group",
+								name = "Blacklisting",
+								desc = "Enable/Disable Blacklisting",
+								args = {
+									StateBlacklisting = {
+										name = "Group Type",
+										desc = "Group Type",
+										type = 'multiselect',
+										order = 4,					
+										values = {
+											["Solo"] = "Solo",
+											["Group"] = "Group",
+											["Raid"] = "Raid",
+											["Battleground"] = "Battleground",
+										},	
+										get = function(_, value) return BCT.session.db.loading.groupStateBL[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.groupStateBL[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateBL[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateBL[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledBL = true
+											else
+												BCT.session.db.loading.enabledBL = false
+											end
+											
+											BCT.SetInCombatBlacklistingMacro()
+										end,
+									},
+									instanceStateBlacklisting = {
+										name = "Instance Type",
+										desc = "Instance Type",
+										type = 'multiselect',
+										order = 5,	
+										values = {
+											[0] = "Outside",
+											[5] = "5 Man Instance",
+											[10] = "10 Man Instance",
+											[20] = "20 Man Instance",
+											[40] = "40 Man Instance",
+										},	
+										get = function(_, value) return BCT.session.db.loading.instanceStateBL[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.instanceStateBL[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateBL[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateBL[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledBL = true
+											else
+												BCT.session.db.loading.enabledBL = false
+											end
+											
+											BCT.SetInCombatBlacklistingMacro()
+										end,
+									},
+								},
+							},
+							announcer = {
+								order = 2,
+								type = "group",
+								name = "Announcements",
+								desc = "Enable/Disable Announcements",
+								args = {
+									StateBlacklisting = {
+										name = "Group Type",
+										desc = "Group Type",
+										type = 'multiselect',
+										order = 4,					
+										values = {
+											["Solo"] = "Solo",
+											["Group"] = "Group",
+											["Raid"] = "Raid",
+											["Battleground"] = "Battleground",
+										},	
+										get = function(_, value) return BCT.session.db.loading.groupStateAnn[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.groupStateAnn[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateAnn[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateAnn[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledAnn = true
+											else
+												BCT.session.db.loading.enabledAnn = false
+											end
+										end,
+									},
+									instanceStateBlacklisting = {
+										name = "Instance Type",
+										desc = "Instance Type",
+										type = 'multiselect',
+										order = 5,	
+										values = {
+											[0] = "Outside",
+											[5] = "5 Man Instance",
+											[10] = "10 Man Instance",
+											[20] = "20 Man Instance",
+											[40] = "40 Man Instance",
+										},	
+										get = function(_, value) return BCT.session.db.loading.instanceStateBL[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.instanceStateBL[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateBL[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateBL[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledBL = true
+											else
+												BCT.session.db.loading.enabledBL = false
+											end
+										end,
+									},
+								},
+							},
+							frames = {
+								order = 4,
+								type = "group",
+								name = "Text Frames",
+								desc = "Show/Hide Text Frames",
+								args = {
+									StateBlacklisting = {
+										name = "Group Type",
+										desc = "Group Type",
+										type = 'multiselect',
+										order = 4,
+										values = {
+											["Solo"] = "Solo",
+											["Group"] = "Group",
+											["Raid"] = "Raid",
+											["Battleground"] = "Battleground",
+										},	
+										get = function(_, value) return BCT.session.db.loading.groupStateFrames[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.groupStateFrames[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateFrames[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateFrames[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledFrames = true
+											else
+												BCT.session.db.loading.enabledFrames = false
+											end
+											
+											BCT.UpdateWindowState()
+										end,
+									},
+									instanceStateBlacklisting = {
+										name = "Instance Type",
+										desc = "Instance Type",
+										type = 'multiselect',
+										order = 5,	
+										values = {
+											[0] = "Outside",
+											[5] = "5 Man Instance",
+											[10] = "10 Man Instance",
+											[20] = "20 Man Instance",
+											[40] = "40 Man Instance",
+										},	
+										get = function(_, value) return BCT.session.db.loading.instanceStateFrames[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.instanceStateFrames[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateFrames[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateFrames[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledFrames = true
+											else
+												BCT.session.db.loading.enabledFrames = false
+											end
+											
+											BCT.UpdateWindowState()
+										end,
+									},
+								},
 							},
 						},
 					},
@@ -695,7 +1028,7 @@ local function GetOptionsTable()
 				desc = "Auras",
 				args = {
 					intro = {
-						name = "All visible auras are automatically counted and does not have to be added. Only bother adding an aura if you want to blacklist or track it." ..
+						name = "All visible auras are automatically counted and does not have to be added. Only bother adding an aura if you want to blacklist or track it. All ranks are treated alike. Auras and other permanent buffs can be tracked, but blacklisting them will not do anything." ..
 						"\n\nEnchants are only counted if added and toggled." ..
 						"\n\nDebuffs are never counted but can be added for tracking.",
 						type = "description",
@@ -706,9 +1039,12 @@ local function GetOptionsTable()
 						type = "select",
 						order = 2,
 						name = "Type",
-						values = function()
-							return BCT.AURAS
-						end,
+						values = {
+							[BCT.BUFF] = "Buffs",
+							[BCT.DEBUFF] = "Debuffs",
+							[BCT.ENCHANT] = "Enchants",
+							[BCT.OTHER] = "Other",
+						},
 						get = function(key, value, state)
 							return BCT.session.state.aurasTypeSelected
 						end, 
@@ -732,6 +1068,26 @@ local function GetOptionsTable()
 									[BCT.PLAYERBUFF] = "Player",
 									[BCT.HOLIDAY] = "Holiday",
 									[BCT.PERSONALS] = "Personal",
+								}
+							elseif BCT.session.state.aurasTypeSelected == BCT.OTHER then
+								return {
+									[0] = "All",
+									[BCT.TALENT] = "Talent",
+									[BCT.CLASS] = "Class",
+									[BCT.PROFESSION] = "Profession",
+								}
+							elseif BCT.session.state.aurasTypeSelected == BCT.ENCHANT then
+								return {
+									[0] = "All",
+									--[BCT.HEAD] = "Head",
+									--[BCT.SHOULDERS] = "Shoulders",
+									--[BCT.LEGS] = "Legs",
+									--[BCT.FEET] = "Feet",
+									--[BCT.WRIST] = "Wrist",
+									--[BCT.HANDS] = "Hands",
+									--[BCT.BACK] = "Back",
+									--[BCT.MH] = "Main Hand",
+									--[BCT.OH] = "Off Hand",
 								}
 							else
 								BCT.session.state.aurasSourceSelected = 0
@@ -767,17 +1123,117 @@ local function GetOptionsTable()
 						name = "Search",
 						type = "input",
 						order = 5,
-						--width = .6,	
 						get = function(info) return BCT.session.state.aurasSearch end,
 						set = function(info, value) BCT.session.state.aurasSearch = value end,
+					},	
+					templates = {
+						name = "Apply Blacklist",
+						desc = "Will overwrite existing blacklist",
+						type = 'select',
+						order = 7,
+						style = "dropdown",
+						values = function() 
+							local tmp = {}
+							for k, v in pairs(BCT.templates) do
+								tmp[k] = k
+							end
+							return tmp
+						end,
+						get = function(info, value)	return end, 
+						set = function(info, value) 
+							for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
+								v[5] = false
+							end
+							local keys = BCT.templates[value]
+							for k, v in pairs(keys) do
+								BCT.session.db.auras[BCT.BUFF][v][5] = true
+							end
+						end,
+					},
+					export = {
+						name = "Export to String",
+						desc = "Export blacklisted IDs",
+						type = 'execute',
+						order = 8,
+						width = "normal",
+						func = function()
+							StaticPopupDialogs["BCT_EXPORT_TO_STRING"] = {
+							text = "Export Blacklisting IDs",
+							button1 = "Ok",
+							OnShow = function(self)
+								local tmp = ""
+								for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
+									if v[5] == true then tmp = tmp .. "," .. k end
+								end
+								self.editBox:SetText(tmp)
+							end,
+							OnAccept = function()
+							end,
+							timeout = 0,
+							hasEditBox = true,
+							whileDead = true,
+							hideOnEscape = true,
+							}
+						
+							StaticPopup_Show ("BCT_EXPORT_TO_STRING")
+						end,
+					},
+					import = {
+						name = "Import from String",
+						desc = "Will overwrite existing blacklisting",
+						type = 'execute',
+						order = 9,
+						width = "normal",
+						func = function()
+							StaticPopupDialogs["BCT_IMPORT_FROM_STRING"] = {
+							text = "Import Blacklisting IDs",
+							button1 = "Ok",
+							OnShow = function(self)
+							end,
+							OnAccept = function(self)
+								local tmp = {}
+								for word in string.gmatch(self.editBox:GetText(), '([^,]+)') do
+									table.insert(tmp, tonumber(word))
+								end
+	
+								for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
+									v[5] = false
+								end
+								
+								for k, v in pairs(tmp) do
+									if BCT.session.db.auras[BCT.BUFF][v] then
+										BCT.session.db.auras[BCT.BUFF][v][5] = true
+									else
+										print("BCT: " .. (GetSpellInfo(v) or "N/A") .. " (" .. v .. ")" .. " missing in db.")
+									end
+								end
+								InterfaceOptionsFrame_OpenToCategory(BCT.optionsFrames.Auras)
+							end,
+							timeout = 0,
+							hasEditBox = true,
+							whileDead = true,
+							hideOnEscape = true,
+							}
+						
+							StaticPopup_Show ("BCT_IMPORT_FROM_STRING")
+						end,
+					},
+					counter = {
+						name = function() return BCT.session.state.aurasCounter end,
+						type = "description",
+						order = 100,
 					},	
 				},
 			},
 			Profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(BCT.db)
 		},
 	}
+
+	local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 	
-	local arr = BCT.session.db.auras[BCT.AURASMAP[BCT.session.state.aurasTypeSelected]]
+	local _, _, classId = UnitClass("player")
+	
+	BCT.session.state.aurasCounter = 0
 	
 	local function getKeysSortedByValue(tbl, sortFunction)
 
@@ -790,11 +1246,29 @@ local function GetOptionsTable()
 				(BCT.session.state.aurasSourceSelected ~= BCT.PLAYERBUFF and true or arr[key][6] == BCT.PLAYERBUFF) and
 				(BCT.session.state.aurasSourceSelected ~= BCT.HOLIDAY and true or arr[key][6] == BCT.HOLIDAY) and
 				(BCT.session.state.aurasSourceSelected ~= BCT.PERSONALS and true or arr[key][6] == BCT.PERSONALS) and
+
+				(BCT.session.state.aurasSourceSelected ~= BCT.TALENT and true or arr[key][6] == BCT.TALENT) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.CLASS and true or arr[key][6] == BCT.CLASS) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.PROFESSION and true or arr[key][6] == BCT.PROFESSION) and
+				
+				(BCT.session.state.aurasSourceSelected ~= BCT.HEAD and true or arr[key][6] == BCT.HEAD) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.SHOULDERS and true or arr[key][6] == BCT.SHOULDERS) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.LEGS and true or arr[key][6] == BCT.LEGS) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.FEET and true or arr[key][6] == BCT.FEET) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.WRIST and true or arr[key][6] == BCT.WRIST) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.HANDS and true or arr[key][6] == BCT.HANDS) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.BACK and true or arr[key][6] == BCT.BACK) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.MH and true or arr[key][6] == BCT.MH) and
+				(BCT.session.state.aurasSourceSelected ~= BCT.OH and true or arr[key][6] == BCT.OH) and
+				
 				(BCT.session.state.aurasFilter ~= "blacklisted" and true or arr[key][5]) and
-				(BCT.session.state.aurasFilter ~= "tracked" and true or arr[key][3])
+				(BCT.session.state.aurasFilter ~= "tracked" and true or arr[key][3]) and
+				
+				(arr[key][8] == nil and true or arr[key][8] == tonumber(classId))
 				then
 
 				table.insert(keys, key)
+
 			end
 		end
 
@@ -814,15 +1288,32 @@ local function GetOptionsTable()
 		local spellName = arr[key][1]
 		local spellType = arr[key][6]
 		
-		if spellType == BCT.OTHER or
-			spellType == BCT.ENCHANT then spellIcon = nil end
+		if BCT.session.state.aurasTypeSelected == BCT.OTHER or
+			BCT.session.state.aurasTypeSelected == BCT.ENCHANT then spellIcon = nil end
 			
-		if not (spellType == BCT.OTHER or 
+		if not (BCT.session.state.aurasTypeSelected == BCT.OTHER or 
 			spellType == BCT.PLAYERBUFF or
 			spellType == BCT.PERSONALS) then
 			spellName = spellName .. " (" .. key .. ")"
 		end
+
+		--local classColors = {
+		--	[1] = "|cffC79C6E", -- Warrior	WARRIOR
+		--	[2] = "|cffF58CBA", --Paladin	PALADIN
+		--	[3] = "|cffA9D271", --Hunter	HUNTER
+		--	[4] = "|cffFFF569", --Rogue	ROGUE
+		--	[5] = "|cffFFFFFF", --Priest	PRIEST
+		--	[7] = "|cff0070DE", --Shaman	SHAMAN
+		--	[8] = "|cff40C7EB", --Mage	MAGE
+		--	[9] = "|cff8787ED", -- Warlock	WARLOCK
+		--	[11] = "|cffFF7D0A", --Druid	DRUID
+		--}
 		
+		-- add class color
+		--if spellType == BCT.TALENT and arr[key][8] ~= nil then
+		--	spellName = classColors[arr[key][8]] .. spellName .. "|r"
+		--end
+
 		if string.match(spellName:lower(), BCT.session.state.aurasSearch) then
 			optionsTbl.args.Auras.args[tostring(key)] = {
 				order = i,
@@ -831,10 +1322,11 @@ local function GetOptionsTable()
 				icon = spellIcon,
 				args = groups[BCT.session.state.aurasTypeSelected]
 			}
+			BCT.session.state.aurasCounter = BCT.session.state.aurasCounter + 1
 			i = i + 1
 		end
 	end
-	
+
 	if i == 7 then
 		optionsTbl.args.Auras.args[tostring(-1)] = {
 			order = i,
@@ -850,6 +1342,6 @@ end
 
 LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("BCT", GetOptionsTable)
 BCT.optionsFrames.BCT = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("BCT", "BCT", nil, "General")
-BCT.optionsFrames.Setup = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("BCT", "Setup", "BCT", "Setup")
+BCT.optionsFrames.Setup = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("BCT", "General", "BCT", "Setup")
 BCT.optionsFrames.Auras = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("BCT", "Auras", "BCT", "Auras")
 BCT.optionsFrames.Profiles = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("BCT", "Profiles", "BCT", "Profiles")
