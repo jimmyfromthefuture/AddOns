@@ -58,7 +58,7 @@ local GetSource = {
 		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		local _, _, classId = UnitClass("player")
 		arr[tonumber(info[#info-1])][6] = value
-		arr[tonumber(info[#info-1])][8] = (BCT.session.state.aurasSourceSelected == BCT.PERSONALS and classId or nil)
+		arr[tonumber(info[#info-1])][9] = (BCT.session.state.aurasSourceSelected == BCT.PERSONALS and classId or nil)
 	end,
 }
 
@@ -124,8 +124,21 @@ local GetBlacklisted = {
 	end,
 }
 
-local GetRemoveSpell = {
+local GetReserved = {
 	order = 8,
+	type = "toggle",
+	name = "Reserve",
+	width = "full",
+	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][8] end,
+	set = function(info, value) 
+		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
+		arr[tonumber(info[#info-1])][8] = value
+		BCT.SetReservedBuffs()
+	end,
+}
+
+local GetRemoveSpell = {
+	order = 9,
 	name = "Remove",
 	type = 'execute',
 	func = function(info)
@@ -160,6 +173,7 @@ local buffGroupArgs = {
 	source = GetSource,
 	tracked = GetTracked,
 	blacklisted = GetBlacklisted,
+	reserved = GetReserved,
 	removeSpell = GetRemoveSpell,
 --	assigned = GetAssigned,
 }
@@ -746,8 +760,262 @@ local function GetOptionsTable()
 							},
 						},
 					},
-					loading = {
+					raid = {
 						order = 7,
+						type = "group",
+						name = "Direct Heal Indicator",
+						args = {
+							introo = {
+								name = "Counts total and reserved raid member buffs. If a raid members values are at or above the set amounts a glow is applied to his raidframe.",
+								type = "description",
+								order = 0,
+							},
+							capAmnt = {
+								name = "Buff Threshold",
+								type = "input",
+								desc = "Superseedes Reserve Glow",
+								order = 2,
+								width = .6,	
+								get = function(info) return tostring(BCT.session.db.highlighter.cap) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp > 0 then
+										BCT.session.db.highlighter.cap = inp
+									else
+										print("BCT: You must input a positive number higher than 0")
+									end
+								end,
+							},	
+							cap = {
+								order = 3,
+								type = "toggle",
+								name = "Enable",
+								width = "normal",
+								get = function(info) return BCT.session.db.highlighter.enabledCap end,
+								set = function(info, value) 
+									BCT.session.db.highlighter.enabledCap = not BCT.session.db.highlighter.enabledCap
+									if BCT.session.db.highlighter.enabledCap then
+										BCT.RangeChecker()
+										BCT.UpdateRaid(UnitName("player"))
+										BCT.UpdateRaid()
+										BCT.SetRangeTicker()
+									else
+										BCT.DisableGlow()
+									end
+								end,
+							},
+							colorCap = {
+								order = 1,
+								type = "color",
+								name = "",
+								width = 0.2,
+								get = function() 
+									local r = BCT.session.db.highlighter.glowColorCap[1]
+									local g = BCT.session.db.highlighter.glowColorCap[2]
+									local b = BCT.session.db.highlighter.glowColorCap[3]
+									return r, g, b
+								end,
+								set = function(info,r,g,b,a) 
+									BCT.session.db.highlighter.glowColorCap[1] = r
+									BCT.session.db.highlighter.glowColorCap[2] = g
+									BCT.session.db.highlighter.glowColorCap[3] = b
+								end,
+							},
+							spacerOne = GetSpacer(4),
+							glowAmnt = {
+								name = "Reserved Slots",
+								type = "input",
+								desc = "Buffs such as absorbs and HoTs which share slots",
+								order = 6,
+								width = .6,	
+								get = function(info) return tostring(BCT.session.db.highlighter.buffer) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp > 0 then
+										BCT.session.db.highlighter.buffer = inp
+									else
+										print("BCT: You must input a positive number higher than 0")
+									end
+								end,
+							},	
+							glow = {
+								order = 7,
+								type = "toggle",
+								name = "Enable",
+								width = "normal",
+								get = function(info) return BCT.session.db.highlighter.enabled end,
+								set = function(info, value) 
+									BCT.session.db.highlighter.enabled = not BCT.session.db.highlighter.enabled
+									if BCT.session.db.highlighter.enabled then
+										BCT.RangeChecker()
+										BCT.UpdateRaid(UnitName("player"))
+										BCT.UpdateRaid()
+										BCT.SetRangeTicker()
+									else
+										BCT.DisableGlow()
+									end
+								end,
+							},
+							colorGlow = {
+								order = 5,
+								type = "color",
+								name = "",
+								width = 0.2,
+								get = function() 
+									local r = BCT.session.db.highlighter.glowColor[1]
+									local g = BCT.session.db.highlighter.glowColor[2]
+									local b = BCT.session.db.highlighter.glowColor[3]
+									return r, g, b
+								end,
+								set = function(info,r,g,b,a) 
+									BCT.session.db.highlighter.glowColor[1] = r
+									BCT.session.db.highlighter.glowColor[2] = g
+									BCT.session.db.highlighter.glowColor[3] = b
+								end,
+							},
+							spacerTwo = GetSpacer(8),
+							updateFreq = {
+								order = 9,
+								name = "Range Check Frequency",
+								desc = "Seconds between range checks",
+								type = "range",
+								min = 0.1, max = 1, step = 0.1,
+								get = function(info) return tonumber(BCT.session.db.highlighter.rangeCheckFreq) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp > 0 then
+										BCT.session.db.highlighter.rangeCheckFreq = inp
+										BCT.SetRangeTicker()
+									else
+										print("BCT: You must input a positive number higher than 0")
+									end
+								end,
+							},
+							spacerThree = GetSpacer(10),
+							particles = {
+								order = 11,
+								name = "Particles",
+								desc = "",
+								type = "range",
+								min = 1, max = 50, step = 1,
+								get = function(info) return tonumber(BCT.session.db.highlighter.glowParticles) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp > 0 then
+										BCT.session.db.highlighter.glowParticles = inp
+									else
+										print("BCT: You must input a positive number higher than 0")
+									end
+								end,
+							},
+							freq = {
+								order = 12,
+								name = "Frequency",
+								desc = "Checks per second",
+								type = "range",
+								min = 0, max = 1, step = 0.05,
+								get = function(info) return tonumber(BCT.session.db.highlighter.glowFrequency) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp > 0 then
+										BCT.session.db.highlighter.glowFrequency = inp
+									else
+										print("BCT: You must input a positive number")
+									end
+								end,
+							},
+							--[[
+							scale = {
+								order = 11,
+								name = "Scale",
+								desc = "",
+								type = "range",
+								min = 1, max = 10, step = 1,
+								get = function(info) return tonumber(BCT.session.db.highlighter.glowScale) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp > 0 then
+										BCT.session.db.highlighter.glowScale = inp
+									else
+										print("BCT: You must input a positive number higher than 0")
+									end
+								end,
+							},
+							--]]
+							length = {
+								order = 13,
+								name = "Length",
+								desc = "",
+								type = "range",
+								min = 0, max = 20, step = 1,
+								get = function(info) return tonumber(BCT.session.db.highlighter.glowLength) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp >= 0 then
+										BCT.session.db.highlighter.glowLength = inp
+									else
+										print("BCT: You must input a positive number")
+									end
+								end,
+							},
+							thickness = {
+								order = 14,
+								name = "Thickness",
+								desc = "",
+								type = "range",
+								min = 1, max = 10, step = 1,
+								get = function(info) return tonumber(BCT.session.db.highlighter.glowThickness) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) and inp > 0 then
+										BCT.session.db.highlighter.glowThickness = inp
+									else
+										print("BCT: You must input a positive number")
+									end
+								end,
+							},
+							xoffset = {
+								order = 15,
+								name = "X Offset",
+								desc = "",
+								type = "range",
+								min = -2140, max = 2140, step = 1,
+								get = function(info) return tonumber(BCT.session.db.highlighter.glowxOffset) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) then
+										BCT.session.db.highlighter.glowxOffset = inp
+									end
+								end,
+							},
+							yoffset = {
+								order = 16,
+								name = "Y Offset",
+								desc = "",
+								type = "range",
+								min = -2140, max = 2140, step = 1,
+								get = function(info) return tonumber(BCT.session.db.highlighter.glowyOffset) end,
+								set = function(info, value) 
+									local inp = tonumber(value)
+									if 'number' == type(inp) then
+										BCT.session.db.highlighter.glowyOffset = inp
+									end
+								end,
+							},
+							border = {
+								order = 17,
+								type = "toggle",
+								name = "Border",
+								width = "double",
+								get = function(info) return BCT.session.db.highlighter.glowBorder end,
+								set = function(info, value) 
+									BCT.session.db.highlighter.glowBorder = not BCT.session.db.highlighter.glowBorder
+								end,
+							},
+						},
+					},
+					loading = {
+						order = 8,
 						type = "group",
 						name = "Loading",
 						args = {
@@ -1017,6 +1285,73 @@ local function GetOptionsTable()
 									},
 								},
 							},
+							highlightning = {
+								order = 4,
+								type = "group",
+								name = "Direct Heal Indicator",
+								desc = "Enable/Disable Direct Heal Indicator",
+								args = {
+									StateBlacklisting = {
+										name = "Group Type",
+										desc = "Group Type",
+										type = 'multiselect',
+										order = 4,
+										values = {
+											["Solo"] = "Solo",
+											["Group"] = "Group",
+											["Raid"] = "Raid",
+											["Battleground"] = "Battleground",
+										},	
+										get = function(_, value) return BCT.session.db.loading.groupStateHl[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.groupStateHl[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateHl[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateHl[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledHl = true
+											else
+												BCT.session.db.loading.enabledHl = false
+											end
+											
+											BCT.UpdateWindowState()
+										end,
+									},
+									instanceStateBlacklisting = {
+										name = "Instance Type",
+										desc = "Instance Type",
+										type = 'multiselect',
+										order = 5,	
+										values = {
+											[0] = "Outside",
+											[5] = "5 Man Instance",
+											[10] = "10 Man Instance",
+											[20] = "20 Man Instance",
+											[40] = "40 Man Instance",
+										},	
+										get = function(_, value) return BCT.session.db.loading.instanceStateHl[value] end, 
+										set = function(_, value, state) 
+											BCT.session.db.loading.instanceStateHl[value] = state
+											
+											local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
+											local groupState = (not IsInGroup()) and "Solo" or 
+												((IsInGroup() and not IsInRaid()) and "Group" or "Raid")
+											
+											if BCT.session.db.loading.instanceStateHl[tonumber(maxPlayers)] and
+												BCT.session.db.loading.groupStateHl[(instanceType == "pvp" and "Battleground" or groupState)] then
+												BCT.session.db.loading.enabledHl = true
+											else
+												BCT.session.db.loading.enabledHl = false
+											end
+											
+											BCT.UpdateWindowState()
+										end,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1028,7 +1363,7 @@ local function GetOptionsTable()
 				desc = "Auras",
 				args = {
 					intro = {
-						name = "All visible auras are automatically counted and does not have to be added. Only bother adding an aura if you want to blacklist or track it. All ranks are treated alike. Auras and other permanent buffs can be tracked, but blacklisting them will not do anything." ..
+						name = "All visible auras are automatically counted and does not have to be added. All ranks are treated alike. Auras and other permanent buffs can be tracked, but blacklisting them will not do anything." ..
 						"\n\nEnchants are only counted if added and toggled." ..
 						"\n\nDebuffs are never counted but can be added for tracking.",
 						type = "description",
@@ -1111,6 +1446,8 @@ local function GetOptionsTable()
 							["all"] = "All",
 							["blacklisted"] = "Blacklisted",
 							["tracked"] = "Tracked",
+							["reserved"] = "Reserved",
+							["class"] = UnitClass("player"),
 						},	
 						get = function(_, value)
 							return BCT.session.state.aurasFilter
@@ -1263,8 +1600,10 @@ local function GetOptionsTable()
 				
 				(BCT.session.state.aurasFilter ~= "blacklisted" and true or arr[key][5]) and
 				(BCT.session.state.aurasFilter ~= "tracked" and true or arr[key][3]) and
+				(BCT.session.state.aurasFilter ~= "reserved" and true or arr[key][8]) and
+				(BCT.session.state.aurasFilter ~= "class" and true or arr[key][9] == tonumber(classId))-- and
 				
-				(arr[key][8] == nil and true or arr[key][8] == tonumber(classId))
+				--(arr[key][9] == nil and true or arr[key][9] == tonumber(classId))
 				then
 
 				table.insert(keys, key)
@@ -1304,14 +1643,14 @@ local function GetOptionsTable()
 		--	[4] = "|cffFFF569", --Rogue	ROGUE
 		--	[5] = "|cffFFFFFF", --Priest	PRIEST
 		--	[7] = "|cff0070DE", --Shaman	SHAMAN
-		--	[8] = "|cff40C7EB", --Mage	MAGE
+		--	[9] = "|cff40C7EB", --Mage	MAGE
 		--	[9] = "|cff8787ED", -- Warlock	WARLOCK
 		--	[11] = "|cffFF7D0A", --Druid	DRUID
 		--}
 		
 		-- add class color
-		--if spellType == BCT.TALENT and arr[key][8] ~= nil then
-		--	spellName = classColors[arr[key][8]] .. spellName .. "|r"
+		--if spellType == BCT.TALENT and arr[key][9] ~= nil then
+		--	spellName = classColors[arr[key][9]] .. spellName .. "|r"
 		--end
 
 		if string.match(spellName:lower(), BCT.session.state.aurasSearch) then

@@ -10,7 +10,6 @@ end
 BCT.Refresh = Refresh
 
 local function ZoneChange()
-
 	if BCT.session.state.zone ~= GetInstanceInfo() then
 		local _, instanceType, _, _, maxPlayers = GetInstanceInfo()
 		local groupState = (not IsInGroup()) and "Solo" or 
@@ -44,7 +43,15 @@ local function ZoneChange()
 			BCT.session.db.loading.enabled = false
 		end
 		
-		BCT.SetInCombatBlacklistingMacro()
+		if BCT.session.db.loading.instanceStateHl[tonumber(maxPlayers)] and
+			BCT.session.db.loading.groupStateHl[(instanceType == "pvp" and "Battleground" or groupState)] then
+			BCT.session.db.loading.enabledHl = true
+		else
+			BCT.session.db.loading.enabledHl = false
+		end
+		
+		BCT.UpdateRaid()
+		BCT.SetInCombatBlacklistingMacro(true)
 		BCT.UpdateWindowState()
 		BCT.session.state.zone = GetInstanceInfo()
 	end
@@ -61,18 +68,33 @@ BCT.Events:RegisterEvent("PLAYER_REGEN_ENABLED")
 BCT.Events:SetScript("OnEvent", function(self, event, ...)
 	local _, _, classIndex = UnitClass("player")
 	if event == "COMBAT_LOG_EVENT_UNFILTERED" then
+		
 		local _, subEvent, _, _, sourceName, _, _, _, destName, _, _, spellId, spellName, _, missType = CombatLogGetCurrentEventInfo()
 		if classIndex == 1 then BCT.SetDefensiveState(subEvent, spellId, spellName, sourceName, destName, missType) end
-		if subEvent == "SPELL_AURA_REMOVED" and destName == UnitName("player") then BCT.Announce(spellName)	end
+		if subEvent == "SPELL_AURA_REMOVED" and destName == UnitName("player") then BCT.Announce(spellName) end
+		if (subEvent == "SPELL_AURA_APPLIED" or subEvent == "SPELL_AURA_REMOVED") then 
+			if UnitInParty(destName) then
+				BCT.UpdateRaid(destName)
+			end
+		end
 		return
 	end
-	BCT.Refresh()
+	if event == "UNIT_AURA" then
+		BCT.UpdateRaid(UnitName("player"))
+		BCT.Refresh()
+		return
+	end
 	if event == "PLAYER_LOGIN" then
+		BCT.SetRangeTicker()
+		BCT.SetReservedBuffs()
+		BCT.UpdateRaid()
+		BCT.UpdateRaid(UnitName("player"))
 		BCT.UpdateFont()
 		BCT.UpdateFontAnnouncer()
 		BCT.UpdateWindowState()
 		BCT.SetInCombatBlacklistingMacro()
 		BCT.profileStr = BCT.db:GetCurrentProfile()
+		BCT.Refresh()
 		return
 	end
 	if event == "PLAYER_REGEN_ENABLED" and BCT.session.state.CombatCache then

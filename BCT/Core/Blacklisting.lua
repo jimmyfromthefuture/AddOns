@@ -42,7 +42,7 @@ BCT.BlacklistButton:SetAttribute('macrotext', '/click BCT1');
 
 BCT.BlacklistButtons = {}
 
-local function SetInCombatBlacklistingMacro()
+local function SetInCombatBlacklistingMacro(zoneChange)
 
 	BCT.session.state.macros = ""
 
@@ -91,7 +91,10 @@ local function SetInCombatBlacklistingMacro()
 			end
 		end
 	else
-		print("BCT failed to change in-combat blacklisting macro due to combat, change will be applied once combat is dropped.")
+		local msg = "BCT: Due to combat, BCT failed to change in-combat blacklisting macro, change will be applied once combat is dropped."
+		if zone then
+			msg = "BCT: Due to combat, BCT failed to set in-combat blacklisting macro after change of zone, change will be applied once combat is dropped."
+		end
 		BCT.session.state.CombatCache = true
 	end
 

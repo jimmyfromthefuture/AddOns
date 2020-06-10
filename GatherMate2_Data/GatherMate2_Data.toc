@@ -1,4 +1,4 @@
-## Interface: 11302
+## Interface: 11304
 ## Notes: Wowhead Data dump for GatherMate2 - Converted for Classic from Pre-Cata by TheSpanishInquisition
 ## Title: GatherMate2Data
 ## Author: kagaro, Xinhuan, Spinx

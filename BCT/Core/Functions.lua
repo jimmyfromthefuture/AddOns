@@ -9,7 +9,7 @@ local function CleanUp()
 			if k ~= t and (v[6] == BCT.PLAYERBUFF or v[6] == BCT.PERSONALS) 
 				and (b[6] == BCT.PLAYERBUFF or b[6] == BCT.PERSONALS) 
 				and GetSpellInfo(k) == GetSpellInfo(t)
-				and	v[8] == b[8] then
+				and	v[9] == b[9] then
 				BCT.session.db.auras[BCT.BUFF][k] = nil
 				BCT.session.db.auras[BCT.BUFF][t] = nil
 				print("BCT: " .. GetSpellInfo(k) .. " was removed from the aura list because of duplicates, please reload UI and confirm availability and setup of the removed buff.")
@@ -25,11 +25,11 @@ local function GetAura(name)
 
 	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
 		if name == GetSpellInfo(k) then
-			return true, v[5], v[3]
+			return true, v[5], v[3], v[8]
 		end
 	end
 	
-	return false, false, false
+	return false, false, false, false
 end
 BCT.GetAura = GetAura
 

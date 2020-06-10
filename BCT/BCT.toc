@@ -1,8 +1,8 @@
 ## Interface: 11304
 ## Author: Ryts
-## Version: 1.29
+## Version: 1.32
 ## Title: BCT
-## Notes: v1.29
+## Notes: v1.32
 ## SavedVariables: BCTDB
 
 Libs\LibStub\LibStub.lua
@@ -15,12 +15,16 @@ Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\LibGetFrame-1.0\LibGetFrame-1.0.xml
+Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml
+Libs\LibRangeCheck-2.0\LibRangeCheck-2.0.lua
 
 BCT.lua
 
 Core/Functions.lua
-Core/Blacklisting.lua
 Core/Env.lua
+Core/Highlighter.lua
+Core/Blacklisting.lua
 Core/Frame.lua
 Core/Announcements.lua
 Core/Events.lua

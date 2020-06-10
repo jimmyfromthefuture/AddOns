@@ -139,3 +139,29 @@ BCT.Window:SetScript("OnUpdate", function(self)
 	self.text:SetText(txt)
 end)
 
+--[[
+BCT.Tester = CreateFrame("Frame","BCTTester",UIParent)
+BCT.Tester:SetMovable(true)
+BCT.Tester:EnableMouse(true)
+BCT.Tester:RegisterForDrag("LeftButton")
+BCT.Tester:SetWidth(200)
+BCT.Tester:SetHeight(35)
+BCT.Tester:SetAlpha(1.)
+BCT.Tester:SetPoint("CENTER",0,0)
+BCT.Tester.text = BCT.Tester:CreateFontString(nil,"ARTWORK") 
+BCT.Tester.text:SetFont(SM:Fetch("font","Expressway"), 13, "OUTLINE")
+BCT.Tester.text:SetPoint("LEFT", BCT.Tester, "LEFT", -800, 0)
+BCT.Tester.text:SetJustifyH("LEFT")
+BCT.Tester.text:SetText("BUFF CAP TRACKER")
+BCT.Tester:SetUserPlaced(true)
+
+BCT.Tester:SetScript("OnUpdate", function(self) 
+	local txt = ""
+	for k,v in pairs(BCT.session.state.raid) do
+		if v[1] then
+			txt = txt .. k .. ": " .. v[1] .. "\n"
+		end
+	end
+	self.text:SetText(txt)
+end)
+--]]

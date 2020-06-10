@@ -1,3 +1,7 @@
+2020-06-08
+- Pulled updated data (for herbalism) from Wowhead so additional nodes for Black Lotus
+- Not bothered to clean it up (merging my own nodes, cleaning database etc) do that yourselves...
+
 2019-09-25
 - Refiltered data from source to add back in Plaguebloom
 - Ran scan and removal of duplicate entries
