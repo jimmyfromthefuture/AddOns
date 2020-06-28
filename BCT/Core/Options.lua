@@ -14,15 +14,31 @@ local GetAuraAdd = {
 	order = 6, 
 	name = "Add ID",
 	type = 'input',
-	desc = "Make sure you are adding a spell ID and not an item ID",
+	desc = "Make sure you are adding a spell ID, NOT an item ID",
 	get = function(info) return "" end,
 	set = function(info, value)
 		local arr = BCT.session.db.auras[BCT.session.state.aurasTypeSelected]
 		local _, _, classId = UnitClass("player")
 		if BCT.session.state.aurasTypeSelected == BCT.ENCHANT then
-			arr[tonumber(value)] = {"", "", BCT.HIDE, BCT.COUNT, BCT.WHITELISTED, BCT.ENCHANT, BCT.UNLISTED}
+			arr[tonumber(value)] = {
+				"", 
+				"", 
+				BCT.HIDE, 
+				BCT.COUNT, 
+				BCT.WHITELISTED, 
+				BCT.ENCHANT, 
+				BCT.UNLISTED
+			}
 		elseif BCT.session.state.aurasTypeSelected == BCT.DEBUFF then
-			arr[tonumber(value)] = {GetSpellInfo(tonumber(value)), GetSpellInfo(tonumber(value)), BCT.HIDE, BCT.COUNT, BCT.WHITELISTED, BCT.DEBUFF, BCT.UNLISTED}
+			arr[tonumber(value)] = {
+				GetSpellInfo(tonumber(value)), 
+				GetSpellInfo(tonumber(value)), 
+				BCT.HIDE, 
+				BCT.COUNT, 
+				BCT.WHITELISTED, 
+				BCT.DEBUFF, 
+				BCT.UNLISTED
+			}
 		else
 			if GetSpellInfo(tonumber(value)) then
 				local found = BCT.GetAura(GetSpellInfo(tonumber(value)))
@@ -31,7 +47,16 @@ local GetAuraAdd = {
 				elseif BCT.session.state.aurasSourceSelected == 0 then
 					print("BCT: Choose a source.")
 				else
-					arr[tonumber(value)] = {GetSpellInfo(tonumber(value)), GetSpellInfo(tonumber(value)), BCT.HIDE, BCT.COUNT, BCT.WHITELISTED, BCT.session.state.aurasSourceSelected, BCT.UNLISTED, (BCT.session.state.aurasSourceSelected == BCT.PERSONALS and classId or nil)}
+					arr[tonumber(value)] = {
+						GetSpellInfo(tonumber(value)), 
+						GetSpellInfo(tonumber(value)), 
+						BCT.HIDE, 
+						BCT.COUNT, 
+						BCT.WHITELISTED, 
+						BCT.session.state.aurasSourceSelected, 
+						BCT.UNLISTED, 
+						(BCT.session.state.aurasSourceSelected == BCT.PERSONALS and classId or nil)
+					}
 				end
 			end
 		end

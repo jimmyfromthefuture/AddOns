@@ -75,6 +75,7 @@ BCT.Anchor:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 BCT.Anchor:SetBackdropColor(0,0,0,1)
 
 BCT.Anchor:SetScript("OnUpdate", function(self) 
+
 	if not TradeFrame:IsVisible() then
 		if GetMouseFocus() ~= nil and BCT.session.db.window.body.mouseover then
 			if GetMouseFocus():GetName() == "BCTAnchor" then

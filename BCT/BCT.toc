@@ -1,9 +1,10 @@
 ## Interface: 11304
 ## Author: Ryts
-## Version: 1.32
+## Version: 1.35
 ## Title: BCT
-## Notes: v1.32
-## SavedVariables: BCTDB
+## Notes: v1.35
+## SavedVariables: BCTDB, 
+## SavedVariablesPerCharacter: BCTStats
 
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
@@ -27,6 +28,9 @@ Core/Highlighter.lua
 Core/Blacklisting.lua
 Core/Frame.lua
 Core/Announcements.lua
+
+##Modules/Statistics.lua
+
 Core/Events.lua
 Core/Cmd.lua
 Core/Options.lua

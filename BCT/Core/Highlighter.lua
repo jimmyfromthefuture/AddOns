@@ -21,7 +21,7 @@ local classBuffs = {
 
 local function FrameGlow(name,show,cap)
 	local frames = GetFrame(name, {ignorePlayerFrame = true, ignoreTargetFrame = true, ignoreTargettargetFrame = true, returnAll = true,})
-	--local frame = GetFrame(name)
+	if not frames then return end
     if show then
 		for k, frame in pairs(frames) do
 			LCG.PixelGlow_Start(

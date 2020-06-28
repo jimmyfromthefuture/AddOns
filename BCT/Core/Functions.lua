@@ -3,7 +3,8 @@ local BCT = LibStub("AceAddon-3.0"):GetAddon("BCT")
 local function CleanUp()
 
 	BCT.session.state.cleanedup = true
-
+	
+	-- duplicates
 	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
 		for t, b in pairs(BCT.session.db.auras[BCT.BUFF]) do
 			if k ~= t and (v[6] == BCT.PLAYERBUFF or v[6] == BCT.PERSONALS) 
@@ -13,6 +14,16 @@ local function CleanUp()
 				BCT.session.db.auras[BCT.BUFF][k] = nil
 				BCT.session.db.auras[BCT.BUFF][t] = nil
 				print("BCT: " .. GetSpellInfo(k) .. " was removed from the aura list because of duplicates, please reload UI and confirm availability and setup of the removed buff.")
+			end
+		end
+	end
+	
+	-- incompatibility issues
+	for i=1,4 do
+		for k, v in pairs(BCT.session.db.auras[i]) do
+			if v[6] == nil then 
+				BCT.session.db.auras[i][k] = nil
+				print("BCT: " .. GetSpellInfo(k) .. " was removed from the aura list because of incompatibility issues with new data structure, please reload UI and confirm availability and setup of the removed buff.")
 			end
 		end
 	end
