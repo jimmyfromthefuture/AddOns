@@ -1,0 +1,19 @@
+## Author: kaybe
+## DefaultState: enabled
+## LoadOnDemand: 0
+## Interface: 11304
+## Notes: Shaman totem bar
+## Notes-deDE: Totemleiste
+## OptionalDeps: Masque
+## SavedVariables: YatabarDB
+## Title: Yatabar
+
+
+embeds.xml
+Localization\enEN.lua
+Localization\deDE.lua
+TotemData.lua
+Yatabar.lua
+Config.lua
+Buttons.lua
+

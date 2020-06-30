@@ -3,7 +3,7 @@
 ## Notes: Nameplate addon designed for advanced users.
 ## SavedVariables: PlaterDB
 ## SavedVariablesPerCharacter: PlaterDBChr
-## Version: Plater-1.13.4-Classic
+## Version: Plater-1.13.4.81-Classic
 
 #@no-lib-strip@
 libs\libs.xml
