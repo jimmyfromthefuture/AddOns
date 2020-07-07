@@ -188,6 +188,12 @@ function CLA_CreateOptionsFrame()
     limitInspection.tooltipText = "When unchecked, everyone in your group can inspect you for items"
     limitInspection:SetChecked(config.limitInspection)
 
+    local alwaysRemind = CLA_MakeCheckbox("Always remind me about loot on corpses in raids", content, 'alwaysRemind');
+    alwaysRemind:SetPoint("TOPLEFT", 10, -180)
+    content.hookTargetFrame = alwaysRemind
+    alwaysRemind.tooltipText = "When checked, you will receive reminders for loot on all corpses while in a raid"
+    alwaysRemind:SetChecked(config.alwaysRemind)
+
     InterfaceOptions_AddCategory(frame)
     CLA_CONFIG_FRAME = frame
 end

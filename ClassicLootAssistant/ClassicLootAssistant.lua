@@ -1,7 +1,7 @@
 local ADDON_NAME, ADDON_TABLE = ...
 
 SLASH_CLA1 = "/cla"
-CLA_VERSION = "2.5"
+CLA_VERSION = "2.7"
 CLA_LOOTLIST = {} -- String encoded NAME:GUID
 CLA_SKINNING_TARGET_IDS = {
     11671, -- Core hound
@@ -18,7 +18,8 @@ CLA_DOWSE_SPELL_ID = 21358
 CLA_CONFIG_DEFAULT = {
     showLoot = false,
     showTooltip = true,
-    limitInspection = true
+    limitInspection = true,
+    alwaysRemind = false
 }
 CLA_CONFIG_FRAME = nil
 CLA_ITEM_FRAME = nil
@@ -490,6 +491,8 @@ function cla_register_loot_event(text, sender)
                     local msg = "[Classic Loot Assistant]: You can loot the " .. creatureName .. " that just died"
                     SendChatMessage(msg, "WHISPER", nil, sender)
                 end
+            elseif sender == UnitName("player") and ClassicLootAssistantConfig.alwaysRemind and IsInRaid() then
+                cla_print_color('You can loot the ' .. creatureName .. ' that just died', CLA_MESSAGE_COLOR)
             end
         end
     end)
