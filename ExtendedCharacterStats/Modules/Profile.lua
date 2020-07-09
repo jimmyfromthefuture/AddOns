@@ -6,7 +6,7 @@
 local Profile = ECSLoader:CreateModule("Profile")
 
 function Profile:GetProfileVersion()
-    return 3
+    return 4
 end
 
 ---@return ECSProfile
@@ -133,7 +133,7 @@ local function GetDefaultGeneralSettings()
         window = {
             height = 422,
             width = 175,
-            xOffset = 353,
+            xOffset = -30,
             yOffset = 30
         }
     }

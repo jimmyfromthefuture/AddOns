@@ -7170,7 +7170,7 @@ f:SetScript('OnEvent', function(self, event, ...)
 				return;
 			end
 		end
-		---I have removed string checks for everything below here to make it work all regions from the start
+		---I have removed string checks for everything below here to make it work for all regions from the start.
 		---They only ever have the 1 chat option so it should be safe.
 		if (NWB.db.global.autoDireMaulBuff) then
 			--if (npcID == "14326" and string.match(g1, "What have you got for me")) then --Guard Mol'dar.
@@ -7187,6 +7187,11 @@ f:SetScript('OnEvent', function(self, event, ...)
 				return;
 			--elseif (npcID == "14353" and string.match(g1, "I'm the new king")) then --Mizzle the Crafty.
 			elseif (npcID == "14353") then --Mizzle the Crafty.
+				SelectGossipOption(1);
+				return;
+			elseif (npcID == "14325" and string.match(g1, "Um, I'm taking some prisoners")) then --Captain Komcrush.
+			--This needs string check because he can give you a quest afterwards also.
+			--elseif (npcID == "14325") then --Captain Komcrush.
 				SelectGossipOption(1);
 				return;
 			end

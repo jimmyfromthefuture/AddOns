@@ -1,6 +1,6 @@
-## Interface: 11304
-## Title : Extended Character Stats v2.4.4
-## Version : 2.4.4
+## Interface: 11305
+## Title : Extended Character Stats v2.4.6
+## Version : 2.4.6
 ## Notes: Displays an extra window with more information about your characters stats ( Crit/Hit/Block etc )
 ## SavedVariablesPerCharacter: ExtendedCharacterStats
 ## DefaultState : enabled
@@ -16,6 +16,7 @@ Modules\Utils.lua
 Modules\Stats.lua
 Modules\GearInfos.lua
 Modules\Profile.lua
+Modules\SlashCommands.lua
 
 # Data
 Modules\Data\Constants.lua

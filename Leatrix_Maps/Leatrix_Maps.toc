@@ -1,9 +1,9 @@
-## Interface: 11304
+## Interface: 11305
 
 ## Title: Leatrix Maps
 ## Notes: Enhancements for your maps.
 
-## Version: 1.13.70
+## Version: 1.13.71
 ## Author: Leatrix
 ## SavedVariables: LeaMapsDB
 
