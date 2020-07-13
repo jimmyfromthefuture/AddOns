@@ -1,6 +1,6 @@
 # Plexus
 
-## [v2.0.4](https://github.com/doadin/Plexus/tree/v2.0.4) (2020-05-19)
-[Full Changelog](https://github.com/doadin/Plexus/compare/v2.0.3...v2.0.4)
+## [v2.0.7](https://github.com/doadin/Plexus/tree/v2.0.7) (2020-07-11)
+[Full Changelog](https://github.com/doadin/Plexus/compare/v2.0.6...v2.0.7) [Previous Releases](https://github.com/doadin/Plexus/releases)
 
-- Packager Update  
+- Bump TOC  
