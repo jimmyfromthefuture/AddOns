@@ -1,0 +1,24 @@
+tag 2aa698265d724bfb569d1c2b26f4749129d211c9 1.13.42-classic
+Author:	Floraline <floraline@ophiuchus.org>
+Date:	Tue Jul 14 17:53:51 2020 +0200
+
+Tagging for release
+
+commit cddd78699e315b46077df4a2c06916dac860f47d
+Author: Floraline <floraline@ophiuchus.org>
+Date:   Tue Jul 14 17:48:52 2020 +0200
+
+    Update toc and version numbers
+
+commit a26b84dd724bcc2c91bd135c55d9817544f37ce2
+Author: Floraline <floraline@ophiuchus.org>
+Date:   Tue Jul 14 17:44:25 2020 +0200
+
+    fix issue with spell ranks
+
+commit 58fa1b1189e5666fc8a6bc2c45dcf8697c7f03c0
+Author: Floraline <floraline@ophiuchus.org>
+Date:   Tue Jul 14 13:06:45 2020 +0200
+
+    fix bug with specialisation switch
+

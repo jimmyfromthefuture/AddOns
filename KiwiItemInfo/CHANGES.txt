@@ -1,48 +1,19 @@
-lightweight tag e3903a3f1a4f66b5c376721bf91eddcbb9398752 v2.3.4
+lightweight tag 9931d74d1ae14b10f700a4a108a80a307b607912 v2.3.5
 Author:	Polite Kiwi <deocojo1@gmail.com>
-Date:	Mon Dec 16 18:34:22 2019 -0500
+Date:	Mon Jul 13 05:39:13 2020 -0400
 
-commit e3903a3f1a4f66b5c376721bf91eddcbb9398752
+commit 9931d74d1ae14b10f700a4a108a80a307b607912
 Author: Polite Kiwi <deocojo1@gmail.com>
-Date:   Mon Dec 16 18:32:27 2019 -0500
+Date:   Mon Jul 13 05:39:13 2020 -0400
 
     Added The Following...
     
-    - Updated to version 2.3.4
-    - Updated toc to classic 1.3.3
-    - Fixed bugs
-      - Line 877 crash due to indexing null
-    - Translation
-      - Sped up the Locale.lua
-        - Function L is now a table
-        - Fallback function added
-        - Command.lua /kiwiii
-          - Now uses Fallback
-          - You can now use English for commands
-          - You can now use translated commands
-      - Fixed a missed translation string
-      - Translations should all be working
-        - Ran thru each of the locales testing
-        - Checked all thru my addons features
-      - Revalued TOOLTIP_EX_AGI_CRIT
-    - Item Compare updated
-      - Now displays stat change calcs
-        - Basic Stats show +x attack power
-        - Basic Stats show crit chance
-        - Resistances show % increase
-        - etc
-        - Shows % of stat on equipped items
-      - Translated in all languages
-        - zhCN incomplete
-        - Some abbreviations may be incorrect
-        - Some words can be incorrect
-        - Some sentence structure may be incorrect
-    - Command /kiwiii without args shows settings frame
-      - Customize the plugin using this
-      - Please respect the formatting
-        - Failure to coop could break it
-        - Only relevant to strings
-    - Added variable item_compare_extra
-      - Controls basic stat changes calcs
-      - For you to turn off Item Compare on specifically
+    - Updated to version 2.3.5
+    - Fixed bug in Tooltip.lua
+      - Where local name could still be indexed
+      - Where things where being divided by zero resulting in inf
+    - VarsUI
+      - Added translations for VarsUI
+      - Corrected line width in frame
+      - Now closes with ESC instead of system menu
 
