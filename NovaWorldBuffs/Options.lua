@@ -945,10 +945,12 @@ end
 ------------------------
 NWB.optionDefaults = {
 	global = {
-		chatColorR = 255, chatColorG = 255, chatColorB = 0,
-		prefixColorR = 255, prefixColorG = 105, prefixColorB = 0,
+		--The Ace3 GUI color picker seems to play better with decimals.
+		--Some colors work with 255 method, some don't.
+		chatColorR = 1, chatColorG = 1, chatColorB = 0,
+		prefixColorR = 1, prefixColorG = 0.4117647058823529, prefixColorB = 0,
 		middleColorR = 1, middleColorG = 0.96, middleColorB = 0.41,
-		mmColorR = 255, mmColorG = 255, mmColorB = 255,
+		mmColorR = 1, mmColorG = 1, mmColorB = 1,
 		logonPrint = true,
 		chatWarning = true,
 		middleScreenWarning = true,
@@ -977,7 +979,7 @@ NWB.optionDefaults = {
 		guildNpcDialogue = 1,
 		guildZanDialogue = 1,
 		guildCommand = 1,
-		guildSongflower = 1,
+		guildSongflower = 0,
 		disableAllGuildMsgs = 0,
 		rendRespawnTime = 10800,
 		rendBuffTime = 3600,
