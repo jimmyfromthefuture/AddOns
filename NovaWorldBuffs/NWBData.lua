@@ -119,7 +119,7 @@ function NWB:OnCommReceived(commPrefix, string, distribution, sender)
 				NWB:sendData("GUILD");
 				--Temporary send old serializer type settings, remove in a week or 2 after enough people update to new serializer.
 				--To avoid duplicate guild msgs.
-				NWB:sendSettings("GUILD");
+				--NWB:sendSettings("GUILD");
 			end
 		end
 		return;
@@ -146,7 +146,7 @@ function NWB:OnCommReceived(commPrefix, string, distribution, sender)
 		NWB:doFlowerMsg(type, layer);
 	end
 	--Ignore data syncing for some recently out of date versions.
-	if (tonumber(remoteVersion) < 1.74) then
+	if (tonumber(remoteVersion) < 1.75) then
 		if (cmd == "requestData" and distribution == "GUILD") then
 			if (not NWB:getGuildDataStatus()) then
 				NWB:sendSettings("GUILD");
@@ -154,7 +154,7 @@ function NWB:OnCommReceived(commPrefix, string, distribution, sender)
 				NWB:sendData("GUILD");
 				--Temporary send old serializer type settings, remove in a week or 2 after enough people update to new serializer.
 				--To avoid duplicate guild msgs.
-				NWB:sendSettings("GUILD");
+				--NWB:sendSettings("GUILD");
 			end
 		end
 		return;
@@ -170,7 +170,7 @@ function NWB:OnCommReceived(commPrefix, string, distribution, sender)
 			NWB:sendData("GUILD");
 			--Temporary send old serializer type settings, remove in a week or 2 after enough people update to new serializer.
 			--To avoid duplicate guild msgs.
-			NWB:sendSettings("GUILD");
+			--NWB:sendSettings("GUILD");
 		end
 	elseif (cmd == "requestSettings") then
 		--Only used once per logon.
@@ -281,7 +281,7 @@ function NWB:getGuildDataStatus()
 end
 
 --Send settings only.
-function NWB:sendSettingsNew(distribution, target, prio)
+function NWB:sendSettings(distribution, target, prio)
 	if (UnitInBattleground("player") and distribution ~= "GUILD") then
 		return data;
 	end
@@ -297,7 +297,8 @@ function NWB:sendSettingsNew(distribution, target, prio)
 end
 
 --Temporary send old serializaton type, remove in later version when more people are on the new serializer.
-function NWB:sendSettings(distribution, target, prio)
+--Removed, no longer in use.
+function NWB:sendSettingsOld(distribution, target, prio)
 	if (UnitInBattleground("player") and distribution ~= "GUILD") then
 		return data;
 	end
@@ -323,6 +324,9 @@ end
 
 --Send first yell msg.
 function NWB:sendYell(distribution, type, target, layer)
+	if (NWB.sharedLayerBuffs) then
+		layer = nil;
+	end
 	if (tonumber(layer)) then
 		NWB:sendComm(distribution, "yell2 " .. version .. " " .. type .. " " .. layer, target);
 		--Temporary send both msgs until next version so people don't get lua error on old versions.
@@ -373,7 +377,7 @@ function NWB:requestData(distribution, target, prio)
 	NWB:sendComm(distribution, "requestData " .. version .. " " .. data, target, prio);
 	--Temporary send old serializer type settings, remove in a week or 2 after enough people update to new serializer.
 	--To avoid duplicate guild msgs.
-	NWB:sendSettings("GUILD");
+	--NWB:sendSettings("GUILD");
 end
 
 --Send settings only and also request other users settings back.
@@ -661,8 +665,8 @@ end
 --Until I find why I'm going to check for this happening before sending and accepting data.
 --This is not an ideal solution because maybe on rare occasions the same buff may drop on more than 1 layer at the same time.
 function NWB:validateCloseTimestamps(layer, key, timestamp)
-	if (NWB.sharedLayerBuffs) then
-		--If buffs are syncing on both layers then skil this check (hotfix enabled 23/7/2020).
+	if (NWB.sharedLayerBuffs and key == "rendTimer") then
+		--If buffs are syncing on both layers then skip this check for rend (Blizzard hotfix enabled 23/7/2020).
 		return true;
 	end
 	local offset = 30;

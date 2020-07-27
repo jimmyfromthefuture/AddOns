@@ -346,7 +346,7 @@ NWB.options = {
 			desc = L["middleHideCombatDesc"],
 			order = 48,
 			get = "getMiddleHideCombat",
-			set = "settMiddleHideCombat",
+			set = "setMiddleHideCombat",
 		},
 		middleHideRaid = {
 			type = "toggle",
@@ -1077,7 +1077,7 @@ NWB.optionDefaults = {
 		autoBwlPortal = true,
 		showBuffStats = false,
 		
-		resetLayers3 = true, --Reset layers one time (sometimes needed when upgrading from old version.
+		resetLayers4 = true, --Reset layers one time (sometimes needed when upgrading from old version.
 		resetSongflowers = true, --Reset songflowers one time.
 		experimental = true, --Enable features being tested on occasion.
 		resetLayerMaps = true,
