@@ -1,7 +1,7 @@
 local ADDON_NAME, ADDON_TABLE = ...
 
 SLASH_CLA1 = "/cla"
-CLA_VERSION = "2.7"
+CLA_VERSION = "2.8"
 CLA_LOOTLIST = {} -- String encoded NAME:GUID
 CLA_SKINNING_TARGET_IDS = {
     11671, -- Core hound
@@ -397,25 +397,39 @@ function CLA_CreateItemListFrame(itemId)
     
         local players = CLA_GetPlayersInGroup()
         local data = {}
+        local sum = 0
 
         for i, val in pairs(players) do
             local playerData = cla_table_find_player(CLA_ITEM_TRACKING_TABLE, val)
             local color = cla_get_cell_color_for_player(val)
 
-            if playerData == nil then
+            if playerData == nil and UnitIsConnected(val) then
                 playerData = {
-                    player = val,
-                    quantity = "?"
+                    player = -1,
+                    quantity = 0
                 }
             end
 
-            table.insert(data, {
-                cols = {
-                    { value = val, color = color },
-                    { value = playerData.quantity }
-                }
-            })
+            if playerData ~= nil then
+                if tonumber(playerData.quantity) and playerData.quantity ~= -1 then
+                    sum = sum + tonumber(playerData.quantity)
+                end
+                
+                table.insert(data, {
+                    cols = {
+                        { value = val, color = color },
+                        { value = tonumber(playerData.quantity) }
+                    }
+                })
+            end
         end
+
+        table.insert(data, {
+            cols = {
+                { value = "[Total amount]" },
+                { value = sum }
+            }
+        });
 
         local item = Item:CreateFromItemID(itemId);
 

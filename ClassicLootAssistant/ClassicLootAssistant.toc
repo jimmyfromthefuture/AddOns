@@ -1,4 +1,4 @@
-## Interface: 11304
+## Interface: 11305
 ## Title: Classic Loot Assistant
 ## Notes: An addon to assist in raid looting
 ## SavedVariables: ClassicLootAssistantConfig
