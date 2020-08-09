@@ -103,6 +103,45 @@ BCT.Anchor:SetScript("OnUpdate", function(self)
 	self.text:SetText(title)
 end)
 
+local function UpdateAnchorPoints()
+	local point, relativeTo, relativePoint, xOfs, yOfs = BCT.Anchor:GetPoint()
+
+	local wasDisabled =
+		(BCT.session.db.window.anchor.point ~= "CENTER" or
+		BCT.session.db.window.anchor.relativeTo ~= nil or
+		BCT.session.db.window.anchor.relativePoint ~= "CENTER" or
+		BCT.session.db.window.anchor.xOfs ~= 0 or
+		BCT.session.db.window.anchor.yOfs ~= 0)
+
+	local inDefaultPosition =
+		(point == "CENTER" and
+		relativeTo == UIParent and
+		relativePoint == "CENTER" and
+		tonumber(xOfs) == 0 and
+		tonumber(yOfs) == 0)
+
+	if not inDefaultPosition then
+		BCT.session.db.window.anchor.point = point
+		BCT.session.db.window.anchor.relativeTo = relativeTo
+		BCT.session.db.window.anchor.relativePoint = relativePoint
+		BCT.session.db.window.anchor.xOfs = tonumber(xOfs)
+		BCT.session.db.window.anchor.yOfs = tonumber(yOfs)
+	end
+
+	if inDefaultPosition and wasDisabled then
+		BCT.Anchor:ClearAllPoints()
+		BCT.Anchor:SetPoint(
+			BCT.session.db.window.anchor.point, 
+			BCT.session.db.window.anchor.relativeTo, 
+			BCT.session.db.window.anchor.relativePoint,
+			BCT.session.db.window.anchor.xOfs, 
+			BCT.session.db.window.anchor.yOfs
+		)
+		BCT.Anchor:SetUserPlaced(true);
+	end
+
+end
+
 BCT.Window = CreateFrame("Frame","BCTTxtFrame",UIParent)
 BCT.Window:SetWidth(200)
 BCT.Window:SetHeight(35)
@@ -119,6 +158,7 @@ local StringBuildTicker = C_Timer.NewTicker(0.1, function()
 	BCT.BuildEnchantString()
 	BCT.BuildTrackedString()
 	BCT.BuildNextFiveString()
+	UpdateAnchorPoints()
 end)
 
 BCT.Window:SetScript("OnUpdate", function(self) 

@@ -621,18 +621,22 @@ PLATER_DEFAULT_SETTINGS = {
 		aura_show_tooltip = false,
 		aura_width = 26,
 		aura_height = 16,
+		aura_width2 = 26,
+		aura_height2 = 16,
 		
 		--> aura frame 1
-		aura_x_offset = 0,
-		aura_y_offset = 0,
+		--aura_x_offset = 0,
+		--aura_y_offset = 0,
 		aura_grow_direction = 2, --> center
+		aura_frame1_anchor = {side = 8, x = 0, y = 5}, -- in sync with aura_x_offset and aura_y_offset to be compatible to scripts...
 		aura_breakline_space = 12, --space between the first and second line when the aura break line
 		
 		--> aura frame 2
 		buffs_on_aura2 = false,
-		aura2_x_offset = 0,
-		aura2_y_offset = 0,
+		--aura2_x_offset = 0,
+		--aura2_y_offset = 0,
 		aura2_grow_direction = 2, --> center
+		aura_frame2_anchor = {side = 8, x = 0, y = 5}, -- in sync with aura_x_offset and aura_y_offset to be compatible to scripts...
 		
 		aura_padding = 1, --space between each icon
 		aura_consolidate = false, --aura icons shown with the same name is stacked into only one
@@ -683,6 +687,7 @@ PLATER_DEFAULT_SETTINGS = {
 		aura_height_personal = 20,
 		aura_show_buffs_personal = false,
 		aura_show_debuffs_personal = true,
+		aura_show_all_duration_buffs_personal = false,
 		
 		aura_show_important = true,
 		aura_show_dispellable = true,
@@ -742,11 +747,11 @@ PLATER_DEFAULT_SETTINGS = {
 		not_affecting_combat_alpha = 0.6,
 		
 		range_check_enabled = true,
-		range_check_alpha = 1, --overall as it set in the unitFrame
-		range_check_health_bar_alpha = 0.65,
-		range_check_cast_bar_alpha = 0.85,
-		range_check_buffs_alpha = 0.85,
-		range_check_power_bar_alpha = 0.85,
+		range_check_alpha = 0.65, --overall as it set in the unitFrame
+		range_check_health_bar_alpha = 1,
+		range_check_cast_bar_alpha = 1,
+		range_check_buffs_alpha = 1,
+		range_check_power_bar_alpha = 1,
 		range_check_in_range_or_target_alpha = 0.9, 
 		
 		target_highlight = true,

@@ -41,9 +41,9 @@ local GetAuraAdd = {
 			}
 		else
 			if GetSpellInfo(tonumber(value)) then
-				local found = BCT.GetAura(GetSpellInfo(tonumber(value)))
+				local found, _, _, _, key = BCT.GetAura(GetSpellInfo(tonumber(value)))
 				if found then
-					print("BCT: Aura already exists.")
+					print("BCT: Aura already exists. (" .. (key or "") .. ")")
 				elseif BCT.session.state.aurasSourceSelected == 0 then
 					print("BCT: Choose a source.")
 				else
@@ -128,6 +128,7 @@ local GetTracked = {
 	order = 6,
 	type = "toggle",
 	name = "Track",
+	desc = "Display the auras position and remaining duration in the text frame",
 	width = "full",
 	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][3] end,
 	set = function(info, value) 
@@ -140,6 +141,7 @@ local GetBlacklisted = {
 	order = 7,
 	type = "toggle",
 	name = "Blacklist",
+	desc = "Add the aura to the blacklist",
 	width = "full",
 	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][5] end,
 	set = function(info, value) 
@@ -153,6 +155,7 @@ local GetReserved = {
 	order = 8,
 	type = "toggle",
 	name = "Reserve",
+	desc = "Marks the aura as HoT/Absorb for the Healing Indicator Module",
 	width = "full",
 	get = function(info) return BCT.session.db.auras[BCT.session.state.aurasTypeSelected][tonumber(info[#info-1])][8] end,
 	set = function(info, value) 
@@ -1508,7 +1511,9 @@ local function GetOptionsTable()
 							end
 							local keys = BCT.templates[value]
 							for k, v in pairs(keys) do
-								BCT.session.db.auras[BCT.BUFF][v][5] = true
+								if BCT.session.db.auras[BCT.BUFF][v] ~= nil then 
+									BCT.session.db.auras[BCT.BUFF][v][5] = true
+								end
 							end
 						end,
 					},

@@ -670,8 +670,6 @@ Plater.DefaultSpellRangeList = {
 	local DB_DEBUFF_BANNED
 	local DB_AURA_ENABLED
 	local DB_AURA_ALPHA
-	local DB_AURA_X_OFFSET
-	local DB_AURA_Y_OFFSET
 	
 	local DB_USE_UIPARENT
 	
@@ -888,7 +886,6 @@ Plater.DefaultSpellRangeList = {
 		local buffFrames_rangeCheckAlpha = Plater.db.profile.range_check_buffs_alpha
 		local powerBar_rangeCheckAlpha = Plater.db.profile.range_check_power_bar_alpha
 
-		local unitFrame = plateFrame.unitFrame
 		local healthBar = unitFrame.healthBar
 		local castBar = unitFrame.castBar
 		local powerBar = unitFrame.powerBar
@@ -901,18 +898,18 @@ Plater.DefaultSpellRangeList = {
 				unitIsTarget = true
 			else
 				notTheTarget = true
-			end
-
-			if (Plater.db.profile.transparency_behavior_use_division) then
-				alphaMultiplier = 0.5
+				if (Plater.db.profile.transparency_behavior_use_division) then
+					alphaMultiplier = 0.5
+				end
 			end
 		end
  
 		--is using the range check by ability
 		if (DB_USE_RANGE_CHECK) then
 			--check when the unit just has been added to the screen
+			local isInRange = IsSpellInRange (Plater.SpellForRangeCheck, plateFrame [MEMBER_UNITID]) == 1
 
-			if (IsSpellInRange (Plater.SpellForRangeCheck, plateFrame [MEMBER_UNITID]) == 1) then
+			if (isInRange) then
 				--unit is in rage
 				if (onAdded) then
 					--plateFrame.FadedIn = true
@@ -954,12 +951,12 @@ Plater.DefaultSpellRangeList = {
 --					buffFrame1:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and buffFrames_rangeCheckAlpha or 1))
 --					buffFrame2:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and buffFrames_rangeCheckAlpha or 1))
 
-					unitFrame:SetAlpha (overallRangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-					healthBar:SetAlpha (healthBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-					castBar:SetAlpha (castBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier  or 1))
-					powerBar:SetAlpha (powerBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-					buffFrame1:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-					buffFrame2:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+					unitFrame:SetAlpha (unitIsTarget and inRangeAlpha or overallRangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+					healthBar:SetAlpha (unitIsTarget and inRangeAlpha or healthBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+					castBar:SetAlpha (unitIsTarget and inRangeAlpha or castBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier  or 1))
+					powerBar:SetAlpha (unitIsTarget and inRangeAlpha or powerBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+					buffFrame1:SetAlpha (unitIsTarget and inRangeAlpha or buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+					buffFrame2:SetAlpha (unitIsTarget and inRangeAlpha or buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
 
 					plateFrame [MEMBER_RANGE] = false
 					plateFrame.unitFrame [MEMBER_RANGE] = false
@@ -976,12 +973,12 @@ Plater.DefaultSpellRangeList = {
 --						buffFrame1:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and buffFrames_rangeCheckAlpha or 1))
 --						buffFrame2:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and buffFrames_rangeCheckAlpha or 1))
 						
-						unitFrame:SetAlpha (overallRangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-						healthBar:SetAlpha (healthBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-						castBar:SetAlpha (castBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier  or 1))
-						powerBar:SetAlpha (powerBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-						buffFrame1:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
-						buffFrame2:SetAlpha (buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+						unitFrame:SetAlpha (unitIsTarget and inRangeAlpha or overallRangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+						healthBar:SetAlpha (unitIsTarget and inRangeAlpha or healthBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+						castBar:SetAlpha (unitIsTarget and inRangeAlpha or castBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier  or 1))
+						powerBar:SetAlpha (unitIsTarget and inRangeAlpha or powerBar_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+						buffFrame1:SetAlpha (unitIsTarget and inRangeAlpha or buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
+						buffFrame2:SetAlpha (unitIsTarget and inRangeAlpha or buffFrames_rangeCheckAlpha * (notTheTarget and alphaMultiplier or 1))
 
 					end
 					plateFrame [MEMBER_RANGE] = false
@@ -996,7 +993,7 @@ Plater.DefaultSpellRangeList = {
 			if (Plater.PlayerHasTargetNonSelf) then
 				--is this unit is the current player target?
 				if (unitIsTarget) then
-					if (not DF:IsNearlyEqual (healthBar:GetAlpha(), inRangeAlpha, 0.01)) then
+					if (not DF:IsNearlyEqual (unitFrame:GetAlpha(), inRangeAlpha, 0.01)) then
 						unitFrame:SetAlpha (inRangeAlpha)
 						healthBar:SetAlpha (inRangeAlpha)
 						castBar:SetAlpha (inRangeAlpha)
@@ -1008,7 +1005,7 @@ Plater.DefaultSpellRangeList = {
 
 				else
 					--this unit isnt the current player target
-					if (not DF:IsNearlyEqual (healthBar:GetAlpha(), inRangeAlpha * healthBar_rangeCheckAlpha, 0.01)) then
+					if (not DF:IsNearlyEqual (unitFrame:GetAlpha(), inRangeAlpha * overallRangeCheckAlpha, 0.01)) then
 						unitFrame:SetAlpha (inRangeAlpha * overallRangeCheckAlpha)
 						healthBar:SetAlpha (inRangeAlpha * healthBar_rangeCheckAlpha)
 						castBar:SetAlpha (inRangeAlpha * castBar_rangeCheckAlpha)
@@ -4129,6 +4126,10 @@ end
 	function Plater.AlignAuraFrames (self)
 
 		if (self.isNameplate) then
+			local horizontalLength = 1
+			local curRowLength = 0
+			local verticalHeight = 1
+			local firstIcon
 		
 			if (Plater.db.profile.aura_consolidate) then
 				Plater.ConsolidateAuraIcons (self)
@@ -4152,49 +4153,47 @@ end
 			
 			if (growDirection ~= 2) then --it's growing to left or right
 			
-				self:SetSize (1, 1)
-				
 				--debug where the buffFrame anchors are
 				--self:SetSize (5, 5)
 				--self:SetBackdrop ({edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
 				--self:SetBackdropBorderColor (1, 0, 0, 1)
 			
 				local framersPerRow = Plater.MaxAurasPerRow + 1
-				local firstIcon = iconFrameContainer[1]
-				
-				--check if there's one icon and if the icon is shown
-				if (not firstIcon or not firstIcon:IsShown()) then
-					return
-				end
-
-				--set the point of the first icon
-				firstIcon:ClearAllPoints()
-				firstIcon:SetPoint ("center", self, "center", 0, 5)
 				
 				--which slot index is being manipulated within the icon loop
-				--is an icon is hidden it won't be used and the slot won't increase
+				--if an icon is hidden it won't be used and the slot won't increase
 				--the slot 1 is guaranteed to always be in use
-				local slotId = 2
+				local slotId = 1
 				
 				--which was the last shown and valid icon attached into the visible icon row
-				local lastIconUsed = firstIcon
+				local lastIconUsed
 				
 				--left to right
 				if (growDirection == 3) then
 					--iterate among all icon frames
-					for i = 2, #iconFrameContainer do
+					for i = 1, #iconFrameContainer do
 						--get the icon id from the icon frame container
 						local iconFrame = iconFrameContainer [i]
 						if (iconFrame:IsShown()) then
 							iconFrame:ClearAllPoints()
 							
-							if (slotId == framersPerRow) then
-								iconFrame:SetPoint ("bottomleft", firstIcon, "topleft", 0, Plater.db.profile.aura_breakline_space)
-								framersPerRow = framersPerRow + framersPerRow
-								--update the first icon to be the first icon in the second row
+							if not firstIcon then
+								--set the point of the first icon
+								iconFrame:ClearAllPoints()
+								iconFrame:SetPoint ("bottomleft", self, "bottomleft", 0, 0)
 								firstIcon = iconFrame
+								verticalHeight = firstIcon:GetHeight()
 							else
-								iconFrame:SetPoint ("topleft", lastIconUsed, "topright", DB_AURA_PADDING, 0)
+								if (slotId == framersPerRow) then
+									iconFrame:SetPoint ("bottomleft", firstIcon, "topleft", 0, Plater.db.profile.aura_breakline_space)
+									framersPerRow = framersPerRow + Plater.MaxAurasPerRow
+									--update the first icon to be the first icon in the second row
+									firstIcon = iconFrame
+									verticalHeight = verticalHeight + Plater.db.profile.aura_breakline_space + firstIcon:GetHeight()
+									
+								else
+									iconFrame:SetPoint ("topleft", lastIconUsed, "topright", DB_AURA_PADDING, 0)
+								end
 							end
 							
 							lastIconUsed = iconFrame
@@ -4205,19 +4204,29 @@ end
 				-- <-- right to left
 				elseif (growDirection == 1) then
 					--> iterate among all icon frames
-					for i = 2, #iconFrameContainer do
+					for i = 1, #iconFrameContainer do
 						--get the icon id from the icon frame container
 						local iconFrame = iconFrameContainer [i]
 						if (iconFrame:IsShown()) then
 							iconFrame:ClearAllPoints()
 							
-							if (slotId == framersPerRow) then
-								iconFrame:SetPoint ("bottomright", firstIcon, "topright", 0, Plater.db.profile.aura_breakline_space)
-								framersPerRow = framersPerRow + framersPerRow
-								--update the first icon to be the first icon in the second row
+							if not firstIcon then
+								--set the point of the first icon
+								iconFrame:ClearAllPoints()
+								iconFrame:SetPoint ("bottomright", self, "bottomright", 0, 0)
 								firstIcon = iconFrame
+								verticalHeight = firstIcon:GetHeight()
 							else
-								iconFrame:SetPoint ("topright", lastIconUsed, "topleft", -DB_AURA_PADDING, 0)
+								if (slotId == framersPerRow) then
+									iconFrame:SetPoint ("bottomright", firstIcon, "topright", 0, Plater.db.profile.aura_breakline_space)
+									framersPerRow = framersPerRow + Plater.MaxAurasPerRow
+									--update the first icon to be the first icon in the second row
+									firstIcon = iconFrame
+									verticalHeight = verticalHeight + Plater.db.profile.aura_breakline_space + firstIcon:GetHeight()
+									
+								else
+									iconFrame:SetPoint ("topright", lastIconUsed, "topleft", -DB_AURA_PADDING, 0)
+								end
 							end
 							
 							lastIconUsed = iconFrame
@@ -4226,11 +4235,10 @@ end
 					end
 				end
 				
+				horizontalLength = 1 + DB_AURA_PADDING
+				
 			else --it's growing from center
 				
-				local iconAmount = 0
-				local horizontalLength = 0
-				local firstIcon
 				local previousIcon
 
 				--iterate among all icons in the aura frame
@@ -4239,14 +4247,16 @@ end
 				for i = 1, #iconFrameContainer do
 					local iconFrame = iconFrameContainer [i]
 					if (iconFrame:IsShown()) then
-						iconAmount = iconAmount + 1
-						horizontalLength = horizontalLength + iconFrame:GetWidth() + DB_AURA_PADDING
+						curRowLength = curRowLength + iconFrame:GetWidth() + DB_AURA_PADDING
 						iconFrame:ClearAllPoints()
 						
 						if (not firstIcon) then
 							firstIcon = iconFrame
 							firstIcon:SetPoint ("bottomleft", self, "bottomleft", 0, 0)
 							previousIcon = firstIcon
+							verticalHeight = firstIcon:GetHeight()
+							horizontalLength = curRowLength
+							
 						else
 							iconFrame:SetPoint ("bottomleft", previousIcon, "bottomright", DB_AURA_PADDING, 0)
 							previousIcon = iconFrame
@@ -4254,17 +4264,21 @@ end
 					end
 				end
 				
-				if (not firstIcon) then
-					return
-				end
-				
-				--remove 1 icon padding value
-				horizontalLength = horizontalLength - DB_AURA_PADDING
-				
-				--set the size of the buff frame
-				self:SetWidth (horizontalLength)
-				self:SetHeight (firstIcon:GetHeight())
 			end
+			
+			if (not firstIcon) then
+				return
+			end
+			
+			if curRowLength > horizontalLength then
+				horizontalLength = curRowLength
+			end
+			
+			--remove 1 icon padding value
+			horizontalLength = horizontalLength - DB_AURA_PADDING
+			--set the size of the buff frame
+			self:SetWidth (horizontalLength)
+			self:SetHeight (verticalHeight)
 		end
 	end
 
@@ -4341,8 +4355,10 @@ end
 		--self parent = NamePlate_X_UnitFrame
 		--self = BuffFrame
 		
+		local curBuffFrame = 1
 		if (isBuff and DB_AURA_SEPARATE_BUFFS) then
 			self = self.BuffFrame2
+			curBuffFrame = 2
 		end
 		
 		local i = self.NextAuraIcon
@@ -4359,8 +4375,15 @@ end
 			
 			newFrameIcon:SetBackdrop ({edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
 		
-			local auraWidth = Plater.db.profile.aura_width
-			local auraHeight = Plater.db.profile.aura_height
+			local auraWidth
+			local auraHeight
+			if curBuffFrame == 2 then
+				auraWidth = Plater.db.profile.aura_width2
+				auraHeight = Plater.db.profile.aura_height2
+			else
+				auraWidth = Plater.db.profile.aura_width
+			    auraHeight = Plater.db.profile.aura_height
+			end
 			newFrameIcon:SetSize (auraWidth, auraHeight)
 			newFrameIcon.Icon:SetSize (auraWidth-2, auraHeight-2)
 			
@@ -4445,6 +4468,7 @@ end
 	            
 	function Plater.AddAura (self, auraIconFrame, i, spellName, texture, count, auraType, duration, expirationTime, caster, canStealOrPurge, nameplateShowPersonal, spellId, isBuff, isShowAll, isDebuff, isPersonal, actualAuraType)
 		auraIconFrame:SetID (i)
+		local curBuffFrame = self.Name == "Secondary" and 2 or 1
 
 		--> check if the icon is showing a different aura
 		if (auraIconFrame.spellId ~= spellId) then
@@ -4515,10 +4539,17 @@ end
 				auraIconFrame:SetSize (auraWidth, auraHeight)
 				auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
 			else
-				local auraWidth = profile.aura_width
-				local auraHeight = profile.aura_height
-				auraIconFrame:SetSize (auraWidth, auraHeight)
-				auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
+				if curBuffFrame == 2 then
+					local auraWidth = profile.aura_width2
+					local auraHeight = profile.aura_height2
+					auraIconFrame:SetSize (auraWidth, auraHeight)
+					auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
+				else
+					local auraWidth = profile.aura_width
+					local auraHeight = profile.aura_height
+					auraIconFrame:SetSize (auraWidth, auraHeight)
+					auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
+				end
 			end
 			
 			auraIconFrame.Cooldown:SetEdgeTexture (profile.aura_cooldown_edge_texture)
@@ -4536,22 +4567,30 @@ end
 		--when the size is changed in the options it doesnt change the IsPersonal flag
 		--when it changes the isPersonal flag it change locally without increasing the refresh ID
 		--> update the icon size depending on where it is shown
-		if (auraIconFrame.IsPersonal ~= isPersonal) then
+		if (auraIconFrame.IsPersonal ~= isPersonal or auraIconFrame.BuffFrame ~= curBuffFrame) then
 			if (isPersonal) then
 				local auraWidth = profile.aura_width_personal
 				local auraHeight = profile.aura_height_personal
 				auraIconFrame:SetSize (auraWidth, auraHeight)
 				auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
 			else
-				local auraWidth = profile.aura_width
-				local auraHeight = profile.aura_height
-				auraIconFrame:SetSize (auraWidth, auraHeight)
-				auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
+				if curBuffFrame == 2 then
+					local auraWidth = profile.aura_width2
+					local auraHeight = profile.aura_height2
+					auraIconFrame:SetSize (auraWidth, auraHeight)
+					auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
+				else
+					local auraWidth = profile.aura_width
+					local auraHeight = profile.aura_height
+					auraIconFrame:SetSize (auraWidth, auraHeight)
+					auraIconFrame.Icon:SetSize (auraWidth-2, auraHeight-2)
+				end
 			end
 			
 			Plater.UpdateIconAspecRatio (auraIconFrame)
 		end
 		auraIconFrame.IsPersonal = isPersonal
+		auraIconFrame.BuffFrame = self.Name == "Secondary" and 2 or 1
 
 		if (count > 1) then
 			local stackLabel = auraIconFrame.CountFrame.Count
@@ -5091,7 +5130,7 @@ end
 				unitAuraCache.hasEnrage = unitAuraCache.hasEnrage or actualAuraType == AURA_TYPE_ENRAGE
 				
 				--> only show buffs casted by the player it self and less than 1 minute in duration
-				if (not DB_BUFF_BANNED [name] and (duration and (duration > 0 and duration < 60)) and (caster and UnitIsUnit (caster, "player"))) then
+				if (not DB_BUFF_BANNED [name] and (noBuffDurationLimitation or (duration and (duration > 0 and duration < 60)) and (caster and UnitIsUnit (caster, "player")))) then
 					local auraIconFrame, buffFrame = Plater.GetAuraIcon (self, true)
 					Plater.AddAura (buffFrame, auraIconFrame, i, name, texture, count, auraType, duration, expirationTime, caster, canStealOrPurge, nameplateShowPersonal, spellId, false, false, false, true, actualAuraType)
 
@@ -5401,13 +5440,11 @@ end
 			end
 			
 		--aura frame
-			--DB_AURA_Y_OFFSET = profile.aura_y_offset is from the buff Settings tab
-			--plateConfigs.buff_frame_y_offset is the offset from the actor type, e.g. enemy npc
-			buffFrame1:ClearAllPoints()
-			DFPixelUtil.SetPoint (buffFrame1, "bottom", unitFrame, "top", DB_AURA_X_OFFSET,  plateConfigs.buff_frame_y_offset + DB_AURA_Y_OFFSET)
+			local bf1Anchor = Plater.db.profile.aura_frame1_anchor
+			Plater.SetAnchor (buffFrame1, {side = bf1Anchor.side, x = bf1Anchor.x, y = bf1Anchor.y + plateConfigs.buff_frame_y_offset}, unitFrame.healthBar, (Plater.db.profile.aura_grow_direction or 2) == 2)
 			
-			buffFrame2:ClearAllPoints()
-			DFPixelUtil.SetPoint (buffFrame2, "bottom", unitFrame, "top", Plater.db.profile.aura2_x_offset,  plateConfigs.buff_frame_y_offset + Plater.db.profile.aura2_y_offset)
+			local bf2Anchor = Plater.db.profile.aura_frame2_anchor
+			Plater.SetAnchor (buffFrame2, {side = bf2Anchor.side, x = bf2Anchor.x, y = bf2Anchor.y + plateConfigs.buff_frame_y_offset}, unitFrame.healthBar, (Plater.db.profile.aura2_grow_direction or 2) == 2)
 			
 		if Plater.db.profile.show_health_prediction or Plater.db.profile.show_shield_prediction then
 			healthBar:UpdateHealPrediction() -- ensure health prediction is updated properly
@@ -5416,7 +5453,6 @@ end
 	
 	--debug function to print the size of the anchor for each aura container
 	function Plater.DebugAuraAnchor()
-		print ("DB_AURA_Y_OFFSET:", DB_AURA_Y_OFFSET)
 		local profile = Plater.db.profile
 		--get the config for this actor type
 		local plateConfigs = DB_PLATE_CONFIG ["enemynpc"]
@@ -5997,14 +6033,18 @@ end
 	-- ~target
 	function Plater.UpdateTarget (plateFrame) --private
 
-		if (UnitIsUnit (plateFrame.unitFrame [MEMBER_UNITID], "focus") and Plater.db.profile.focus_indicator_enabled) then
-			--this is a rare call, no need to cache these values
-			local texture = LibSharedMedia:Fetch ("statusbar", Plater.db.profile.focus_texture)
-			plateFrame.FocusIndicator:SetTexture (texture)
-			plateFrame.FocusIndicator:SetVertexColor (unpack (Plater.db.profile.focus_color))
-			plateFrame.FocusIndicator:Show()
+		if UnitIsUnit (plateFrame.unitFrame [MEMBER_UNITID], "focus") then
+			if Plater.db.profile.focus_indicator_enabled then
+				--this is a rare call, no need to cache these values
+				local texture = LibSharedMedia:Fetch ("statusbar", Plater.db.profile.focus_texture)
+				plateFrame.FocusIndicator:SetTexture (texture)
+				plateFrame.FocusIndicator:SetVertexColor (unpack (Plater.db.profile.focus_color))
+				plateFrame.FocusIndicator:Show()
+			end
+			plateFrame.unitFrame.IsFocus = true
 		else
 			plateFrame.FocusIndicator:Hide()
+			plateFrame.unitFrame.IsFocus = false
 		end
 
 		if (UnitIsUnit (plateFrame.unitFrame [MEMBER_UNITID], "target")) then
@@ -7450,64 +7490,70 @@ end
 	end
 
 	local anchor_functions = {
-		function (widget, config, attachTo)--1
+		function (widget, config, attachTo, centered)--1
 			widget:ClearAllPoints()
-			DFPixelUtil.SetPoint (widget, "bottomleft", attachTo, "topleft", config.x, config.y, 0, 0)
+			local widgetRelative = centered and "bottom" or "bottomleft"
+			DFPixelUtil.SetPoint (widget, widgetRelative, attachTo, "topleft", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--2
+		function (widget, config, attachTo, centered)--2
 			widget:ClearAllPoints()
-			DFPixelUtil.SetPoint (widget, "right", attachTo, "left", config.x, config.y, 0, 0)
+			local widgetRelative = centered and "center" or "right"
+			DFPixelUtil.SetPoint (widget, widgetRelative, attachTo, "left", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--3
+		function (widget, config, attachTo, centered)--3
 			widget:ClearAllPoints()
-			DFPixelUtil.SetPoint (widget, "topleft", attachTo, "bottomleft", config.x, config.y, 0, 0)
+			local widgetRelative = centered and "top" or "topleft"
+			DFPixelUtil.SetPoint (widget, widgetRelative, attachTo, "bottomleft", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--4
+		function (widget, config, attachTo, centered)--4
 			widget:ClearAllPoints()
 			DFPixelUtil.SetPoint (widget, "top", attachTo, "bottom", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--5
+		function (widget, config, attachTo, centered)--5
 			widget:ClearAllPoints()
-			DFPixelUtil.SetPoint (widget, "topright", attachTo, "bottomright", config.x, config.y, 0, 0)
+			local widgetRelative = centered and "top" or "topright"
+			DFPixelUtil.SetPoint (widget, widgetRelative, attachTo, "bottomright", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--6
+		function (widget, config, attachTo, centered)--6
 			widget:ClearAllPoints()
-			DFPixelUtil.SetPoint (widget, "left", attachTo, "right", config.x, config.y, 0, 0)
+			local widgetRelative = centered and "center" or "left"
+			DFPixelUtil.SetPoint (widget, widgetRelative, attachTo, "right", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--7
+		function (widget, config, attachTo, centered)--7
 			widget:ClearAllPoints()
-			DFPixelUtil.SetPoint (widget, "bottomright", attachTo, "topright", config.x, config.y, 0, 0)
+			local widgetRelative = centered and "bottom" or "bottomright"
+			DFPixelUtil.SetPoint (widget, widgetRelative, attachTo, "topright", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--8
+		function (widget, config, attachTo, centered)--8
 			widget:ClearAllPoints()
 			DFPixelUtil.SetPoint (widget, "bottom", attachTo, "top", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--9
+		function (widget, config, attachTo, centered)--9
 			widget:ClearAllPoints()
 			DFPixelUtil.SetPoint (widget, "center", attachTo, "center", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--10
+		function (widget, config, attachTo, centered)--10
 			widget:ClearAllPoints()
 			DFPixelUtil.SetPoint (widget, "left", attachTo, "left", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--11
+		function (widget, config, attachTo, centered)--11
 			widget:ClearAllPoints()
 			DFPixelUtil.SetPoint (widget, "right", attachTo, "right", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--12
+		function (widget, config, attachTo, centered)--12
 			widget:ClearAllPoints()
 			DFPixelUtil.SetPoint (widget, "top", attachTo, "top", config.x, config.y, 0, 0)
 		end,
-		function (widget, config, attachTo)--13
+		function (widget, config, attachTo, centered)--13
 			widget:ClearAllPoints()
 			DFPixelUtil.SetPoint (widget, "bottom", attachTo, "bottom", config.x, config.y, 0, 0)
 		end
 	}
 
 	--auto set the point based on the table from the config, if attachTo isn't received, it'll use its parent
-	function Plater.SetAnchor (widget, config, attachTo) --private
+	function Plater.SetAnchor (widget, config, attachTo, centered) --private
 		attachTo = attachTo or widget:GetParent()
-		anchor_functions [config.side] (widget, config, attachTo)
+		anchor_functions [config.side] (widget, config, attachTo, centered)
 	end
 
 	--check the setting 'only_damaged' and 'only_thename' for player characters. not critical code, can run slow

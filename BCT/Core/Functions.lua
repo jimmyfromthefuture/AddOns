@@ -36,7 +36,7 @@ local function GetAura(name)
 
 	for k, v in pairs(BCT.session.db.auras[BCT.BUFF]) do
 		if name == GetSpellInfo(k) then
-			return true, v[5], v[3], v[8]
+			return true, v[5], v[3], v[8], k
 		end
 	end
 	
