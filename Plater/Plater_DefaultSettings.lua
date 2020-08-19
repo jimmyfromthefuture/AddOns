@@ -50,7 +50,7 @@ DF:NewColor ("PLATER_GUILD", 0.498039, 1, .2, 1)
 
 DF:NewColor ("PLATER_DEBUFF", 1, 0.7117, 0.7117, 1)
 DF:NewColor ("PLATER_BUFF", 0.7117, 1, 0.7509, 1)
-DF:NewColor ("PLATER_CAST", 0.7117, 0.7784, 1, 1)
+DF:NewColor ("PLATER_CAST", 0.4117, 0.4784, 1, 1)
 
 --defining reaction constants here isnce they are used within the profile
 local UNITREACTION_HOSTILE = 3
@@ -495,7 +495,14 @@ PLATER_DEFAULT_SETTINGS = {
 		},
 		
 		login_counter = 0,
+		
+		spell_prediction = {
+			enabled = false,
+			castbar_height = 12,
 
+		},
+
+		--transparency control
 		transparency_behavior = 0x1,
 		transparency_behavior_use_division = false,
 		non_targeted_alpha_enabled = false,
@@ -590,6 +597,7 @@ PLATER_DEFAULT_SETTINGS = {
 		hook_auto_imported = {}, --store the name and revision of scripts imported from the Plater script library
 		
 		patch_version = 0,
+		patch_version_profile = 0,
 		
 		health_cutoff = true,
 		health_cutoff_extra_glow = false,

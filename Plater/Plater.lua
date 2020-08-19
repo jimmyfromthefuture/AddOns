@@ -1666,6 +1666,27 @@ Plater.DefaultSpellRangeList = {
 		end
 	end
 	
+	--same thing as above but apply patches only to new profiles
+	--this doesn't count profiles imported from other users
+	function Plater.ApplyPatchesToNewProfile()
+		if (PlaterPatchLibraryForNewProfiles) then
+			local currentPatch = Plater.db.profile.patch_version_profile
+			for i = currentPatch+1, #PlaterPatchLibraryForNewProfiles do
+			
+				local patch = PlaterPatchLibraryForNewProfiles [i]
+				Plater:Msg ("Applied Patch for Profiles #" .. i .. ":")
+				
+				for o = 1, #patch.Notes do
+					print (patch.Notes [o])
+				end
+				
+				DF:Dispatch (patch.Func)
+				
+				Plater.db.profile.patch_version_profile = i
+			end
+		end
+	end
+	
 	--when using UIParent as the parent for the unitFrame, this function is hooked in the plateFrame OnSizeChanged script
 	--the goal is to adjust the the unitFrame scale when the plateFrame scale changes
 	--this approach also solves the issue to the unitFrame not playing correctly the animation when the nameplate is removed from the screen
@@ -2426,6 +2447,25 @@ Plater.DefaultSpellRangeList = {
 				onTickFrame.BuffFrame = plateFrame.unitFrame.BuffFrame
 				onTickFrame.BuffFrame2 = plateFrame.unitFrame.BuffFrame2
 			
+				--> create a second castbar
+				local castBar2 = DF:CreateCastBar (plateFrame.unitFrame, "$parentCastBar2")
+				plateFrame.unitFrame.castBar2 = castBar2
+				castBar2.Icon:ClearAllPoints()
+				castBar2.Icon:SetPoint("right", castBar2, "left", -1, 0)
+
+				castBar2.FrameOverlay = CreateFrame ("frame", "$parentOverlayFrame", castBar2)
+				castBar2.FrameOverlay:SetAllPoints()
+
+				--pushing the spell name up
+				castBar2.Text:SetParent (castBar2.FrameOverlay)
+				
+				--does have a border but its alpha is zero by default
+				castBar2.FrameOverlay:SetBackdrop ({edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
+				castBar2.FrameOverlay:SetBackdropBorderColor (1, 1, 1, 0)
+				castBar2:SetPoint("topleft", plateFrame.unitFrame.castBar, "bottomleft", 0, -2)
+				castBar2:SetPoint("topright", plateFrame.unitFrame.castBar, "bottomright", 0, -2)
+				
+
 			--> unit name
 				--regular name
 				plateFrame.unitFrame.unitName:SetParent (healthBar) --the name is parented to unitFrame in the framework
@@ -3029,7 +3069,7 @@ Plater.DefaultSpellRangeList = {
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --> addon initialization
 
-function Plater.OnInit() --private
+function Plater.OnInit() --private ~oninit
 	Plater.RefreshDBUpvalues()
 	
 	Plater.CombatTime = GetTime()
@@ -3091,6 +3131,8 @@ function Plater.OnInit() --private
 		C_Timer.After (1, Plater.GetSpellForRangeCheck)
 		C_Timer.After (4, Plater.GetHealthCutoffValue)
 		C_Timer.After (4.2, Plater.ForceCVars)
+		
+		C_Timer.After (2, Plater.InitializeSpellPrediction)
 	
 	--hooking scripts has load conditions, here it creates a load filter for plater
 	--so when a load condition is changed it reload hooks
@@ -3116,6 +3158,9 @@ function Plater.OnInit() --private
 			
 			if (not Plater.db.profile.first_run3) then
 				C_Timer.After (15, Plater.SetCVarsOnFirstRun)
+				
+				--run Patches to run only when the profile is new
+				Plater.ApplyPatchesToNewProfile()
 				
 				--enable UIParent nameplates for new installs of Plater
 				--this setting is disabled by default and will be enabled for new people
@@ -8027,7 +8072,7 @@ end
 	end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---> combat log reader  ~combatlog
+--> combat log reader  ~combatlog ~cleu
 
 
 	local PlaterCLEUParser = CreateFrame ("frame", "PlaterCLEUParserFrame", UIParent)
@@ -11418,4 +11463,4 @@ function Plater.OpenColorFrame()
 	a:SetWidth (totalWidth)
 end
 
---functiona enda
+
