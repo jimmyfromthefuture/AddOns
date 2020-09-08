@@ -15,10 +15,9 @@ local function OnEvent(self)
 	self.text:SetFormattedText(displayString, HasNewMail() and "New Mail" or "No Mail")
 end
 
-local function OnEnter(self)
+local function OnEnter()
 	local senders = { GetLatestThreeSenders() }
 	if #senders > 0 then
-		DT:SetupTooltip(self)
 		DT.tooltip:AddLine(HasNewMail() and HAVE_MAIL_FROM or MAIL_LABEL, 1, 1, 1)
 		DT.tooltip:AddLine(' ')
 		for _, sender in pairs(senders) do
@@ -38,4 +37,4 @@ local function ValueColorUpdate(hex)
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
-DT:RegisterDatatext('Mail', nil, {'MAIL_INBOX_UPDATE', 'UPDATE_PENDING_MAIL', 'MAIL_CLOSED', 'MAIL_SHOW'}, OnEvent, nil, nil, OnEnter, nil, MAIL_LABEL)
+DT:RegisterDatatext('Mail', nil, {'MAIL_INBOX_UPDATE', 'UPDATE_PENDING_MAIL', 'MAIL_CLOSED', 'MAIL_SHOW'}, OnEvent, nil, nil, OnEnter, nil, MAIL_LABEL, nil, ValueColorUpdate)

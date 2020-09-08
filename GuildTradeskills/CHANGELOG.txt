@@ -1,0 +1,176 @@
+6.0.3
+	Somebody else is using a module called 'Text'. Renaming ours.
+
+6.0.2
+	Fixed an issue that prevented the user from toggling receiving broadcasts off.
+	Fixed an issue that prevented the user from removing a tracked profession.
+	Fixed an issue that prevented the POST from being accepted when a reagent link was nil. Since they are not always populated we should not reject the post.
+	Added German localization.
+	Added French localization.
+
+6.0.1
+	Fixing an issue that prevented the user from adding a profession.
+
+6.0.0
+	Tagging for release.
+
+5.0.5
+	Removed the result limit on the search frame.
+	Split out the databases. It was getting far too complicated.
+	We should now reliably fetch reagents on the first try.
+	We should now also fetch reagent links.
+	Fixed an error when the player received a whisper with the only contents being '?'.
+	We will not respond to whisper inquiries from non-guildmates and characters that have not been manually added when not advertising.
+	Moved broadcasting to only broadcasting timestamps and relying on whispers. The yell channel is more restrictive on rate limiting than the whisper and guild channels.
+	Throttled broadcasting to only send one message every minute.
+	It's no longer possible to add, reject, or ignore guildmates.
+	We now send deleted professions to manually added characters.
+	We now perform an addon check when manually adding a character.
+	Versions are now sent though yell and whisper channels.
+	Added a check for unsupported professions. Not many people would be interested in whether somebody can smelt something or not.
+
+5.0.4
+	Fixed an issue where the player would get disconnected if they were registered to vote but could not.
+
+5.0.3
+	Sanity check passed. Marking as release.
+
+5.0.2
+	Apparently load order is important when loading libraries.
+
+5.0.1
+	Forgot to add the AceConfig dependency.
+
+5.0.0
+	Added the ability to add non-guild members.
+	Added the ability to broadcast and receive broadcasts.
+	Added non-guild member management.
+	Added an options panel for UI inclined users.
+	Fixed the ordering of commands on /gt help.
+	Moved the profession add notification from the chat pane to a popup.
+
+4.2.5
+	Fixed an error when receiving whispers.
+
+4.2.4
+	Fixed an issue when players were still using the old whisper comm method.
+
+4.2.3
+	Adding UUID to text utils.
+
+4.2.2
+	Added guild database maintentance. We now remove characters that aren't in the guild any more.
+
+4.2.1
+	Moved to a guild based voting system to decide who sends a post instead of whispering everyone individually. This should massively reduce the number of messages sent and received at scale.
+	Still maintaining addon whisper functionality to have the ability to add non-guild members.
+
+4.1.1
+	Fixed an issue where the profession name was not being set when created.
+
+4.1.0
+	Added advertising capabilities.
+	Added more protections for invalid posts.
+	Changed the trigger character from '!' to '?'. Too many addons use '!'. Localized the trigger character.
+
+4.0.12
+	Fixed syntax error in Modules/Database
+
+4.0.11
+	Added post message format checking. We now drop invalid posts insted of corrupting the database.
+	Added the ability to reset an individual profession or character.
+	We now always update the local DB on an accepted post. This should help fix broken databases.
+	Added a database integrity check and a message on failure.
+
+4.0.10
+	It packaged it but it included the entire effing Ace3 repo. Including bat files. Causing the file to be rejected.
+
+4.0.9
+	Let's give automatic packaging a shot.
+
+4.0.8
+	Added the ability to logdump to a copy/pastable window.
+	Added the ability to dbdump to a copy/pastable window.
+	Fixed an issue that was causing characters that haven't added any professions to get an error.
+	Now also resets the profession database when resetting.
+	Fixed log formatting.
+	Added a few poweruser commands. Not listed in standard help message.
+	Added a touch of highlighting to the actual commands in the help message.
+	Timestamps are now posted 15 seconds after the player logs in instead of immediately. This enables them to actually be sent.
+
+4.0.7
+	Fixed an issue where players were posting even when things were up to date.
+
+4.0.6
+	Fixing the ability to delete a profession.
+
+4.0.4
+	Now has the capacity to send timestamps on every profession interaction.
+
+4.0.3
+	Fixed the way the version number was being parsed.
+	Fixed a few bugs in comms about players posting to themselves.
+
+4.0.2
+	Fixed the way multiple tradeskill timestamps were posted.
+	Fixed version checking.
+
+4.0.1
+	Fixing an issue where localizations weren't loaded when we tried to print the welcome message.
+
+4.0.0
+	I accidentally reverted that entire thing.
+
+2.0.0
+	Ripped apart the entire thing and converted it to an Ace3 addon.
+	Included dependencies that other addons were loading.
+
+1.0.0
+	Added whisper support.	
+
+0.1.2
+	Emergency fix for database function.
+
+0.1.1
+	Expanded logging capabilities to be more flexible.
+	Added version checking.
+	Added concat ability to text utils.
+	Updated table utils remove token to return the token and the table.
+	Added function in comms to be able to broadcast to entire online guild one by one.
+
+0.1.0
+	Moved LICENSE->LICENSE.txt
+	Added FAQ
+
+0.0.6
+	Fixed issue where timestamps were being posted twice when the player opens a profession.
+	Added ability to change default output chat window.
+	Fixed an issue that was causing skill filter to fail when clicking a character's name.
+	Fixed an issue that was causing whispers to fail when a character was right clicked.
+	Adding a hard cap to the number of items displayed in the scroll lists. Instead we should create/release on scroll.
+
+0.0.5
+	Removed character and profession reset stubs in favor of just ability to remove profession.
+	Added back end for removing profession and having it propagate through the network.
+	Removed log info localizations. The end user shouldn't ever see these.
+	Moved GUI profession check box states up to SavedCharacterVars instead of local. It's super annoying to have to check them every time you reload the UI.
+	Adding a profession will now auto-close the profession after it is done adding.
+	Added ability to remove from a table by value or if a table is not integer indexed.
+
+0.0.4
+	Added support for enchanting.
+	Added ability to toggle comms. Non localized as this shouldn't be regularly used by end users.
+	Reset last skill clicked in the GUI when necessary.
+
+0.0.3
+	Fixed issue where only one character was being displayed in the results
+
+0.0.2
+	Fixed DB error on new launches
+
+0.0.1
+	Init
+	Added database
+	Added ability to add professions
+	Added sync capabilities
+	Added GUI

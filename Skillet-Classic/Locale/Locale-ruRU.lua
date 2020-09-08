@@ -90,8 +90,12 @@ L["FEATURESDESC"] = "Необязательные свойства которы�
 L["Filter"] = "Фильтр"
 L["Flat"] = "Прямой"
 L["Flush All Data"] = "Сбросить все данные"
+--[[Translation missing --]]
+L["Flush Player Data"] = "Flush Player Data"
 L["Flush Recipe Data"] = "Сбросить данные рецептов"
 L["FLUSHALLDATADESC"] = "Сбросить все данные Skillet"
+--[[Translation missing --]]
+L["FLUSHPLAYERDATADESC"] = "Flush this character's data"
 L["FLUSHRECIPEDATADESC"] = "Сбросить данные рецептов Skillet"
 L["From Selection"] = "Из выбранного"
 L["Glyph "] = "Символ "

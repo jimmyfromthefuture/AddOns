@@ -9,8 +9,8 @@ local GetAddOnInfo = GetAddOnInfo
 local GetAddOnMetadata = GetAddOnMetadata
 local GetNumAddOns = GetNumAddOns
 local IsShiftKeyDown = IsShiftKeyDown
-local ReloadUI = ReloadUI
 local InCombatLockdown = InCombatLockdown
+local ReloadUI = ReloadUI
 
 local displayString = ""
 local configText = "ElvUI"
@@ -32,9 +32,7 @@ local function OnEvent(self)
 	self.text:SetFormattedText(displayString, configText)
 end
 
-local function OnEnter(self)
-	DT:SetupTooltip(self)
-
+local function OnEnter()
 	DT.tooltip:AddDoubleLine(L["Left Click:"], L["Toggle Configuration"], 1, 1, 1)
 	DT.tooltip:AddDoubleLine(L["Hold Shift + Right Click:"], reloadText, 1, 1, 1)
 	if plugins then
@@ -66,4 +64,4 @@ local function ValueColorUpdate(hex)
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
-DT:RegisterDatatext('ElvUI Config', nil, nil, OnEvent, nil, Click, OnEnter)
+DT:RegisterDatatext('ElvUI Config', nil, nil, OnEvent, nil, Click, OnEnter, nil, nil, nil, ValueColorUpdate)

@@ -3,10 +3,11 @@ local E, L, V, P, G = unpack(select(2, ...)) --Import: Engine, Locales, PrivateD
 --Global Settings
 G.general = {
 	UIScale = 0.64,
-	version = 1.27,
+	version = 1.31,
 	locale = E:GetLocale(),
 	eyefinity = false,
 	smallerWorldMap = true,
+	allowDistributor = false,
 	smallerWorldMapScale = 0.9,
 	fadeMapWhenMoving = true,
 	mapAlphaWhenMoving = 0.2,
@@ -39,6 +40,44 @@ G.bags = {
 G.datatexts = {
 	customPanels = {},
 	customCurrencies = {},
+	settings = {
+		Agility = { Label = '', NoLabel = false },
+		Armor = { Label = '', NoLabel = false },
+		Avoidance = { Label = '', NoLabel = false, decimalLength = 1 },
+		CallToArms = { Label = '', NoLabel = false },
+		Crit = { Label = '', NoLabel = false, decimalLength = 1 },
+		Currencies = { goldFormat = 'BLIZZARD', goldCoins = true, displayedCurrency = 'BACKPACK', displayStyle = 'ICON', tooltipData = {} },
+		Durability = { Label = '', NoLabel = false, percThreshold = 30 },
+		Experience = { textFormat = 'CUR' },
+		Friends = {
+			Label = '', NoLabel = false,
+			--status
+			hideAFK = false,
+			hideDND = false,
+			--clients
+			hideWoW = false,
+			hideD3 = false,
+			hideVIPR = false,
+			hideWTCG = false, --Hearthstone
+			hideHero = false, --Heros of the Storm
+			hidePro = false, --Overwatch
+			hideS1 = false,
+			hideS2 = false,
+			hideDST2 = false,
+			hideBSAp = false, --Mobile
+			hideApp = false, --Launcher
+		},
+		Gold = { goldFormat = 'BLIZZARD', goldCoins = true },
+		Guild = { Label = '', NoLabel = false },
+		QuickJoin = { Label = '', NoLabel = false },
+		Bags = { textFormat = 'USED_TOTAL' },
+		Reputation = { textFormat = 'CUR' },
+		Speed = { Label = '', NoLabel = false, decimalLength = 1 },
+		Stamina = { Label = '', NoLabel = false },
+		Strength = { Label = '', NoLabel = false },
+		Time = { time24 = _G.GetCurrentRegion() ~= 1, localTime = true },
+		Versatility = { Label = '', NoLabel = false, decimalLength = 1 },
+	},
 	newPanelInfo = {
 		name = '',
 		enable = true,

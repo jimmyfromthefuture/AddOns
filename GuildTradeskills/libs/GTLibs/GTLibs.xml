@@ -1,0 +1,7 @@
+<Ui xmlns='http://www.blizzard.com/wow/ui/'>
+	<Script file='GTText.lua'/>
+	<Script file='Table.lua'/>
+	<Script file='Log.lua'/>
+	<Script file='Friends.lua'/>
+	<Script file='ScrollFrame.lua'/>
+</Ui>

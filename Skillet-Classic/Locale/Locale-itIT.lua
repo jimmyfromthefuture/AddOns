@@ -100,8 +100,12 @@ L["Filter"] = "Filtro"
 --[[Translation missing --]]
 L["Flat"] = "Flat"
 L["Flush All Data"] = "Flush All Data"
+--[[Translation missing --]]
+L["Flush Player Data"] = "Flush Player Data"
 L["Flush Recipe Data"] = "Flush Recipe Data"
 L["FLUSHALLDATADESC"] = "Flush all Skillet data"
+--[[Translation missing --]]
+L["FLUSHPLAYERDATADESC"] = "Flush this character's data"
 L["FLUSHRECIPEDATADESC"] = "Flush Skillet recipe data"
 L["From Selection"] = "From Selection"
 L["Glyph "] = "Glifo"

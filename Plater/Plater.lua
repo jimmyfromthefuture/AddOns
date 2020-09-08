@@ -905,7 +905,7 @@ Plater.DefaultSpellRangeList = {
 		end
  
 		--is using the range check by ability
-		if (DB_USE_RANGE_CHECK) then
+		if (DB_USE_RANGE_CHECK and Plater.SpellForRangeCheck) then
 			--check when the unit just has been added to the screen
 			local isInRange = IsSpellInRange (Plater.SpellForRangeCheck, plateFrame [MEMBER_UNITID]) == 1
 
@@ -2879,7 +2879,7 @@ Plater.DefaultSpellRangeList = {
 							--includes neutral npcs
 							
 							--add the npc in the npcid cache
-							if (not DB_NPCIDS_CACHE [plateFrame [MEMBER_NPCID]] and not IS_IN_OPEN_WORLD and not Plater.ZonePvpType and plateFrame [MEMBER_NPCID]) then
+							if (plateFrame [MEMBER_NPCID] and not DB_NPCIDS_CACHE [plateFrame [MEMBER_NPCID]] and IS_IN_INSTANCE) then
 								if (UNKNOWN ~= plateFrame [MEMBER_NAME]) then --UNKNOWN is the global string from blizzard
 									DB_NPCIDS_CACHE [plateFrame [MEMBER_NPCID]] = {plateFrame [MEMBER_NAME], Plater.ZoneName}
 								end
@@ -8007,11 +8007,12 @@ end
 	end
 	
 	function Plater.GetUnitType (plateFrame)
-		if (PET_CACHE [plateFrame [MEMBER_GUID]]) then
+		if (plateFrame ["namePlateClassification"] == "minus") then
+			return "minus"
+			
+		elseif (PET_CACHE [plateFrame [MEMBER_GUID]]) then
 			return "pet"
 			
-		elseif (plateFrame ["namePlateClassification"] == "minus") then
-			return "minus"
 		end
 		
 		return "normal"
@@ -10605,7 +10606,7 @@ end
 		--consistency/init:
 		scriptObjectNew.OptionsValues = scriptObjectNew.OptionsValues or {}
 		scriptObjectNew.Options = scriptObjectNew.Options or {}
-		scriptObjectOld.scriptObjectOld = scriptObjectOld.scriptObjectOld or {}
+		scriptObjectOld.OptionsValues = scriptObjectOld.OptionsValues or {}
 		
 		local newUserOptions = scriptObjectNew.OptionsValues
 		local newOptions = scriptObjectNew.Options

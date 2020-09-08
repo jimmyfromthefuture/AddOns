@@ -215,10 +215,8 @@ local function Click(self, btn)
 	end
 end
 
-local function OnEnter(self, _, noUpdate)
+local function OnEnter()
 	if not IsInGuild() then return end
-
-	DT:SetupTooltip(self)
 
 	local total, _, online = GetNumGuildMembers()
 	if #guildTable == 0 or #guildTable < online then BuildGuildTable() end
@@ -292,4 +290,4 @@ local function ValueColorUpdate(hex)
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
-DT:RegisterDatatext('Guild', _G.SOCIAL_LABEL, {'CHAT_MSG_SYSTEM', 'GUILD_ROSTER_UPDATE', 'PLAYER_GUILD_UPDATE', 'GUILD_MOTD', 'MODIFIER_STATE_CHANGED'}, OnEvent, nil, Click, OnEnter, nil, GUILD)
+DT:RegisterDatatext('Guild', _G.SOCIAL_LABEL, {'CHAT_MSG_SYSTEM', 'GUILD_ROSTER_UPDATE', 'PLAYER_GUILD_UPDATE', 'GUILD_MOTD', 'MODIFIER_STATE_CHANGED'}, OnEvent, nil, Click, OnEnter, nil, GUILD, nil, ValueColorUpdate)

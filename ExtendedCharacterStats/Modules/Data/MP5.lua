@@ -2,8 +2,10 @@
 local Data = ECSLoader:ImportModule("Data")
 ---@type DataUtils
 local DataUtils = ECSLoader:ImportModule("DataUtils")
+---@type Utils
+local Utils = ECSLoader:ImportModule("Utils")
 
-local _GetMP5ValueOnItems
+local _GetMP5ValueOnItems, _GetTalentModifier, _GetAuraModifier
 
 local _, _, classId = UnitClass("player")
 
@@ -26,6 +28,10 @@ _GetMP5ValueOnItems = function ()
                     mp5 = mp5 + statMP5 + 1
                 end
             end
+            local enchant = DataUtils:GetEnchantFromItemLink(itemLink)
+            if enchant and enchant == Data.enchantIds.BRACER_MANA_REGENERATION then
+                mp5 = mp5 + 4
+            end
         end
     end
 
@@ -43,7 +49,32 @@ function Data:GetMP5FromSpirit()
     return DataUtils:Round(base, 0) * 5
 end
 
-local function _GetTalentModifierMP5()
+-- Get manaregen while casting
+function Data:GetMP5WhileCasting()
+    local _, casting = GetManaRegen() -- Returns mana reg per 1 second
+    if casting < 1 then
+        casting = lastManaReg
+    end
+    lastManaReg = casting
+
+    local mod = _GetTalentModifier()
+    if Data:HasSetBonusModifierMP5() then
+        mod = mod + 0.15
+    end
+    local auraMod, auraValues = _GetAuraModifier()
+    mod = mod + auraMod
+    if mod == 0 then
+        casting = 0
+    end
+    casting = casting * mod
+
+    local mp5Items = Data:GetMP5FromItems()
+    casting = (casting * 5) + mp5Items + auraValues
+
+    return DataUtils:Round(casting, 2)
+end
+
+_GetTalentModifier = function()
     local mod = 0
 
     if classId == Data.PRIEST then
@@ -60,24 +91,41 @@ local function _GetTalentModifierMP5()
     return mod
 end
 
--- Get manaregen while casting
-function Data:GetMP5WhileCasting()
-    local _, casting = GetManaRegen() -- Returns mana reg per 1 second
-    if casting < 1 then
-        casting = lastManaReg
-    end
-    lastManaReg = casting
+_GetAuraModifier = function ()
+    local mod = 0
+    local bonus = 0
 
-    local mod = _GetTalentModifierMP5()
-    if Data:HasSetBonusModifierMP5() then
-        mod = mod + 0.15
-    end
-    if mod > 0 then
-        casting = casting * mod
+    for i = 1, 40 do
+        local _, _, _, _, _, _, _, _, _, spellId, _ = UnitAura("player", i, "HELPFUL")
+        if spellId == nil then
+            break
+        end
+
+        if spellId == 6117 or spellId == 22782 or spellId == 22783 then
+            mod = mod + 0.3 -- 30% from Mage Armor
+        end
+        if spellId == 24363 then
+            bonus = bonus + 12 -- 12 MP5 from Mageblood Potion
+        end
+        if spellId == 16609 then
+            bonus = bonus + 10 -- 10 MP5 from Warchief's Blessing
+        end
+        if spellId == 18194 then
+            bonus = bonus + 8 -- 8 MP5 from Nightfin Soup
+        end
+        if spellId == 5677 then
+            bonus = bonus + 10 -- 4 Mana per 2 seconds from Mana Spring Totem (Rank 1)
+        end
+        if spellId == 10491 then
+            bonus = bonus + 15 -- 6 Mana per 2 seconds from Mana Spring Totem (Rank 2)
+        end
+        if spellId == 10493 then
+            bonus = bonus + 20 -- 8 Mana per 2 seconds from Mana Spring Totem (Rank 3)
+        end
+        if spellId == 10494 then
+            bonus = bonus + 25 -- 10 Mana per 2 seconds from Mana Spring Totem (Rank 4)
+        end
     end
 
-    local mp5Items = Data:GetMP5FromItems()
-    casting = (casting * 5) + mp5Items
-
-    return DataUtils:Round(casting, 2)
+    return mod, bonus
 end

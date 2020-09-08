@@ -33,7 +33,7 @@ local function OnEvent(self, event, _, timeSeconds)
 		self:SetScript("OnUpdate", OnUpdate)
 	else
 		local txt = self.text:GetText()
-		if not txt or txt == ' ' then
+		if not txt or txt == ' ' or txt ~= format(displayString, timerText, UpdateText()) then
 			self.text:SetFormattedText(displayString, timerText, UpdateText())
 		end
 	end
@@ -50,4 +50,4 @@ local function ValueColorUpdate(hex)
 end
 E.valueColorUpdateFuncs[ValueColorUpdate] = true
 
-DT:RegisterDatatext('Combat Time', nil, {"PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED"}, OnEvent, nil, nil, nil, nil, L["Combat Time"])
+DT:RegisterDatatext('Combat Time', nil, {'PLAYER_REGEN_DISABLED', 'PLAYER_REGEN_ENABLED'}, OnEvent, nil, nil, nil, nil, L["Combat Time"], nil, ValueColorUpdate)

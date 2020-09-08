@@ -14,7 +14,9 @@ local REPUTATION, STANDING = REPUTATION, STANDING
 
 local function OnEvent(self, event, eventType)
 	local name, reaction, min, max, value = GetWatchedFactionInfo()
-	if not name then return end
+	if not name then
+		return 	self.text:SetText(NOT_APPLICABLE)
+	end
 
 	local standingLabel
 	local isCapped
@@ -25,7 +27,7 @@ local function OnEvent(self, event, eventType)
 
 	local color = _G.FACTION_BAR_COLORS[reaction]
 	local text = name
-	local textFormat = E.DataBars.db.reputation.textFormat
+	local textFormat = E.global.datatexts.settings.Reputation.textFormat
 
 	standingLabel = E:RGBToHex(color.r, color.g, color.b, nil, _G['FACTION_STANDING_LABEL'..reaction]..'|r')
 
@@ -35,8 +37,7 @@ local function OnEvent(self, event, eventType)
 		maxMinDiff = 1
 	end
 
-	if isCapped and textFormat ~= 'NONE' then
-		-- show only name and standing on exalted
+	if isCapped then
 		text = format('%s: [%s]', name, standingLabel)
 	else
 		if textFormat == 'PERCENT' then
@@ -59,9 +60,7 @@ local function OnEvent(self, event, eventType)
 	self.text:SetText(text)
 end
 
-local function OnEnter(self)
-	DT:SetupTooltip(self)
-
+local function OnEnter()
 	local name, reaction, min, max, value = GetWatchedFactionInfo()
 
 	if name then

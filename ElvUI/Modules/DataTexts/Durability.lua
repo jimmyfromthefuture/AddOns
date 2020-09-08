@@ -57,7 +57,7 @@ local function OnEvent(self)
 	local hex = E:RGBToHex(r, g, b)
 	self.text:SetFormattedText(displayString, hex, totalDurability)
 
-	if totalDurability <= E.db.datatexts.durability.percThreshold then
+	if totalDurability <= E.global.datatexts.settings.Durability.percThreshold then
 		E:Flash(self, 0.53, true)
 	else
 		E:StopFlash(self)
@@ -69,9 +69,7 @@ local function Click()
 	ToggleCharacter("PaperDollFrame")
 end
 
-local function OnEnter(self)
-	DT:SetupTooltip(self)
-
+local function OnEnter()
 	for slot, durability in pairs(invDurability) do
 		DT.tooltip:AddDoubleLine(format('|T%s:14:14:0:0:64:64:4:60:4:60|t  %s', GetInventoryItemTexture("player", slot), GetInventoryItemLink("player", slot)), format(tooltipString, durability), 1, 1, 1, E:ColorGradient(durability * 0.01, 1, .1, .1, 1, 1, .1, .1, 1, .1))
 	end

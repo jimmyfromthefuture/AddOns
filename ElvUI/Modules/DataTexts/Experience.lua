@@ -15,7 +15,7 @@ local function OnEvent(self, event)
 	else
 		local cur, max = UnitXP('player'), UnitXPMax('player')
 		local rested = GetXPExhaustion()
-		local textFormat = E.DataBars.db.experience.textFormat
+		local textFormat = E.global.datatexts.settings.Experience.textFormat
 
 		if rested and rested > 0 then
 			if textFormat == 'PERCENT' then
@@ -56,11 +56,8 @@ local function OnEvent(self, event)
 	-- self.text:SetFormattedText()
 end
 
-local function OnEnter(self)
-	DT:SetupTooltip(self)
-
-	local cur, max = UnitXP('player'), UnitXPMax('player')
-	local rested = GetXPExhaustion()
+local function OnEnter()
+	local cur, max, rested = UnitXP('player'), UnitXPMax('player'), GetXPExhaustion()
 	DT.tooltip:AddLine(L["Experience"])
 	DT.tooltip:AddLine(' ')
 

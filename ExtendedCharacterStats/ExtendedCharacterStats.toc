@@ -1,6 +1,6 @@
 ## Interface: 11305
-## Title : Extended Character Stats v2.4.6
-## Version : 2.4.6
+## Title : Extended Character Stats v2.5.0
+## Version : 2.5.0
 ## Notes: Displays an extra window with more information about your characters stats ( Crit/Hit/Block etc )
 ## SavedVariablesPerCharacter: ExtendedCharacterStats
 ## DefaultState : enabled
@@ -21,6 +21,7 @@ Modules\SlashCommands.lua
 # Data
 Modules\Data\Constants.lua
 Modules\Data\Data.lua
+Modules\Data\DataUtils.lua
 Modules\Data\Defense.lua
 Modules\Data\ItemSets.lua
 Modules\Data\Melee.lua
@@ -28,7 +29,6 @@ Modules\Data\MP5.lua
 Modules\Data\Ranged.lua
 Modules\Data\SpellCrit.lua
 Modules\Data\SpellHit.lua
-Modules\Data\Utils.lua
 
 # Config
 Modules\Config\Config.lua
@@ -43,6 +43,7 @@ Modules\Config\SpellBonusSection.lua
 Modules\i18n\i18n.lua
 Modules\i18n\en.lua
 Modules\i18n\de.lua
+Modules\i18n\fr.lua
 
 # Main
 ECS.lua
