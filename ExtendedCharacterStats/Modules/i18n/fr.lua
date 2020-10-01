@@ -21,7 +21,7 @@ strings = {
     ["SETTINGS"] = "Paramètres",
     ["STATS"] = "Statistiques",
     ["STATS_SETTINGS"] = "Paramètres des statistiques",
-    ["GENERAL"] = "Générale",
+    ["GENERAL"] = "Général",
     ["GENERAL_SETTINGS"] = "Paramètres généraux",
     ["SHOW_ITEM_QUALITY_COLORS"] = "Affiche la couleur de rareté des objets",
     ["SHOW_ITEM_QUALITY_COLORS_DESC"] = "Affiche/cache le niveau de rareté des objets par un cadre coloré.",
@@ -45,8 +45,13 @@ strings = {
     ["HIT_BONUS_SETTING"] = "Bonus de toucher",
     ["MISS_CHANCE_SETTING"] = "Chances de rater",
     ["MISS_CHANCE_BOSS_SETTING"] = "Ch. de rater-Boss",
+    -- General Stat Settings
+    ["GENERAL_STATS"] = "Général",
+    ["GENERAL_STATS_DESC"] = "Affiche/cache toutes les statistiques générales.",
+    ["MOVEMENT_SPEED_SETTING"] = "Affiche la vitesse de déplacement",
+    ["MOVEMENT_SPEED_SETTING_DESC"] = "Affiche/Cache la vitesse de déplacement.",
     -- Melee Settings
-    ["MELEE_SETTINGS"] = "Mêlée Générale",
+    ["MELEE_SETTINGS"] = "Mêlée Général",
     ["MELEE_SETTINGS_DESC"] = "Affiche/cache toutes les statistiques de mêlée.",
     ["MELEE_ATTACK_POWER_SETTING"] = "Puissance d'attaque en mêlée",
     ["MELEE_ATTACK_POWER_SETTING_DESC"] = "Affiche/Cache la puissance d'attaque en mêlée.",
@@ -59,7 +64,7 @@ strings = {
     ["MELEE_MISS_CHANCE_SETTING_DESC"] = "Affiche/cache les chances de rater en mêlée contre un ennemi du même niveau.",
     ["MELEE_MISS_CHANCE_BOSS_SETTING_DESC"] = "Affiche/cache les chances de rater en mêlée contre un boss de 3 niveaux supérieurs.",
     -- Range Settings
-    ["RANGED_SETTINGS"] = "À distance Générale",
+    ["RANGED_SETTINGS"] = "À distance Général",
     ["RANGED_SETTINGS_DESC"] = "Affiche/cache toutes les statistiques à distance.",
     ["RANGED_ATTACK_POWER_SETTING"] = "Puissance d'attaque à distance",
     ["RANGED_ATTACK_POWER_SETTING_DESC"] = "Affiche/Cache la puissance d'attaque à distance.",
@@ -72,7 +77,7 @@ strings = {
     ["RANGED_MISS_CHANCE_SETTING_DESC"] = "Affiche/cache les chances de rater à distance contre un ennemi du même niveau.",
     ["RANGED_MISS_CHANCE_BOSS_SETTING_DESC"] = "Affiche/cache les chances de rater à distance contre un boss de 3 niveaux supérieurs.",
     -- Defense Settings
-    ["DEFENSE_SETTINGS"] = "Défense Générale",
+    ["DEFENSE_SETTINGS"] = "Défense Général",
     ["DEFENSE_SETTINGS_DESC"] = "Affiche/cache toutes les statistiques de défense.",
     ["ARMOR_SETTING"] = "Armure",
     ["ARMOR_SETTING_DESC"] = "Affiche/cache la valeur de l'armure.",
@@ -87,16 +92,18 @@ strings = {
     ["DODGE_CHANCE_SETTING"] = "Chances d'esquiver",
     ["DODGE_CHANCE_SETTING_DESC"] = "Affiche/cache les chances d'esquiver.",
     -- Mana Settings
-    ["MANA_SETTINGS"] = "Mana Générale",
+    ["MANA_SETTINGS"] = "Mana Général",
     ["MANA_SETTINGS_DESC"] = "Affiche/cache toutes les statistiques de mana.",
     ["MP5_ITEMS_SETTING"] = "MP5 Objets",
     ["MP5_ITEMS_SETTING_DESC"] = "Affiche/cache la valeur MP5 des objets.",
     ["MP5_SPIRIT_SETTING"] = "MP5 Esprit",
     ["MP5_SPIRIT_SETTING_DESC"] = "Affiche/cache la valeur MP5 de l'esprit.",
+    ["MP5_BUFFS_SETTING"] = "MP5 Amélioration",
+    ["MP5_BUFFS_SETTING_DESC"] = "Affiche/cache la valeur MP5 de Amélioration.",
     ["MP5_CASTING_SETTING"] = "MP5 Lancer",
     ["MP5_CASTING_SETTING_DESC"] = "Affiche/cache la valeur MP5 pendant le lancer.",
     -- Spell Settings
-    ["SPELL_SETTINGS"] = "Sorts Générale",
+    ["SPELL_SETTINGS"] = "Sorts Général",
     ["SPELL_SETTINGS_DESC"] = "Affiche/cache toutes les statistiques des sorts.",
     ["SPELL_CRIT_SETTING"] = "Critique des sorts",
     ["SPELL_CRIT_SETTING_DESC"] = "Affiche/cache les chances d'infliger un coup critique avec les sorts.",
@@ -142,6 +149,8 @@ strings = {
     ["SHADOW_CRIT_SETTING_DESC"] = "Affiche/Cache les chances de critique des ombres.",
 
     -- Stats
+    ["MOVEMENT_SPEED"] = "Vitesse de déplacement: ",
+
     ["HIT"] = "Toucher",
     ["MISS"] = "Rater: ",
     ["MISS_BOSS"] = "Rater (Lvl + 3): ",
@@ -163,6 +172,7 @@ strings = {
 
     ["MP5_ITEMS"] = "MP5 (Objets): ",
     ["MP5_SPIRIT"] = "MP5 (Esprit): ",
+    ["MP5_BUFFS"] = "MP5 (Amélioration): ",
     ["MP5_CASTING"] = "MP5 (Lancer): ",
 
     ["SPELL"] = "Sorts",

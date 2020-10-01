@@ -45,6 +45,11 @@ strings = {
     ["HIT_BONUS_SETTING"] = "Hit Bonus",
     ["MISS_CHANCE_SETTING"] = "Miss Chance",
     ["MISS_CHANCE_BOSS_SETTING"] = "Miss Chance Boss",
+    -- General Stat Settings
+    ["GENERAL_STATS"] = "Show General Stats",
+    ["GENERAL_STATS_DESC"] = "Shows/Hides all general stats.",
+    ["MOVEMENT_SPEED_SETTING"] = "Show Movement Speed",
+    ["MOVEMENT_SPEED_SETTING_DESC"] = "Shows/Hides the movement speed value.",
     -- Melee Settings
     ["MELEE_SETTINGS"] = "Show Melee Stats",
     ["MELEE_SETTINGS_DESC"] = "Shows/Hides all melee stats.",
@@ -93,6 +98,8 @@ strings = {
     ["MP5_ITEMS_SETTING_DESC"] = "Shows/Hides the MP5 value from items.",
     ["MP5_SPIRIT_SETTING"] = "MP5 Spirit",
     ["MP5_SPIRIT_SETTING_DESC"] = "Shows/Hides the MP5 value from spirit.",
+    ["MP5_BUFFS_SETTING"] = "MP5 Buffs",
+    ["MP5_BUFFS_SETTING_DESC"] = "Shows/Hides the MP5 value from buffs.",
     ["MP5_CASTING_SETTING"] = "MP5 Casting",
     ["MP5_CASTING_SETTING_DESC"] = "Shows/Hides the MP5 while casting value.",
     -- Spell Settings
@@ -142,6 +149,8 @@ strings = {
     ["SHADOW_CRIT_SETTING_DESC"] = "Shows/Hides the shadow crit chance.",
 
     -- Stats
+    ["MOVEMENT_SPEED"] = "Movement Speed: ",
+
     ["HIT"] = "Hit",
     ["MISS"] = "Miss: ",
     ["MISS_BOSS"] = "Miss (Lvl + 3): ",
@@ -163,6 +172,7 @@ strings = {
 
     ["MP5_ITEMS"] = "MP5 (Items): ",
     ["MP5_SPIRIT"] = "MP5 (Spirit): ",
+    ["MP5_BUFFS"] = "MP5 (Buffs): ",
     ["MP5_CASTING"] = "MP5 (Casting): ",
 
     ["SPELL"] = "Spell",

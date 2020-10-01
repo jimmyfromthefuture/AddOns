@@ -235,6 +235,9 @@ if L then
 
 		---------- OPTIONS START -----------
 
+		L['LABEL_OPEN_SEARCH'] = 'Open Search'
+		L['DESC_OPEN_SEARCH'] = 'Opens the search panel.'
+
 		L['CANCEL'] = 'Cancel'
 		L['OKAY'] = 'Okay'
 
@@ -303,10 +306,6 @@ if L then
 		L['DESC_RECEIVE_FORWARDS'] = 'Accept forwarded broadcasts.'
 		L['CONFIRM_RECEIVE_FORWARDS'] = 'This feature is in beta. You may experience issues. You will accept any forwarded broadcasts. Are you sure?'
 
-		L['ALT_CHARACTERS'] = 'Alternate Characters'
-		L['LABEL_DISPLAY_ALTS'] = 'Show Alts'
-		L['DESC_DISPLAY_ALTS'] = 'Show alternate characters when searching.'
-
 		---------- OPTIONS END ----------
 
 	L['BARE_LONG_TAG'] = 'GuildTradeskills'
@@ -337,6 +336,9 @@ if L then
 	L['UPDATE_AVAILABLE'] = LONG_TAG .. ' is out of date. Your version is {{local_version}} and {{remote_version}} is available.'
 
 	L['CORRUPTED_DATABASE'] = 'Unfortunately it seems your database has become corrupted. Please reset it with \'/gt reset\'.'
+
+	L['NO_SKILL_SELECTED'] = 'You must select a skill before whispering a character.'
+	L['SEND_WHISPER'] = WHISPER_TAG .. 'Hey {{character_name}}! Can you craft {{skill_link}} for me?'
 
 	---------- GUI END ----------
 	---------- ADVERTISE START ----------

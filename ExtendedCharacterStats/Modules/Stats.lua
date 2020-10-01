@@ -170,7 +170,10 @@ end
 _CreateStatInfos = function()
     local profile = ExtendedCharacterStats.profile
 
-    local category = profile.melee
+    local category = profile.general
+    _CreateStatInfo(category, category.movementSpeed)
+
+    category = profile.melee
     _CreateStatInfo(category, category.attackPower, category.crit)
     if category.display then
         category = category.hit
@@ -188,7 +191,7 @@ _CreateStatInfos = function()
     _CreateStatInfo(category, category.armor, category.defense, category.blockChance, category.blockValue, category.parry, category.dodge)
 
     category = profile.regen
-    _CreateStatInfo(category, category.mp5Items, category.mp5Spirit, category.mp5Casting)
+    _CreateStatInfo(category, category.mp5Items, category.mp5Spirit, category.mp5Buffs, category.mp5Casting)
 
     category = profile.spell
     _CreateStatInfo(category, category.crit)

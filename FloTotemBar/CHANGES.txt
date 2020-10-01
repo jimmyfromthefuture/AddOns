@@ -1,24 +1,30 @@
-tag 2aa698265d724bfb569d1c2b26f4749129d211c9 1.13.42-classic
+tag 7021f9684606a9938a94e51fec7e7f10888eb06d 1.13.43-classic
 Author:	Floraline <floraline@ophiuchus.org>
-Date:	Tue Jul 14 17:53:51 2020 +0200
+Date:	Mon Sep 28 21:29:18 2020 +0200
 
 Tagging for release
 
-commit cddd78699e315b46077df4a2c06916dac860f47d
+commit 7c89596df2bca60267b26fad235d091cb8b9a4aa
 Author: Floraline <floraline@ophiuchus.org>
-Date:   Tue Jul 14 17:48:52 2020 +0200
+Date:   Mon Sep 28 21:28:33 2020 +0200
 
-    Update toc and version numbers
+    update toc for classic
 
-commit a26b84dd724bcc2c91bd135c55d9817544f37ce2
+commit 085ab5cf5b616b3368034a23a29e695c74e09dd9
 Author: Floraline <floraline@ophiuchus.org>
-Date:   Tue Jul 14 17:44:25 2020 +0200
+Date:   Mon Sep 28 19:20:23 2020 +0200
 
-    fix issue with spell ranks
+    Fix for totem duration in classic
 
-commit 58fa1b1189e5666fc8a6bc2c45dcf8697c7f03c0
+commit 4e7e7a3b300bca00452247094a5b5bededb36d89
 Author: Floraline <floraline@ophiuchus.org>
-Date:   Tue Jul 14 13:06:45 2020 +0200
+Date:   Mon Sep 28 19:04:08 2020 +0200
 
-    fix bug with specialisation switch
+    Bump version
+
+commit 1fe7bc794e0515d6034637ee18c410b7ff222926
+Author: Floraline <floraline@ophiuchus.org>
+Date:   Mon Sep 28 19:03:22 2020 +0200
+
+    Error with trap destruction detection
 

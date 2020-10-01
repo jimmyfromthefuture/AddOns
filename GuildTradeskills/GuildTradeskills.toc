@@ -4,7 +4,7 @@
 ## Notes-deDE: Ermöglicht Gildenmitgliedern, die Fertigkeiten des anderen zu durchsuchen.
 ## Notes-frFR: Permet aux membres de la guilde de rechercher mutuellement leurs compétences.
 ## Author: Chalos
-## Version: release_6.0.3
+## Version: release_6.0.4
 ## X-Curse-Project_ID: 381775
 ## X-WoWI-ID: 25573
 ## SavedVariablesPerCharacter: GTCDB

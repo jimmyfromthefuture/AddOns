@@ -1,0 +1,260 @@
+ <Ui xmlns="http://www.blizzard.com/wow/ui/"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+       
+   <Frame name="Targets_Frame" parent="UIParent" toplevel="true" enableMouse="true" movable="true" hidden="true">
+     <Scripts>
+      <OnLoad>self:RegisterForDrag("LeftButton");</OnLoad>
+      <OnDragStart>self:StartMoving();</OnDragStart>
+      <OnDragStop>self:StopMovingOrSizing();</OnDragStop>
+     </Scripts>
+     <Size>
+       <AbsDimension x="200" y="320" />
+     </Size>
+     <Anchors>
+       <Anchor point="CENTER" />
+     </Anchors>
+     <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background"
+           edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+       <BackgroundInsets>
+         <AbsInset left="11" right="12" top="12" bottom="11"/>
+       </BackgroundInsets>
+       <TileSize>
+         <AbsValue val="32"/>
+       </TileSize>
+       <EdgeSize>
+         <AbsValue val="32"/>
+       </EdgeSize>
+     </Backdrop>
+   </Frame>
+	
+	<Button name="Targets_hideButton" inherits="UIPanelCloseButtonNoScripts" parent="Targets_Frame">
+	  <Size>
+			<AbsDimension x="24" y="24" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOPRIGHT">
+				<Offset>
+					<AbsDimension x="-10" y="-10" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnClick>
+				Targets_hide()
+			</OnClick>
+		</Scripts>
+	</Button>
+	
+	<Button name="Targets_anounceButton" inherits="UIPanelButtonTemplate" parent="Targets_Frame" text="Announce">
+	  <Size>
+			<AbsDimension x="80" y="24" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-280" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnClick>
+				Targets_anounce()
+			</OnClick>
+		</Scripts>
+	</Button>
+	
+	<Button name="Targets_clearButton" inherits="UIPanelButtonTemplate" parent="Targets_Frame" text="Clear">
+	  <Size>
+			<AbsDimension x="80" y="24" />
+		</Size>
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="100" y="-280" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnClick>
+				Targets_clear()
+			</OnClick>
+		</Scripts>
+	</Button>
+     
+   <Button name="TargetsButtonTemplate" movable="false" parent="UIParent" inherits="ActionButtonTemplate,SecureActionButtonTemplate" hidden="false" virtual="true" RegisterForClicks="LeftButtonUp,RightButtonUp">
+    <Size>
+			<AbsDimension x="24" y="24" />
+		</Size>
+	</Button>
+	
+
+  <FontString text="Test" name="TargetsNameBoxFontTemplate" inherits="GameFontNormal"  virtual="true">
+    <Size x="100" y="20"/>
+    <Color a="1" r="1" g="1" b="1" />
+    <Anchors>
+      <Anchor point="TOP"/>
+    </Anchors>
+    <FontHeight>
+      <AbsValue val="10"/>
+    </FontHeight>
+  </FontString>
+  
+	<Frame name="TargetsNameBoxTemplate" virtual="true">
+    <Size>
+      <AbsDimension x="20" y="20" />
+    </Size>
+    <Anchors>
+        <Anchor point="TOPLEFT" />
+    </Anchors>
+    <Layers>
+        <Layer level="OVERLAY">
+          <FontString text="..." name="$parentText" inherits="TargetsNameBoxFontTemplate" justifyH="left">
+              <Anchors>
+                  <Anchor point="TOPLEFT">
+                      <Offset>
+                        <AbsDimension x="40" y="-5" />
+                      </Offset>
+                  </Anchor>
+              </Anchors>
+          </FontString>
+        </Layer>
+    </Layers>
+  </Frame>
+	
+	<Button name="Targets_setTarget1" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-30" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_1"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt1", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt1" parent="Targets_setTarget1" inherits="TargetsNameBoxTemplate"></Frame>
+	
+	<Button name="Targets_setTarget2" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-60" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_2"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt2", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt2" parent="Targets_setTarget2" inherits="TargetsNameBoxTemplate"></Frame>
+	
+	<Button name="Targets_setTarget3" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-90" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_3"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt3", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt3" parent="Targets_setTarget3" inherits="TargetsNameBoxTemplate"></Frame>
+	
+	<Button name="Targets_setTarget4" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-120" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_4"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt4", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt4" parent="Targets_setTarget4" inherits="TargetsNameBoxTemplate"></Frame>
+	
+	<Button name="Targets_setTarget5" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-150" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_5"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt5", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt5" parent="Targets_setTarget5" inherits="TargetsNameBoxTemplate"></Frame>
+	
+	<Button name="Targets_setTarget6" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-180" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_6"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt6", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt6" parent="Targets_setTarget6" inherits="TargetsNameBoxTemplate"></Frame>
+	
+	<Button name="Targets_setTarget7" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-210" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_7"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt7", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt7" parent="Targets_setTarget7" inherits="TargetsNameBoxTemplate"></Frame>
+	
+	<Button name="Targets_setTarget8" inherits="TargetsButtonTemplate" parent="Targets_Frame">
+		<Anchors>
+			<Anchor point="TOPLEFT">
+				<Offset>
+					<AbsDimension x="20" y="-240" />
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\TargetingFrame\UI-RaidTargetingIcon_8"/>
+		<Scripts>
+			<OnClick>
+				Targets_setTargetBtn("rt8", button)
+			</OnClick>
+		</Scripts>
+	</Button>
+	<Frame name="Targets_names_rt8" parent="Targets_setTarget8" inherits="TargetsNameBoxTemplate"></Frame>
+	
+ </Ui>

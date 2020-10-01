@@ -45,6 +45,11 @@ strings = {
     ["HIT_BONUS_SETTING"] = "Trefferwertungsbonus",
     ["MISS_CHANCE_SETTING"] = "Chance zu verfehlen",
     ["MISS_CHANCE_BOSS_SETTING"] = "Chance zu verfehlen (Boss)",
+    -- General Stat Settings
+    ["GENERAL_STATS"] = "Allgemeine Werte anzeigen",
+    ["GENERAL_STATS_DESC"] = "Zeigt/Versteckt die allgemeinen Werte.",
+    ["MOVEMENT_SPEED_SETTING"] = "Bewegungsgeschwindigkeit anzeigen",
+    ["MOVEMENT_SPEED_SETTING_DESC"] = "Zeigt/Versteckt die Bewegungsgeschwindigkeit.",
     -- Melee Settings
     ["MELEE_SETTINGS"] = "Nahkampfwerte anzeigen",
     ["MELEE_SETTINGS_DESC"] = "Zeigt/Versteckt alle Nahkampfwerte.",
@@ -93,6 +98,8 @@ strings = {
     ["MP5_ITEMS_SETTING_DESC"] = "Zeigt/Versteckt den MP5-Wert von Gegenständen.",
     ["MP5_SPIRIT_SETTING"] = "MP5 Willenskraft",
     ["MP5_SPIRIT_SETTING_DESC"] = "Zeigt/Versteckt den MP5-Wert durch Willenskraft.",
+    ["MP5_BUFFS_SETTING"] = "MP5 Stärkungszauber",
+    ["MP5_BUFFS_SETTING_DESC"] = "Zeigt/Versteckt den MP5-Wert Stärkungszauber.",
     ["MP5_CASTING_SETTING"] = "MP5 Zaubernd",
     ["MP5_CASTING_SETTING_DESC"] = "Zeigt/Versteckt den MP5-Wert während des Zauberwirkens.",
     -- Spell Settings
@@ -142,6 +149,8 @@ strings = {
     ["SHADOW_CRIT_SETTING_DESC"] = "Zeigt/Versteckt die Chance mit Schattenzaubern kritisch zu treffen.",
 
     -- Stats
+    ["MOVEMENT_SPEED"] = "Geschwindigkeit: ",
+
     ["HIT"] = "Trefferchance",
     ["MISS"] = "Verfehlen: ",
     ["MISS_BOSS"] = "Verfehlen (Lvl + 3): ",
@@ -163,6 +172,7 @@ strings = {
 
     ["MP5_ITEMS"] = "MP5 (Gegenstände): ",
     ["MP5_SPIRIT"] = "MP5 (Willenskraft): ",
+    ["MP5_BUFFS"] = "MP5 (Stärkungszauber): ",
     ["MP5_CASTING"] = "MP5 (Zaubernd): ",
 
     ["SPELL"] = "Zauber",

@@ -20,14 +20,19 @@ Data.WARLOCK = 9
 Data.DRUID = 11
 
 Data.setNames = {}
+Data.setNames.BATTLEGEAR_OF_MIGHT = "Battlegear of Might"
 Data.setNames.STORMRAGE_RAIMENT = "Stormrage Raiment"
 Data.setNames.VESTMENTS_OF_TRANSCENDENCE = "Vestments of Transcendence"
+Data.setNames.TEN_STORMS = "The Ten Storms"
 Data.setNames.HARUSPEXS_GARB = "Haruspex's Garb"
 Data.setNames.AUGURS_REGALIA = "Augur's Regalia"
 Data.setNames.FREETHINKERS_ARMOR = "Freethinker's Armor"
-Data.setNames.TEN_STORMS = "The Ten Storms"
 
 Data.enchantIds = {
     BIZNIK_SCOPE = "2523", -- 3% Hit from Biznicks 247x128 Accurascope
     BRACER_MANA_REGENERATION = "2565", -- 4 MP5 on bracer
+    PROPHETIC_AURA = "2590", -- 4 MP5 for priest ZG Enchant
+    BRILLIANT_MANA_OIL = "2629", -- 12 MP5
+    LESSER_MANA_OIL = "2625", -- 8 MP5
+    MINOR_MANA_OIL = "2624", -- 4 MP5
 }

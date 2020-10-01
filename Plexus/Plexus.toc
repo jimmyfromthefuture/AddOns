@@ -1,5 +1,5 @@
 ## Interface: 11305
-## Version: v2.0.15
+## Version: v2.0.16
 
 ## Title: Plexus
 ## Notes: A compact plexus of party/raid unit frames.
@@ -74,6 +74,7 @@ Indicators\Icon.lua
 Indicators\Text.lua
 
 Statuses\Aggro.lua
+Statuses\AFK.lua
 Statuses\Auras.lua
 Statuses\Group.lua
 Statuses\GroupBuffs.lua

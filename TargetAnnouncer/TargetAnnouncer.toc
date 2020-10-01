@@ -1,0 +1,8 @@
+## Interface: 11302
+## Title: Target Announcer
+## Author: Koro
+## Version: 1.0.0
+## SavedVariablesPerCharacter: Targets_targets
+
+Targets.lua
+Targets.xml

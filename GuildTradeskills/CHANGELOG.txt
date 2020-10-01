@@ -1,3 +1,9 @@
+6.0.4
+	Comms are now disabled when in a raid.
+	Added options to the default interface options panel.
+	Fixed online/offline tracking. Players who are online should now show so.
+	Fixed the ability to right click and whisper a character.
+
 6.0.3
 	Somebody else is using a module called 'Text'. Renaming ours.
 

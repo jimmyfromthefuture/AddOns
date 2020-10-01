@@ -6,12 +6,20 @@
 local Profile = ECSLoader:CreateModule("Profile")
 
 function Profile:GetProfileVersion()
-    return 4
+    return 6
 end
 
 ---@return ECSProfile
 local function GetDefaultStatsProfile()
     return {
+        ---@type Category
+        general = {
+            display = true,
+            refName = "GeneralHeader",
+            text = "GENERAL",
+
+            movementSpeed = {display = true, refName = "MovementSpeed", text = "MOVEMENT_SPEED"},
+        },
 
         ---@class Category
         melee = {
@@ -77,6 +85,7 @@ local function GetDefaultStatsProfile()
 
             mp5Items = {display = true, refName = "MP5Items", text = "MP5_ITEMS"},
             mp5Spirit = {display = true, refName = "MP5Spirit", text = "MP5_SPIRIT"},
+            mp5Buffs = {display = true, refName = "MP5Buffs", text = "MP5_BUFFS"},
             mp5Casting = {display = true, refName = "MP5Casting", text = "MP5_CASTING"},
         },
 
@@ -135,7 +144,7 @@ local function GetDefaultGeneralSettings()
         statFontSize = 10,
         window = {
             height = 422,
-            width = 175,
+            width = 180,
             xOffset = -30,
             yOffset = 30
         }

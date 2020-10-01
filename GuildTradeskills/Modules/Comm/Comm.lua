@@ -82,7 +82,7 @@ function Comm:GetTimestampString(characterName)
 	local character = GT.DBCharacter:GetCharacter(characterName)
 	local professionStrings = {}
 	for professionName, profession in pairs(character.professions) do
-		local professionString = GTText:Concat(Comm.DELIMITER, characterName, professionName, profession.lastUpdate)
+		local professionString = Text:Concat(Comm.DELIMITER, characterName, professionName, profession.lastUpdate)
 		GT.Log:Info('Comm_GetTimestampString', professionString)
 		table.insert(professionStrings, professionString)
 	end
@@ -101,6 +101,11 @@ function Comm:OnTimestampsReceived(prefix, message, distribution, sender)
 
 	if not GT.DBComm:GetIsEnabled() then
 		GT.Log:Warn('Comm_OnTimestampsReceived_CommDisabled')
+		return
+	end
+
+	if IsInRaid() then
+		GT.Log:Warn('Comm_OnTimestampsReceived_InRaid')
 		return
 	end
 
@@ -135,6 +140,11 @@ function Comm:SendPost(distribution, characterName, professionName, recipient)
 		return
 	end
 
+	if IsInRaid() then
+		GT.Log:Warn('Comm_SendPost_InRaid')
+		return
+	end
+
 	if characterName == recipient then
 		GT.Log:Warn('Comm_SendPost_AboutThemselves', characterName, professionName, recipient)
 		return
@@ -166,9 +176,9 @@ function Comm:GetPostMessage(characterName, professionName)
 		local skill = GT.DBProfession:GetSkill(professionName, skillName)
 		if skill ~= nil then
 			if message == nil then
-				message = GTText:Concat(Comm.DELIMITER, skillName, skill.skillLink)
+				message = Text:Concat(Comm.DELIMITER, skillName, skill.skillLink)
 			else
-				message = GTText:Concat(Comm.DELIMITER, message, skillName, skill.skillLink)
+				message = Text:Concat(Comm.DELIMITER, message, skillName, skill.skillLink)
 			end
 
 			local uniqueReagentCount = 0
@@ -176,15 +186,15 @@ function Comm:GetPostMessage(characterName, professionName)
 				uniqueReagentCount = uniqueReagentCount + 1
 			end
 
-			message = GTText:Concat(Comm.DELIMITER, message, uniqueReagentCount)
+			message = Text:Concat(Comm.DELIMITER, message, uniqueReagentCount)
 			for reagentName, reagent in pairs(skill.reagents) do
-				message = GTText:Concat(Comm.DELIMITER, message, reagentName, GTText:ToString(reagent.reagentLink), reagent.reagentCount)
+				message = Text:Concat(Comm.DELIMITER, message, reagentName, Text:ToString(reagent.reagentLink), reagent.reagentCount)
 			end
 		end
 	end
 	if message ~= nil then
-		local header = GTText:Concat(Comm.DELIMITER, characterName, professionName, profession.lastUpdate)
-		return GTText:Concat(Comm.DELIMITER, header, message)
+		local header = Text:Concat(Comm.DELIMITER, characterName, professionName, profession.lastUpdate)
+		return Text:Concat(Comm.DELIMITER, header, message)
 	else
 		return nil
 	end
@@ -201,6 +211,11 @@ function Comm:OnPostReceived(prefix, message, distribution, sender)
 		return
 	end
 
+	if IsInRaid() then
+		GT.Log:Warn('Comm_OnPostReceived_InRaid')
+		return
+	end
+
 	if distribution ~= Comm.WHISPER and distribution ~= Comm.GUILD then
 		GT.Log:Error('Comm_OnPostReceived_RejectDistribution', distribution, sender)
 		return
@@ -211,7 +226,7 @@ function Comm:OnPostReceived(prefix, message, distribution, sender)
 		return
 	end
 
-	local tokens = GTText:Tokenize(message, Comm.DELIMITER)
+	local tokens = Text:Tokenize(message, Comm.DELIMITER)
 	local characterName = Table:RemoveToken(tokens)
 
 	if GT:IsCurrentCharacter(characterName) then
@@ -235,12 +250,12 @@ function Comm:OnPostReceived(prefix, message, distribution, sender)
 end
 
 function Comm:UpdateProfession(message)
-	local tokens = GTText:Tokenize(message, Comm.DELIMITER)
+	local tokens = Text:Tokenize(message, Comm.DELIMITER)
 	local characterName, tokens = Table:RemoveToken(tokens)
 	local professionName, tokens = Table:RemoveToken(tokens)
 	local lastUpdate, tokens = Table:RemoveToken(tokens)
 	lastUpdate = tonumber(lastUpdate)
-	GT.Log:Info('Comm__UpdateProfession', characterName, professionName, lastUpdate)
+	GT.Log:Info('Comm_UpdateProfession', characterName, professionName, lastUpdate)
 
 	profession = GT.DBCharacter:GetProfession(characterName, professionName)
 	if profession == nil then
@@ -279,13 +294,18 @@ function Comm:SendDeletions(distribution, recipient)
 		return
 	end
 
+	if IsInRaid() then
+		GT.Log:Warn('Comm_SendDeletions_InRaid')
+		return
+	end
+
 	local characterName = GT:GetCharacterName()
 	local character = GT.DBCharacter:GetCharacter(characterName)
 
 	local sendDelete = false
 	local message = characterName
 	for _, professionName in pairs(character.deletedProfessions) do
-		message = GTText:Concat(Comm.DELIMITER, message, professionName)
+		message = Text:Concat(Comm.DELIMITER, message, professionName)
 		sendDelete = true
 	end
 
@@ -303,12 +323,17 @@ function Comm:OnDeletionsReceived(prefix, message, distribution, sender)
 		return
 	end
 
+	if IsInRaid() then
+		GT.Log:Warn('Comm_OnDeletionsReceived_InRaid')
+		return
+	end
+
 	if not distribution == Comm.GUILD and not distribution == Comm.WHISPER then
 		GT.Log:Warn('Comm_OnDeletionsReceived_DistributionRejected', distribution, sender)
 		return
 	end
 
-	local tokens = GTText:Tokenize(message, Comm.DELIMITER)
+	local tokens = Text:Tokenize(message, Comm.DELIMITER)
 	local characterName, tokens = Table:RemoveToken(tokens)
 
 	if string.lower(characterName) ~= string.lower(sender) then
@@ -375,8 +400,8 @@ function Comm:OnVersionReceived(prefix, message, distribution, sender)
 		if GT.DB:GetVersionNotification() < rVersion then
 			local lrVersion, lbVersion, laVersion = GT:DeconvertVersion(lVersion)
 			local rrVersion, rbVersion, raVersion = GT:DeconvertVersion(rVersion)
-			local message = string.gsub(GT.L['UPDATE_AVAILABLE'], '%{{local_version}}', GTText:Concat('.', lrVersion, lbVersion, laVersion))
-			message = string.gsub(message, '%{{remote_version}}', GTText:Concat('.', rrVersion, rbVersion, raVersion))
+			local message = string.gsub(GT.L['UPDATE_AVAILABLE'], '%{{local_version}}', Text:Concat('.', lrVersion, lbVersion, laVersion))
+			message = string.gsub(message, '%{{remote_version}}', Text:Concat('.', rrVersion, rbVersion, raVersion))
 			GT.Log:PlayerInfo(message)
 			GT.DB:SetVersionNotification(rVersion)
 		else
@@ -442,7 +467,7 @@ function Comm:_ProcessTimestamps(message)
 	local toPost = {}
 	local all = {}
 
-	local tokens = GTText:Tokenize(message, Comm.DELIMITER)
+	local tokens = Text:Tokenize(message, Comm.DELIMITER)
 
 	while #tokens > 0 do
 		local characterName, tokens = Table:RemoveToken(tokens)
@@ -455,18 +480,13 @@ function Comm:_ProcessTimestamps(message)
 			local profession = GT.DBCharacter:GetProfession(characterName, professionName)
 
 			if profession == nil or profession.lastUpdate < lastUpdate then
-				if profession == nil then
-					-- GT.Log:Info('Comm_OnTimestampsReceived_LocalNil', characterName, professionName, lastUpdate)
-				else
-					-- GT.Log:Info('Comm_OnTimestampsReceived_LocalOutOfDate', characterName, professionName, profession.lastUpdate, lastUpdate)
-				end
 
 				toGet = Comm:_Update(toGet, characterName, professionName, lastUpdate)
 			elseif profession.lastUpdate > lastUpdate then
-				-- GT.Log:Info('Comm_OnTimestampsReceived_RemoteOutOfDate', characterName, professionName, profession.lastUpdate, lastUpdate)
+				GT.Log:Info('Comm_OnTimestampsReceived_RemoteOutOfDate', characterName, professionName, profession.lastUpdate, lastUpdate)
 				toPost = Comm:_Update(toPost, characterName, professionName, profession.lastUpdate)
 			else
-				-- GT.Log:Info('Comm_OnTimestampsReceived_UpToDate', characterName, professionName, profession.lastUpdate, lastUpdate)
+				GT.Log:Info('Comm_OnTimestampsReceived_UpToDate', characterName, professionName, profession.lastUpdate, lastUpdate)
 			end
 		end
 	end
@@ -492,7 +512,7 @@ function Comm:_ProcessTimestamps(message)
 
 			all = Comm:_Update(all, characterName, professionName, profession.lastUpdate)
 			--[===[@debug@
-			toPost = Comm:_Update(toPost, characterName, professionName, profession.lastUpdate)
+			-- toPost = Comm:_Update(toPost, characterName, professionName, profession.lastUpdate)
 			--@end-debug@]===]
 		end
 	end

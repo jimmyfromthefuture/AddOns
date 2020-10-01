@@ -43,6 +43,10 @@ end
 ---@return number | string
 function Data:GetStatInfo(refName)
 
+    if refName == "MovementSpeed" then
+        return Data:GetMovementSpeed()
+    end
+
     if refName == "MeleeAttackpower" then
         return Data:GetMeleeAttackPower()
     end
@@ -112,6 +116,10 @@ function Data:GetStatInfo(refName)
     end
     if refName == "MP5Spirit" then
         return Data:GetMP5FromSpirit()
+    end
+    if refName == "MP5Buffs" then
+    	local _, mp5Buffs = Data:GetMP5FromBuffs()
+        return mp5Buffs
     end
     if refName == "MP5Casting" then
         return Data:GetMP5WhileCasting()

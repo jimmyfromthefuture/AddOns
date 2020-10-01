@@ -8,9 +8,9 @@
 
 local VERSION
 if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
-	VERSION = "8.3.42"
+	VERSION = "8.3.43"
 elseif WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-	VERSION = "1.13.42"
+	VERSION = "1.13.43"
 end
 
 -------------------------------------------------------------------------------
@@ -374,7 +374,13 @@ function FloTotemBar_UpdateTotem(self, slot, idx)
 	elseif WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 		if self.slot == slot then
 
+			local haveTotem, totemName, startTime, duration, icon = GetTotemInfo(slot);
 			local timeleft = GetTotemTimeLeft(slot);
+			local countdown = _G[self:GetName().."Countdown"..idx];
+			if countdown then
+				countdown:SetMinMaxValues(0, duration);
+				countdown:SetValue(timeleft);
+			end
 			if timeleft == 0 then
 				FloLib_ResetTimer(self, idx);
 			end
@@ -387,7 +393,7 @@ function FloTotemBar_CheckTrapLife(self, spellIdx, timestamp, event, hideCaster,
 	local spell = self.spells[spellIdx];
 	local name = string.upper(spell.name);
 
-	_, _, spellTexture = GetSpellInfo(spellId);
+	_, _, spellTexture = GetSpellInfo(spell.id);
 	-- bad french localisation
 	if spellName == "Effet Piège immolation" then spellName = "Effet Piège d'immolation" end
 

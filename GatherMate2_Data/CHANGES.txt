@@ -1,3 +1,10 @@
+2020-09-14
+- Added code to increment "version" so derivative "WoWHead" addon can't label this as obsolete
+
+2020-09-09
+- Refreshed data from WoWHead
+- Cleaned up data to remove duplicates
+
 2020-06-08
 - Pulled updated data (for herbalism) from Wowhead so additional nodes for Black Lotus
 - Not bothered to clean it up (merging my own nodes, cleaning database etc) do that yourselves...

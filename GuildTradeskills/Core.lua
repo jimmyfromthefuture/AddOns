@@ -13,7 +13,7 @@ GT.Log = LibStub:GetLibrary('Log')
 ---------- END LOAD LIBRARIES ----------
 
 GT.resetWarned = false
-GT.version = 'release_6.0.3'
+GT.version = 'release_6.0.4'
 
 GT.DAY = 24 * 60 * 60
 GT.STARTUP_DELAY = 5
@@ -60,7 +60,6 @@ function GT:Welcome()
 	local characterName = GT:GetCharacterName()
 	local character = GT.DBCharacter:AddCharacter(characterName)
 	character.class = GT:GetCharacterClass()
-	character.isAlt = true
 	character.isOnline = true
 	
 	GT.Log:PlayerInfo(L['WELCOME'])
@@ -77,7 +76,7 @@ function GT:CreateActionQueue(delay, queue)
 end
 
 function GT:FrameDelay(frameCount, callback)
-	local uuid = GTText:UUID()
+	local uuid = Text:UUID()
 	delay = {
 		endFrame = frameCount + frameNumber,
 		callback = callback
@@ -122,7 +121,7 @@ function GT:InitReset(tokens)
 	end
 
 	if not Table:Contains(tokens, L['RESET_EXPECT_COMFIRM']) then
-		local message = string.gsub(L['RESET_UNKNOWN'], '%{{token}}', GTText:Concat(' ', tokens))
+		local message = string.gsub(L['RESET_UNKNOWN'], '%{{token}}', Text:Concat(' ', tokens))
 		GT.Log:PlayerWarn(message)
 		return
 	end
@@ -168,9 +167,9 @@ function GT:GetCurrentVersion()
 		return version
 	end
 	--@end-debug@]===]
-	local tokens = GTText:Tokenize(GT.version, '_')
+	local tokens = Text:Tokenize(GT.version, '_')
 	local version = tokens[2]
-	tokens = GTText:Tokenize(version, '.')
+	tokens = Text:Tokenize(version, '.')
 	rVersion, tokens = Table:RemoveToken(tokens)
 	bVersion, tokens = Table:RemoveToken(tokens)
 	aVersion, tokens = Table:RemoveToken(tokens)

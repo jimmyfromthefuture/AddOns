@@ -72,6 +72,11 @@ function CommYell:SendTimestamps()
 		return
 	end
 
+	if IsInRaid() then
+		GT.Log:Warn('CommYell_SendTimestamps_InRaid')
+		return
+	end
+
 	local characterStrings = {}
 	local size = 0
 
@@ -125,6 +130,11 @@ function CommYell:OnTimestampsReceived(sender, toGet, toPost)
 		return
 	end
 
+	if IsInRaid() then
+		GT.Log:Warn('CommYell_OnTimestampsReceived_InRaid')
+		return
+	end
+
 	GT.Log:Info('CommYell_OnTimestampsReceived', sender, toGet, toPost)
 
 	local sendLines = {}
@@ -160,7 +170,7 @@ function CommYell:OnTimestampsReceived(sender, toGet, toPost)
 
 		if shouldSendGet then
 			for professionName, _ in pairs(toGet[characterName]) do
-				table.insert((sendLines), GTText:Concat(GT.Comm.DELIMITER, characterName, professionName))
+				table.insert((sendLines), Text:Concat(GT.Comm.DELIMITER, characterName, professionName))
 			end
 		end
 	end

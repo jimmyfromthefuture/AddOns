@@ -71,7 +71,6 @@ function DBCharacter:AddCharacter(characterName)
 	character.characterName = characterName
 	character.isGuildMember = true
 	character.isBroadcasted = false
-	character.isAlt = false
 	character.class = 'UNKNOWN'
 	character.lastCommReceived = time()
 
@@ -276,7 +275,7 @@ function DBCharacter:ValidateData()
 
 	local characters = DBCharacter.db.char.characters
 	for characterName, character in pairs(characters) do
-		if GTText:IsNumber(characterName) or GTText:IsLink(characterName) then
+		if Text:IsNumber(characterName) or Text:IsLink(characterName) then
 			GT.Log:Error('DBCharacter_ValidateData_InvalidCharacterName', characterName)
 			valid = false
 		end
@@ -286,7 +285,7 @@ function DBCharacter:ValidateData()
 		end
 
 		local tempCharacterName = character.characterName
-		if GTText:IsNumber(tempCharacterName) or GTText:IsLink(tempCharacterName) then
+		if Text:IsNumber(tempCharacterName) or Text:IsLink(tempCharacterName) then
 			GT.Log:Error('DBCharacter_ValidateData_InvalidCharacter_CharacterName', tempCharacterName)
 		end
 		if character.isGuildMember == nil then
@@ -304,7 +303,7 @@ function DBCharacter:ValidateData()
 		end
 
 		for professionName, profession in pairs(character.professions) do
-			if GTText:IsNumber(professionName) or GTText:IsLink(professionName) then
+			if Text:IsNumber(professionName) or Text:IsLink(professionName) then
 				GT.Log:Error('DBCharacter_ValidateData_InvalidProfessionName', professionName)
 				valid = false
 			end
@@ -314,14 +313,14 @@ function DBCharacter:ValidateData()
 			end
 
 			local tempProfessionName = profession.professionName
-			if GTText:IsNumber(tempProfessionName) or GTText:IsLink(tempProfessionName) then
+			if Text:IsNumber(tempProfessionName) or Text:IsLink(tempProfessionName) then
 				GT.Log:Error('DBCharacter_ValidateData_InvalidProfession_ProfessionName', tempProfessionName)
 				valid = false
 			end
 
 			local skills = profession.skills
 			for _, skillName in pairs(skills) do
-				if GTText:IsNumber(skillName) or GTText:IsLink(skillName) then
+				if Text:IsNumber(skillName) or Text:IsLink(skillName) then
 					GT.Log:Error('DBCharacter_ValidateData_InvalidSkillName', skillName)
 					valid = false
 				end
