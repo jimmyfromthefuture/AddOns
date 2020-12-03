@@ -33,10 +33,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "ImpendingDoom", self:SpellName(19702))
 	self:Log("SPELL_CAST_SUCCESS", "LucifronsCurse", self:SpellName(19703))
@@ -64,7 +60,6 @@ end
 
 function mod:MindControl(args)
 	self:Bar(20604, 15, L.mc_bar:format(args.destName))
-	self:TargetMessage(20604, args.destName, "yellow")
+	self:TargetMessage(20604, "yellow", args.destName)
 	self:PrimaryIcon(20604, args.destName)
 end
-

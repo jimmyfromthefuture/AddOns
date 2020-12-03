@@ -90,12 +90,10 @@ L["FEATURESDESC"] = "Необязательные свойства которы�
 L["Filter"] = "Фильтр"
 L["Flat"] = "Прямой"
 L["Flush All Data"] = "Сбросить все данные"
---[[Translation missing --]]
-L["Flush Player Data"] = "Flush Player Data"
+L["Flush Player Data"] = "Очистить данные игрока"
 L["Flush Recipe Data"] = "Сбросить данные рецептов"
 L["FLUSHALLDATADESC"] = "Сбросить все данные Skillet"
---[[Translation missing --]]
-L["FLUSHPLAYERDATADESC"] = "Flush this character's data"
+L["FLUSHPLAYERDATADESC"] = "Очистить данные этого персонажа"
 L["FLUSHRECIPEDATADESC"] = "Сбросить данные рецептов Skillet"
 L["From Selection"] = "Из выбранного"
 L["Glyph "] = "Символ "
@@ -114,6 +112,7 @@ L["Ignored Materials Clear"] = "Очистить список игнорируе
 L["Ignored Materials List"] = "Список игнорируемых материалов"
 L["IGNORELISTDESC"] = "Открыть список игнорируемых материалов."
 L["Illusions"] = "Иллюзии"
+L["in your bank"] = "в вашем банке"
 L["in your inventory"] = "в вашем инвентаре"
 L["Include alts"] = "Включать альтов"
 L["Include bank"] = "Включая банк"

@@ -529,8 +529,8 @@ L["showBuffStatsTitle"] = "顯示增益次數";
 L["showBuffStatsDesc"] = "在/buff 框架顯示你獲得每個增益的次數?";
 
 L["buffResetButtonTooltip"] = "這將會重置所有增益\n增益次數資料不會被重置."; --/buff 框架的重置按鈕的提示。
-L["time"] = "次"; --Singular - This shows how many timers you got a buff. Example: (1 time)
-L["times"] = "次"; --Plural - This shows how many timers you got a buff. Example: (5 times)
+L["time"] = "(%s 次)"; --Singular - This shows how many timers you got a buff. Example: (1 time)
+L["times"] = "(%s 次)"; --Plural - This shows how many timers you got a buff. Example: (5 times)
 L["flowerWarning"] = "輕歌花的鏡像紀錄已啟動，但是你沒有在到達費伍德時先點擊NPC，所以沒有計時器被記錄。";
 
 L["mmColorTitle"] = "小地圖Layer顏色";
@@ -570,3 +570,39 @@ L["chatNpcKilledDesc"] = "當黑妹或是奈法NPC被殺重置增益時間時，
 
 L["flashNpcKilledTitle"] = "NPC被殺時閃爍";
 L["flashNpcKilledDesc"] = "當NPC被殺時，閃爍魔獸視窗?";
+
+
+
+
+
+
+
+L["timerWindowWidthTitle"] = "計時器視窗寬度";
+L["timerWindowWidthDesc"] = "計時器的視窗寬度。";
+
+L["timerWindowHeightTitle"] = "計時器視窗高度";
+L["timerWindowHeghtDesc"] = "計時器的視窗高度。";
+
+L["buffWindowWidthTitle"] = "增益視窗寬度";
+L["buffWindowWidthDesc"] = "增益視窗的寬度。";
+
+L["buffWindowHeightTitle"] = "增益視窗高度";
+L["buffWindowHeghtDesc"] = "增益視窗的高度。";
+
+L["dmfSettingsListTitle"] = "按月馬增益清單";
+L["dmfSettingsListDesc"] = "點擊這個顯示你的暗月增益設定哪個種類。";
+
+L["ignoreKillDataTitle"] = "忽略殺死NPC的訊息";
+L["ignoreKillDataDesc"] = "忽略任何NPC被殺死的資料。";
+
+L["noOverwriteTitle"] = "不要覆蓋計時器";
+L["noOverwriteDesc"] = "你可以開啟此選項，所以當你已經有一個計時器時，將不會再覆蓋新的計時，直到你的計時器結束。";
+
+L["layerMsg1"] = "你在一個Layer區域。";
+L["layerMsg2"] = "點擊這裡以觀看正確的計時器。";
+L["layerMsg3"] = "目標任何NPC以觀看你正確的Layer。";
+L["layerMsg4"] = "目標任何NPC在 %s 以觀看你正確的Layer。"; --Target any NPC in Orgrimmar to see your current layer.
+
+--NOTE: Darkmoon Faire buff type is now a character specific setting, changing buff type will only change it for this character.
+L["note"] = "註記:";
+L["dmfConfigWarning"] = "暗月馬戲團的增益種類特定設定，更改增益類型只會對此腳色進行修改。";

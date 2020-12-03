@@ -31,10 +31,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "Blink", self:SpellName(23138))
 	self:Log("SPELL_CAST_SUCCESS", "MagicGrounding", self:SpellName(19714))
@@ -57,11 +53,14 @@ end
 
 function mod:MagicGrounding(args)
 	-- Self buff
-	self:Message(19714, "orange", self:Dispeller("magic", true) and "Alarm", CL.onboss:format(args.spellName))
+	self:Message(19714, "orange", CL.onboss:format(args.spellName))
+	if self:Dispeller("magic", true) then
+		self:PlaySound(19714, "alarm")
+	end
 end
 
 function mod:Counterspell(args)
 	self:CDBar(19715, 15) -- 15-19
-	self:Message(19715, "yellow", "Info")
+	self:Message(19715, "yellow")
+	self:PlaySound(19715, "info")
 end
-

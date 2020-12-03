@@ -85,22 +85,14 @@ L["Icon Cooldown Frame"] = "图标冷却时间框架"
 L["Icon Options"] = "图标选项"
 L["Icon Size"] = "图标尺寸"
 L["Icon Stack Text"] = "图标堆叠文本"
---[[Translation missing --]]
-L["Indicator Bottom"] = "Indicator Bottom"
---[[Translation missing --]]
-L["Indicator Bottom Left Corner"] = "Indicator Bottom Left Corner"
---[[Translation missing --]]
-L["Indicator Bottom Right Corner"] = "Indicator Bottom Right Corner"
---[[Translation missing --]]
-L["Indicator Left"] = "Indicator Left"
---[[Translation missing --]]
-L["Indicator Right"] = "Indicator Right"
---[[Translation missing --]]
-L["Indicator Top"] = "Indicator Top"
---[[Translation missing --]]
-L["Indicator Top Left Corner"] = "Indicator Top Left Corner"
---[[Translation missing --]]
-L["Indicator Top Right Corner"] = "Indicator Top Right Corner"
+L["Indicator Bottom"] = "指示底部"
+L["Indicator Bottom Left Corner"] = "指示底部左下角"
+L["Indicator Bottom Right Corner"] = "指示底部右下角"
+L["Indicator Left"] = "指示左侧"
+L["Indicator Right"] = "指示右侧"
+L["Indicator Top"] = "指示顶部"
+L["Indicator Top Left Corner"] = "指示顶部左上角"
+L["Indicator Top Right Corner"] = "指示顶部右上角"
 L["Indicators"] = "指示"
 L["Invert Bar Color"] = "反转条颜色"
 L["Invert Text Color"] = "反转文本颜色"

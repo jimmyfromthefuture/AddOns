@@ -31,10 +31,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "Panic", self:SpellName(19408))
 	self:Log("SPELL_CAST_SUCCESS", "Enrage", self:SpellName(19451))
@@ -57,12 +53,13 @@ end
 
 function mod:Enrage(args)
 	self:Bar(19451, 8, CL.cast:format(args.spellName))
-	self:Message(19451, "yellow", "Info")
+	self:Message(19451, "yellow")
+	self:PlaySound(19451, "info")
 end
 
 function mod:Conflagration(args)
 	if self:Me(args.destGUID) then
-		self:Message(19428, "blue", "Alert", CL.underyou:format(args.spellName))
+		self:Message(19428, "blue", CL.underyou:format(args.spellName))
+		self:PlaySound(19428, "alert")
 	end
 end
-

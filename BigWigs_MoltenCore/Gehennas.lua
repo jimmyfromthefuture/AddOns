@@ -30,10 +30,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "Curse", self:SpellName(19716))
 	self:Log("SPELL_AURA_APPLIED", "Fire", self:SpellName(19717))
@@ -52,7 +48,7 @@ end
 function mod:Fire(args)
 	if self:Me(args.destGUID) then
 		self:Flash(19717)
-		self:Message(19717, "blue", "Alarm", CL.you:format(args.spellName))
+		self:Message(19717, "blue", CL.you:format(args.spellName))
+		self:PlaySound(19717, "alarm")
 	end
 end
-

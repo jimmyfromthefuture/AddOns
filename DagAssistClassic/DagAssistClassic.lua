@@ -131,7 +131,7 @@ btnMinimap:SetScript("OnEvent", function(self, event, ...)
 		DagAssist[event](self, event, ...);
 	end
 end)
-btnMinimap:RegisterEvent("PLAYER_ENTERING_WORLD");
+btnMinimap:RegisterEvent("ADDON_LOADED");
 
 function DagAssist.OnUpdate(self, elapsed, ...)
 	if (not DagAssist.MenuLoaded) then
@@ -175,8 +175,10 @@ function DagAssist.OnUpdate(self, elapsed, ...)
 										btn:SetAttribute("type","pet");
 										btn:SetAttribute("*pet1", actionInfo.Name);
 									end
+								elseif btn.Action.DA_ActionType == "petaction" then
+									btnMenuItem:SetAttribute("type","petaction");
+									btnMenuItem:SetAttribute("*petaction", actionInfo.Name);
 								end
-
 								btn.IconSet = true;
 							end
 						else
@@ -218,15 +220,14 @@ function DagAssist:PositionMinimapButton()
 	end
 end
 
-function DagAssist:PLAYER_ENTERING_WORLD(self, event)
-	DagAssist:PositionMinimapButton();
-	DagAssist:LoadMenu();
-	DagAssist.MinimapButton:Show();
-
-	btnMinimap:RegisterEvent("BAG_UPDATE");
-	btnMinimap:RegisterEvent("LEARNED_SPELL_IN_TAB");
-	btnMinimap:RegisterEvent("PLAYER_REGEN_DISABLED");
-	btnMinimap:RegisterEvent("PLAYER_REGEN_ENABLED");
+function DagAssist:ADDON_LOADED(self, event)
+	C_Timer.After(0.2, function()
+		DagAssist:PositionMinimapButton();
+    DagAssist:LoadMenu();
+		DagAssist.MinimapButton:Show();
+		btnMinimap:RegisterEvent("BAG_UPDATE");
+		btnMinimap:RegisterEvent("PLAYER_REGEN_ENABLED");
+  end)
 end
 
 function DagAssist:LoadMenu()
@@ -236,10 +237,12 @@ function DagAssist:LoadMenu()
 	end
 
   local menu = DagAssist.Menu;
-  if (not DA_Vars.Menu) then
-    DA_Vars.Menu = DagAssist.LoadDefaultMenu()
-  end
-  
+
+	if (not DA_Vars.Menu) then
+	  DA_Vars.Menu = DagAssist.LoadDefaultMenu()
+	end
+	menuItems = DA_Vars.Menu;
+
   if (not DagAssist.Buttons) then
     DagAssist.Buttons = {};
   end
@@ -329,8 +332,12 @@ function DagAssist:LoadMenu()
 						btnMenuItem:SetAttribute("type","pet");
 						btnMenuItem:SetAttribute("*pet1", actionInfo.Name);
 					end
+				elseif action.DA_ActionType == "petaction" then
+					btnMenuItem:SetAttribute("type","spell");
+					btnMenuItem:SetAttribute("*spell1", actionInfo.Name);
 				end
 			end
+
 			btnMenuItem:SetAttribute("checkselfcast","1");
 			btnMenuItem:SetAttribute("checkfocuscast","1");
 			btnMenuItem:SetFrameRef("dag_menu", DagAssist.Menu);
@@ -339,7 +346,12 @@ function DagAssist:LoadMenu()
 			btnMenuItem:SetFrameLevel(btnMenuItem:GetFrameLevel() + 1);
 
 			if (actionInfo.Name) then
-				btnMenuItem:SetText(actionInfo.Name);
+				local count = ""
+	      if action.DA_ActionType == "item" and GetItemCount(action.DA_ActionData) > 1 then
+	        count = " (" .. GetItemCount(action.DA_ActionData) ..")"
+	      end
+
+				btnMenuItem:SetText(actionInfo.Name .. count);
 				if (action.DA_ActionData == "6948") then
 					btnMenuItem:SetText(GetBindLocation());
 				end
@@ -418,9 +430,6 @@ function DagAssist:LoadMenu()
 	DagAssist.MenuLoaded = true;
 end
 
-function DagAssist:PLAYER_REGEN_DISABLED(self, event)
-        --DagAssist:SetMenuItemVisibility();
-end
 function DagAssist:PLAYER_REGEN_ENABLED(self, event)
 	if (DagAssist.ReloadNeeded) then
 		DagAssist:LoadMenu();
@@ -428,8 +437,5 @@ function DagAssist:PLAYER_REGEN_ENABLED(self, event)
 	end
 end
 function DagAssist:BAG_UPDATE(self, event)
-        --DagAssist:SetMenuItemVisibility();
-end
-function DagAssist:LEARNED_SPELL_IN_TAB(self, event)
-        --DagAssist:SetMenuItemVisibility();
+		DagAssist:LoadMenu();
 end

@@ -384,18 +384,18 @@ end
 
 local icons = {
 	MESSAGE = 134332, -- Interface\\Icons\\INV_MISC_NOTE_06
-	ME_ONLY = 463836, -- Interface\\Icons\\Priest_spell_leapoffaith_b
+	ME_ONLY = [[Interface\AddOns\BigWigs\Media\Icons\Priest_spell_leapoffaith_b]],
 	SOUND = 130977, -- "Interface\\Common\\VoiceChat-On"
 	ICON = 137008, -- Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_8
 	FLASH = 135849, -- Interface\\Icons\\Spell_Frost_FrostShock
-	PULSE = 135731, -- Interface\\Icons\\Spell_Arcane_Arcane04
+	PULSE = [[Interface\AddOns\BigWigs\Media\Icons\Spell_Arcane_Arcane04]],
 	PROXIMITY = 132181, -- Interface\\Icons\\ability_hunter_pathfinding
-	ALTPOWER = 429383, -- Interface\\Icons\\spell_arcane_invocation
-	INFOBOX = 443374, -- Interface\\Icons\\INV_MISC_CAT_TRINKET05
-	COUNTDOWN = 1035057, -- Interface\\Icons\\Achievement_GarrisonQuests_0005
+	ALTPOWER = [[Interface\AddOns\BigWigs\Media\Icons\spell_arcane_invocation]],
+	INFOBOX = [[Interface\AddOns\BigWigs\Media\Icons\INV_MISC_CAT_TRINKET05]],
+	COUNTDOWN = [[Interface\AddOns\BigWigs\Media\Icons\Achievement_GarrisonQuests_0005]],
 	SAY = 2056011, -- Interface\\Icons\\UI_Chat
 	SAY_COUNTDOWN = 2056011, -- Interface\\Icons\\UI_Chat
-	VOICE = 589118, -- Interface\\Icons\\Warrior_DisruptingShout
+	VOICE = [[Interface\AddOns\BigWigs\Media\Icons\Warrior_DisruptingShout]],
 }
 
 local function hasOptionFlag(dbKey, module, key)
@@ -623,6 +623,42 @@ end
 
 local function getDefaultToggleOption(scrollFrame, dropdown, module, bossOption)
 	local dbKey, name, desc, icon, alternativeName = BigWigs:GetBossOptionDetails(module, bossOption)
+
+	-- jesus this is so hacky. should probably be "custom_select_" with values as a
+	-- :GetBossOptionDetails return, but this keeps changes to a minimum for now
+	if type(dbKey) == "string" and dbKey:find("^custom_off_select_") then
+		local L = module:GetLocale()
+		local values = { [0] = _G.ADDON_DISABLED }
+		local i = 1
+		local value = L[dbKey.."_value"..i]
+		repeat
+			values[i] = value
+			i = i + 1
+			value = L[dbKey.."_value"..i]
+		until not value
+
+		local dropdown = AceGUI:Create("Dropdown")
+		if desc then
+			-- The label will truncate at ~74 chars, but showing the desc in a tooltip seems awkward
+			dropdown:SetLabel(("%s: |cffffffff%s|r"):format(name, desc))
+		else
+			dropdown:SetLabel(name)
+		end
+		dropdown:SetMultiselect(false)
+		dropdown:SetList(values)
+		dropdown:SetFullWidth(true)
+		dropdown:SetUserData("key", dbKey)
+		dropdown:SetUserData("module", module)
+		dropdown:SetCallback("OnValueChanged", function(widget, _, value)
+			if value == 0 then value = false end
+			local key = widget:GetUserData("key")
+			local module = widget:GetUserData("module")
+			module.db.profile[key] = value or false
+		end)
+		dropdown:SetValue(module.db.profile[dbKey] or 0)
+
+		return dropdown
+	end
 
 	local check = AceGUI:Create("CheckBox")
 	check:SetLabel(alternativeName and L.alternativeName:format(name, alternativeName) or name)

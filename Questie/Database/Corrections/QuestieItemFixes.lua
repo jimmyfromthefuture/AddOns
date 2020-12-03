@@ -78,6 +78,9 @@ function QuestieItemFixes:Load()
             [itemKeys.name] = "Flagon of Dwarven Honeymead",
             [itemKeys.npcDrops] = {1464},
         },
+        [2633] = {
+            [itemKeys.npcDrops] = {940,941,942}, -- #2433
+        },
         [2676] = {
             [itemKeys.objectDrops] = {276,},
         },
@@ -437,6 +440,12 @@ function QuestieItemFixes:Load()
             [itemKeys.npcDrops] = {},
             [itemKeys.objectDrops] = {},
         },
+        [6358] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [6359] = {
+            [itemKeys.objectDrops] = {},
+        },
         [6435] = {
             [itemKeys.name] = "Infused Burning Gem",
             [itemKeys.relatedQuests] = {1435},
@@ -447,6 +456,18 @@ function QuestieItemFixes:Load()
             [itemKeys.name] = "Secure Crate",
             [itemKeys.relatedQuests] = {1492},
             [itemKeys.npcDrops] = {},
+            [itemKeys.objectDrops] = {},
+        },
+        [6522] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [7070] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [7079] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [7080] = {
             [itemKeys.objectDrops] = {},
         },
         [7083] = {
@@ -845,13 +866,26 @@ function QuestieItemFixes:Load()
             [itemKeys.npcDrops] = {},
             [itemKeys.objectDrops] = {},
         },
+        [12562] = {
+            [itemKeys.npcDrops] = {},
+        },
         [12567] = {
             [itemKeys.name] = "Filled Flasket",
             [itemKeys.relatedQuests] = {4505},
             [itemKeys.npcDrops] = {},
             [itemKeys.objectDrops] = {148501},
         },
-        [12733] = { 
+        [12648] = {
+            [itemKeys.relatedQuests] = {4962},
+            [itemKeys.npcDrops] = {4678},
+            [itemKeys.objectDrops] = {},
+        },
+        [12649] = {
+            [itemKeys.relatedQuests] = {4963},
+            [itemKeys.npcDrops] = {4676},
+            [itemKeys.objectDrops] = {},
+        },
+        [12733] = {
             [itemKeys.name] = "Sacred Frostsaber Meat",
             [itemKeys.relatedQuests] = {5056},
             [itemKeys.npcDrops] = {7434,7433,7430,7432,7431,},
@@ -879,6 +913,9 @@ function QuestieItemFixes:Load()
             [itemKeys.name] = "Empty Canteen",
             [itemKeys.relatedQuests] = {5157},
             [itemKeys.npcDrops] = {},
+            [itemKeys.objectDrops] = {},
+        },
+        [13422] = {
             [itemKeys.objectDrops] = {},
         },
         [13546] = {
@@ -931,6 +968,11 @@ function QuestieItemFixes:Load()
         },
         [15874] = {
             [itemKeys.objectDrops] = {177784},
+            [itemKeys.npcDrops] = {12347},
+        },
+        [15924] = {
+            [itemKeys.objectDrops] = {177784},
+            [itemKeys.npcDrops] = {12347},
         },
         [16209] = {
             [itemKeys.name] = "Podrig's Order",
@@ -1052,16 +1094,43 @@ function QuestieItemFixes:Load()
             [itemKeys.npcDrops] = {},
             [itemKeys.objectDrops] = {},
         },
+        [18947] = {
+            [itemKeys.npcDrops] = {5296,5297,5299}, -- #2321
+        },
         [18956] = {
             [itemKeys.npcDrops] = {5357,5358,5359,5360,5361,14603,14604,14638,14639,14640}, -- #1470
         },
         [19034] = {
             [itemKeys.objectDrops] = {179910},
         },
-        [19061]= {
+        [19061] = {
             [itemKeys.name] = "Vessel of Rebirth",
             [itemKeys.relatedQuests] = {7785,},
             [itemKeys.npcDrops] = {14347},
+            [itemKeys.objectDrops] = {},
+        },
+        [19803] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [19805] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [19806] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [19807] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [19808] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [19850] = {
+            [itemKeys.objectDrops] = {180204},
+        },
+        [19851] = {
+            [itemKeys.objectDrops] = {180205},
+        },
+        [19975] = {
             [itemKeys.objectDrops] = {},
         },
         [20023] = {
@@ -1089,6 +1158,39 @@ function QuestieItemFixes:Load()
             [itemKeys.objectDrops] = {180453,},
             [itemKeys.npcDrops] = {},
         },
+        [20708] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [20709] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [21071] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [21106] = {
+            [itemKeys.objectDrops] = {180666},
+        },
+        [21107] = {
+            [itemKeys.objectDrops] = {180665},
+        },
+        [21109] = {
+            [itemKeys.objectDrops] = {180667},
+        },
+        [21113] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [21114] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [21150] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [21151] = {
+            [itemKeys.objectDrops] = {},
+        },
+        [21153] = {
+            [itemKeys.objectDrops] = {},
+        },
         [21158] = {
             [itemKeys.name] = "Hive'Zora Scout Report",
             [itemKeys.relatedQuests] = {8534},
@@ -1105,6 +1207,9 @@ function QuestieItemFixes:Load()
             [itemKeys.name] = "Hive'Ashi Scout Report",
             [itemKeys.relatedQuests] = {8739},
             [itemKeys.npcDrops] = {15611},
+            [itemKeys.objectDrops] = {},
+        },
+        [21228] = {
             [itemKeys.objectDrops] = {},
         },
         [21557] = {
@@ -1143,8 +1248,17 @@ function QuestieItemFixes:Load()
             [itemKeys.npcDrops] = {15898},
             [itemKeys.objectDrops] = {},
         },
+        [22094] = {
+            [itemKeys.npcDrops] = {4364,4366,4368,4370,4371,16072,},
+        },
+        [22229] = {
+            [itemKeys.npcDrops] = {7068,7069,7071,7072,7075}, -- #2344
+        },
         [22435] = {
             [itemKeys.npcDrops] = {6551,6554}, -- #1771
+        },
+        [22527] = {
+            [itemKeys.npcDrops] = {6520,6521,7031,7032,7132,8519,8520,8521,8522,8909,8910,8911,9017,9025,9026,9816,9878,9879,11480,11483,11484,11744,11745,11746,11747,13279,13280,14399,14400,14455,14458,14460,14462},
         },
     }
 end

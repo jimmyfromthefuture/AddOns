@@ -8,5 +8,5 @@ local DataUtils = ECSLoader:ImportModule("DataUtils")
 function Data:GetMovementSpeed()
     local _, runSpeed, _, _ = GetUnitSpeed("player")
     runSpeed = runSpeed / 7 * 100
-    return DataUtils:Round(runSpeed, 2) .. "%"
+    return DataUtils:Round(runSpeed, 0) .. "%"
 end

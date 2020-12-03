@@ -47,6 +47,7 @@ _QuestieAuto.disallowedQuests = {
     [155] = true, -- The Defias Traitor (The Defias Brotherhood)
     [219] = true, -- Corporal Keeshan (Missing In Action)
     [309] = true, -- Miran (Protecting the Shipment)
+    [349] = true, -- Stranglethorn Fever (Consumes items)
     [434] = true, -- Tyrion (The Attack!)
     [435] = true, -- Deathstalker Erland (Escorting Erland)
     [648] = true, -- Homing Robot OOX-17/TN (Rescue OOX-17/TN!)
@@ -111,6 +112,7 @@ _QuestieAuto.disallowedQuests = {
     [5063] = true,
     [5068] = true,
     [8196] = true,
+    [9338] = true, -- Allegiance to Cenarion Circle
     -- The Barrens Bloodshard quests
     [889] = true,
     [5042] = true,

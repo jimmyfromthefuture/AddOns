@@ -1098,6 +1098,7 @@ function QuestieTracker:ResetLocation()
     Questie.db[Questie.db.global.questieTLoc].TrackerWidth = 0
 
     QuestieTracker:ResetLinesForChange()
+    QuestieTracker:Update()
 
     if _QuestieTracker.baseFrame then
         _QuestieTracker:SetSafePoint(_QuestieTracker.baseFrame)
@@ -1491,7 +1492,7 @@ function QuestieTracker:Update()
             line.label:SetPoint("TOPLEFT", line, "TOPLEFT", 0, 0)
 
             local questName = (quest.LocalizedName or quest.name)
-            local coloredQuestName = QuestieLib:GetColoredQuestName(quest.Id, questName, quest.level, Questie.db.global.trackerShowQuestLevel, complete)
+            local coloredQuestName = QuestieLib:GetColoredQuestName(quest.Id, questName, quest.level, Questie.db.global.trackerShowQuestLevel, Questie.db.global.collapseCompletedQuests)
             line.label:SetText(coloredQuestName)
 
             line.label:SetWidth(math.min(math.max(Questie.db[Questie.db.global.questieTLoc].TrackerWidth, _QuestieTracker.baseFrame:GetWidth()) - (trackerLineIndent + trackerSpaceBuffer), line.label:GetUnboundedStringWidth()))
@@ -1672,8 +1673,12 @@ function QuestieTracker:Update()
         end
     end
 
+    if not line then
+        line = _QuestieTracker.LineFrames[trackerLineCount]
+    end
+
     -- Begin post clean up of unused frameIndexes
-    _QuestieTracker.highestIndex = lineIndex
+    _QuestieTracker.highestIndex = lineIndex > trackerLineCount and trackerLineCount or lineIndex
     local startUnusedFrames = 1
     local startUnusedButtons = 1
 
@@ -1809,9 +1814,11 @@ function QuestieTracker:Update()
                 end
             end
         end
-        C_Timer.After(2.0, function()
-            QuestieTracker:Update()
-            _QuestieTracker.IsFirstRun = nil
+        _QuestieTracker.IsFirstRun = nil
+        QuestieCombatQueue:Queue(function()
+            C_Timer.After(2.0, function()
+                QuestieTracker:Update()
+            end)
         end)
     end
 
@@ -2192,33 +2199,18 @@ end
 function QuestieTracker:ResetLinesForChange()
     Questie:Debug(DEBUG_DEVELOP, "QuestieTracker: ResetLinesForChange")
     if InCombatLockdown() or not Questie.db.global.trackerEnabled then return end
-    if _QuestieTracker.highestIndex then
-        for i = 1, _QuestieTracker.highestIndex do
-            if _QuestieTracker.LineFrames[i] then
-                _QuestieTracker.LineFrames[i].mode = nil
-                _QuestieTracker.LineFrames[i].expandQuest.mode = nil
-                _QuestieTracker.LineFrames[i].expandZone.mode = nil
-            end
-            if _QuestieTracker.trackedQuestsFrame then
-                _QuestieTracker.trackedQuestsFrame:Hide()
-                _QuestieTracker.trackedQuestsFrame:Update()
-            end
+    for _, line in pairs(_QuestieTracker.LineFrames) do
+        line.mode = nil
+        if line.expandQuest then
+            line.expandQuest.mode = nil
         end
-    else
-        for i = 1, trackerLineCount do
-            if _QuestieTracker.LineFrames[i] then
-                _QuestieTracker.LineFrames[i].mode = nil
-                _QuestieTracker.LineFrames[i].expandQuest.mode = nil
-                _QuestieTracker.LineFrames[i].expandZone.mode = nil
-            end
-            if _QuestieTracker.trackedQuestsFrame then
-                _QuestieTracker.trackedQuestsFrame:Hide()
-                _QuestieTracker.trackedQuestsFrame:Update()
-            end
+        if line.expandZone then
+            line.expandZone.mode = nil
         end
     end
-    _QuestieTracker:UpdateLayout()
-    QuestieTracker:Update()
+    if _QuestieTracker.trackedQuestsFrame then
+        _QuestieTracker.trackedQuestsFrame:Hide()
+    end
 end
 
 function QuestieTracker:RemoveQuest(id)

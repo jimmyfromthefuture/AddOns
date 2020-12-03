@@ -4,6 +4,7 @@ local UnitAura, UnitClass, UnitGUID, UnitIsPlayer, UnitIsVisible, UnitIsDead, Un
     = UnitAura, UnitClass, UnitGUID, UnitIsPlayer, UnitIsVisible, UnitIsDead, UnitIsGhost
 local PlexusStatusGroupBuffs = Plexus:NewStatusModule("PlexusStatusGroupBuffs")
 PlexusStatusGroupBuffs.menuName = "Group Buffs"
+PlexusStatusGroupBuffs.options = false
 
 local spellNameList
 local spellIconList
@@ -32,7 +33,7 @@ spellIconList = {
 
 PlexusStatusGroupBuffs.defaultDB = {
     debug = false,
-    type = "group",
+    EnableClassFilter = false,
     --alert_groupbuffs = {
     --	class = true,
     --	enable = true,
@@ -83,6 +84,31 @@ PlexusStatusGroupBuffs.defaultDB = {
     }
 }
 end
+
+PlexusStatusGroupBuffs.options = {
+    name = "Group Buffs",
+    desc = "Options for Group Buffs.",
+    type = "group",
+    childGroups = "tree",
+    disabled = InCombatLockdown,
+    get = function(info)
+        local k = info[#info]
+        return PlexusStatusGroupBuffs.db.profile[k]
+    end,
+    set = function(info, v)
+        local k = info[#info]
+        PlexusStatusGroupBuffs.db.profile[k] = v
+        PlexusStatusGroupBuffs:UpdateAllUnits()
+    end,
+    args = {
+        EnableClassFilter = {
+            name = "Enable Class Filter",
+            desc = "Enable showing status if your class can cast buff.",
+            order = 1, width = "double",
+            type = "toggle",
+        },
+    },
+}
 
 if Plexus:IsClassicWow() then
 spellNameList = {
@@ -135,6 +161,7 @@ spellIconList = {
 
 PlexusStatusGroupBuffs.defaultDB = {
     debug = false,
+    EnableClassFilter = false,
     --alert_groupbuffs = {
     --	class = true,
     --	enable = true,
@@ -227,19 +254,9 @@ PlexusStatusGroupBuffs.defaultDB = {
 }
 end
 
---local extraOptionsForStatus = {
---    class = {
---        type = "toggle",
---        name = "Class",
---        desc = "Only show buffs your class can cast.",
---        get = function()
---            return PlexusStatusGroupBuffs.db.profile.class
---        end,
---        set = function(_, v)
---            PlexusStatusGroupBuffs.db.profile.class = v
---        end,
---    },
---}
+local extraOptionsForStatus = {
+    --enable = false, -- you can't disable this
+}
 
 function PlexusStatusGroupBuffs:OnInitialize()
     self.super.OnInitialize(self)
@@ -250,21 +267,19 @@ function PlexusStatusGroupBuffs:OnEnable()
     self.debugging = self.db.profile.debug
 
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
-    self:RegisterEvent("PLAYER_LEAVING_WORLD")
+    self:RegisterEvent("UNIT_AURA", "UpdateUnit")
+    self:RegisterMessage("Plexus_UnitJoined")
 end
 
-function PlexusStatusGroupBuffs:PLAYER_LEAVING_WORLD()
-    self:UnregisterEvent("UNIT_AURA")
-end
 
 function PlexusStatusGroupBuffs:PLAYER_ENTERING_WORLD()
     self:UpdateAllUnits()
-    self:RegisterEvent("UNIT_AURA", "UpdateUnit")
 end
 
-function PlexusStatusGroupBuffs:Plexus_UnitJoined(guid, unit) --luacheck: ignore 212
+function PlexusStatusGroupBuffs:Plexus_UnitJoined(event, guid, unit) --luacheck: ignore 212
+    --self:RegisterMessage("Plexus_UnitJoined", guid, roster.unitid[guid])
     --self:Debug("Plexus_UnitJoined", unit)
-    self:UpdateUnit(unit)
+    self:UpdateUnit(event, unit, guid)
 end
 
 function PlexusStatusGroupBuffs:RegisterStatuses()
@@ -274,7 +289,7 @@ function PlexusStatusGroupBuffs:RegisterStatuses()
     for status, settings in self:ConfiguredStatusIterator() do
         desc = settings.desc or settings.text or ""
         self:Debug("registering", status, desc)
-        self:RegisterStatus(status, desc)
+        self:RegisterStatus(status, desc, extraOptionsForStatus, false)
     end
 end
 
@@ -316,8 +331,9 @@ function PlexusStatusGroupBuffs:Reset()
 end
 
 function PlexusStatusGroupBuffs:UpdateAllUnits()
+    --self:Debug("UpdateAllUnits")
     for guid, unit in PlexusRoster:IterateRoster() do
-        self:UpdateUnit(unit, guid)
+        self:UpdateUnit("UpdateAllUnits",unit, guid)
     end
 end
 
@@ -326,31 +342,47 @@ function PlexusStatusGroupBuffs:UpdateUnit(event, unit, guid)
     for status in self:ConfiguredStatusIterator() do
         self:ShowMissingBuffs(event, unit, status, guid)
     end
-
 end
 
 function PlexusStatusGroupBuffs:ShowMissingBuffs(event, unit, status, guid)
     self:Debug("UpdateUnit Event: ", event)
+    self:Debug("UpdateUnit Unit: ", unit)
+    self:Debug("UpdateUnit GUID: ", guid)
     if not unit then return end
     if not status then return end
     if not guid then return end
+    if not UnitIsPlayer(unit) then return end
     local settings = self.db.profile[status]
     local BuffClass = settings.class
+    local EnableClassFilter = self.db.profile.EnableClassFilter
+    local _, englishClass= UnitClass("player")
 
     if not settings.enable then
-        return self.core:SendStatusLost(guid, status)
+        self.core:SendStatusLostAllUnits(status)
+        return
     end
 
     if UnitIsDead(unit) or UnitIsGhost(unit) then
-        return self.core:SendStatusLost(guid, status)
+        self.core:SendStatusLost(guid, status)
+        return
+    end
+
+    if EnableClassFilter then
+        if BuffClass ~= englishClass then
+            --self:Debug("Class Filter is on, we are not the class")
+            self.core:SendStatusLost(guid, status)
+            return
+        end
     end
 
     if UnitIsVisible(unit) then
         for i = 1, 40 do
             local name = UnitAura(unit, i, "HELPFUL")
+            if not name then break end
             for _, buff in pairs(settings.buffs) do
                 if name == buff then
-                    return self.core:SendStatusLost(guid, status)
+                    self.core:SendStatusLost(guid, status)
+                    return
                 end
             end
         end
@@ -358,34 +390,16 @@ function PlexusStatusGroupBuffs:ShowMissingBuffs(event, unit, status, guid)
 
     local icon = settings.icon
 
-    if not Plexus:IsClassicWow() and UnitIsPlayer(unit) then
-        self.core:SendStatusGained(
-            guid,
-            status,
-            settings.priority,
-            nil,
-            settings.color,
-            settings.text,
-            nil,
-            nil,
-            icon
-        )
-    end
+    self.core:SendStatusGained(
+        guid,
+        status,
+        settings.priority,
+        nil,
+        settings.color,
+        settings.text,
+        nil,
+        nil,
+        icon
+    )
 
-    --self:Debug("UnitClass", UnitClass)
-    local _, englishClass= UnitClass("player")
-    if Plexus:IsClassicWow() and UnitIsPlayer(unit) and BuffClass == englishClass then
-    self:Debug("status", icon)
-        self.core:SendStatusGained(
-            guid,
-            status,
-            settings.priority,
-            nil,
-            settings.color,
-            settings.text,
-            nil,
-            nil,
-            icon
-        )
-    end
 end

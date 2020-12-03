@@ -1,10 +1,11 @@
-## Interface: 11305
-## Title : Extended Character Stats v2.6.1
-## Version : 2.6.1
+## Interface: 11306
+## Title : Extended Character Stats v2.6.3
+## Version : 2.6.3
+## Author: Ethulu, BreakBB
 ## Notes: Displays an extra window with more information about your characters stats ( Crit/Hit/Block etc )
 ## SavedVariablesPerCharacter: ExtendedCharacterStats
 ## DefaultState : enabled
-## Author: Ethulu, BreakBB
+## X-Curse-Project-ID: 334877
 
 embeds.xml
 
@@ -46,6 +47,7 @@ Modules\i18n\i18n.lua
 Modules\i18n\en.lua
 Modules\i18n\de.lua
 Modules\i18n\fr.lua
+Modules\i18n\cn.lua
 
 # Main
 ECS.lua

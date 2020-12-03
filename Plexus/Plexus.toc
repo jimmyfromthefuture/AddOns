@@ -1,5 +1,5 @@
 ## Interface: 11305
-## Version: v2.0.16
+## Version: v2.1.25
 
 ## Title: Plexus
 ## Notes: A compact plexus of party/raid unit frames.
@@ -69,6 +69,7 @@ Indicators\Alpha.lua
 Indicators\Bar.lua
 Indicators\Border.lua
 Indicators\Corner.lua
+Indicators\ExtraBar.lua
 Indicators\HealingBar.lua
 Indicators\Icon.lua
 Indicators\Text.lua
@@ -78,16 +79,17 @@ Statuses\AFK.lua
 Statuses\Auras.lua
 Statuses\Group.lua
 Statuses\GroupBuffs.lua
+Statuses\GroupNumber.lua
 Statuses\Heals.lua
 Statuses\Health.lua
 Statuses\Mana.lua
 Statuses\Mouseover.lua
 Statuses\Name.lua
+Statuses\Player.lua
 Statuses\RaidIcon.lua
 Statuses\Range.lua
 Statuses\ReadyCheck.lua
-Statuses\ResourceBar.lua
+Statuses\Resource.lua
 Statuses\Resurrect.lua
-Statuses\Role.lua
 Statuses\Target.lua
 Statuses\Vehicle.lua

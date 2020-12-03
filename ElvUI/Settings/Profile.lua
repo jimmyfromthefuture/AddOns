@@ -80,8 +80,8 @@ P.general = {
 			},
 			tracking = {
 				scale = 1,
-				position = 'BOTTOMLEFT',
-				xOffset = 2,
+				position = 'BOTTOMRIGHT',
+				xOffset = -2,
 				yOffset = 2,
 			},
 			ticket = {
@@ -121,6 +121,7 @@ P.databars = {
 	colors = {
 		experience = { r = 0, g = .4, b = 1, a = .8 },
 		rested = { r = 1, g = 0, b = 1, a = .2},
+		quest = { r = 0, g = 1, b = 0, a = .4},
 		petExperience = { r = 1, g = 1, b = .41, a = .8 },
 		useCustomFactionColors = false,
 		factionColors = {
@@ -146,7 +147,7 @@ for _, databar in pairs({'experience', 'reputation', 'petExperience', 'threat'})
 		font = "PT Sans Narrow",
 		fontOutline = "NONE",
 		mouseover = false,
-		orientation = 'HORIZONTAL',
+		orientation = 'AUTOMATIC',
 		reverseFill = false,
 	}
 end
@@ -798,6 +799,7 @@ P.auras = {
 --Chat
 P.chat = {
 	url = true,
+	panelSnapping = true,
 	shortChannels = true,
 	hyperlinkHover = true,
 	throttleInterval = 45,

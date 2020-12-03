@@ -201,18 +201,6 @@ fraConfig.btnOk:SetScript("OnClick",
 	end
 )
 
---[[
---Hide minimap button
-fraConfig.chkHideMinimap = CreateFrame("CheckButton", "DagAssistConfigHideMinimapButton", fraConfig, "ChatConfigCheckButtonTemplate");
-fraConfig.chkHideMinimap:SetPoint("BOTTOMLEFT", fraConfig, "BOTTOMLEFT", 10, 10);
-
---Hide minimap button label
-fraConfig.lblHideButton = fraConfig:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
-fraConfig.lblHideButton:SetPoint("LEFT", fraConfig.chkHideMinimap, "RIGHT", 0, 2);
-fraConfig.lblHideButton:SetHeight(7);
-fraConfig.lblHideButton:SetText("Hide minimap button");
---]]
-
 function DagAssistRetrieveCursorItem(self, event, ...)
 	if (InCombatLockdown() == 1) then
 		return;
@@ -242,6 +230,8 @@ function DagAssistRetrieveCursorItem(self, event, ...)
 			cursorData = itemID;
 		elseif cursorType == "spell" then
 			cursorData = spellID;
+		elseif cursorData == "petaction" then
+
 		end
 
 		DagAssistAssignConfigButtonAction(self, cursorType, cursorData, cursorSubType);
@@ -288,6 +278,9 @@ function DagAssistGetActionInfo(actionType, actionData, actionSubType)
 	elseif actionType == "macro" then
 		itemName, itemTexture, _ = GetMacroInfo(actionData);
 	elseif actionType == "spell" then
+		itemName = GetSpellInfo(actionData);
+		itemTexture = GetSpellTexture(itemName);
+	elseif actionType == "petaction" then
 		itemName = GetSpellInfo(actionData);
 		itemTexture = GetSpellTexture(itemName);
 	end

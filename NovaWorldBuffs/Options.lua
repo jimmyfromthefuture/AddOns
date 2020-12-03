@@ -5,6 +5,8 @@
 --Novaspark-Arugal OCE (classic).
 --https://www.curseforge.com/members/venomisto/projects
 
+local addonName, addon = ...;
+local NWB = addon.a;
 local L = LibStub("AceLocale-3.0"):GetLocale("NovaWorldBuffs");
 
 NWB.options = {
@@ -30,24 +32,40 @@ NWB.options = {
 			fontSize = "medium",
 			order = 3,
 		},
+		ignoreKillData = {
+			type = "toggle",
+			name = L["ignoreKillDataTitle"],
+			desc = L["ignoreKillDataDesc"],
+			order = 4,
+			get = "getIgnoreKillData",
+			set = "setIgnoreKillData",
+		},
+		noOverwrite = {
+			type = "toggle",
+			name = L["noOverwriteTitle"],
+			desc = L["noOverwriteDesc"],
+			order = 5,
+			get = "getNoOverwrite",
+			set = "setNoOverwrite",
+		},
 		showBuffs = {
 			type = "execute",
 			name = L["showBuffsTitle"],
 			desc = L["showBuffsDesc"],
 			func = "openBuffListFrame",
-			order = 4,
+			order = 6,
 			width = 1.7,
 		},
 		generalHeader = {
 			type = "header",
 			name = L["generalHeaderDesc"],
-			order = 5,
+			order = 10,
 		},
 		showWorldMapMarkers = {
 			type = "toggle",
 			name = L["showWorldMapMarkersTitle"],
 			desc = L["showWorldMapMarkersDesc"],
-			order = 6,
+			order = 11,
 			get = "getShowWorldMapMarkers",
 			set = "setShowWorldMapMarkers",
 		},
@@ -55,7 +73,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["receiveGuildDataOnlyTitle"],
 			desc = L["receiveGuildDataOnlyDesc"],
-			order = 7,
+			order = 12,
 			get = "getReceiveGuildDataOnly",
 			set = "setReceiveGuildDataOnly",
 		},
@@ -63,7 +81,7 @@ NWB.options = {
 			type = "color",
 			name = L["chatColorTitle"],
 			desc = L["chatColorDesc"],
-			order = 8,
+			order = 13,
 			get = "getChatColor",
 			set = "setChatColor",
 			hasAlpha = false,
@@ -72,7 +90,7 @@ NWB.options = {
 			type = "color",
 			name = L["mmColorTitle"],
 			desc = L["mmColorDesc"],
-			order = 9,
+			order = 14,
 			get = "getMmColor",
 			set = "setMmColor",
 			hasAlpha = false,
@@ -81,7 +99,7 @@ NWB.options = {
 			type = "color",
 			name = L["middleColorTitle"],
 			desc = L["middleColorDesc"],
-			order = 10,
+			order = 15,
 			get = "getMiddleColor",
 			set = "setMiddleColor",
 			hasAlpha = false,
@@ -91,13 +109,13 @@ NWB.options = {
 			name = L["resetColorsTitle"],
 			desc = L["resetColorsDesc"],
 			func = "resetColors",
-			order = 11,
+			order = 16,
 		},
 		showTimeStamp = {
 			type = "toggle",
 			name = L["showTimeStampTitle"],
 			desc = L["showTimeStampDesc"],
-			order = 12,
+			order = 17,
 			get = "getShowTimeStamp",
 			set = "setShowTimeStamp",
 		},
@@ -113,7 +131,7 @@ NWB.options = {
 				[1] = 12,
 				[2] = 24,
 			},
-			order = 13,
+			order = 18,
 			get = "getTimeStampFormat",
 			set = "setTimeStampFormat",
 		},
@@ -129,7 +147,7 @@ NWB.options = {
 				[1] = "local",
 				[2] = "server",
 			},
-			order = 14,
+			order = 19,
 			get = "getTimeStampZone",
 			set = "setTimeStampZone",
 		},
@@ -137,33 +155,17 @@ NWB.options = {
 			type = "toggle",
 			name = L["colorizePrefixLinksTitle"],
 			desc = L["colorizePrefixLinksDesc"],
-			order = 15,
+			order = 20,
 			get = "getColorizePrefixLinks",
 			set = "setColorizePrefixLinks",
-		},
-		showAllAlts = {
-			type = "toggle",
-			name = L["showAllAltsTitle"],
-			desc = L["showAllAltsDesc"],
-			order = 16,
-			get = "getShowAllAlts",
-			set = "setShowAllAlts",
 		},
 		minimapButton = {
 			type = "toggle",
 			name = L["minimapButtonTitle"],
 			desc = L["minimapButtonDesc"],
-			order = 20,
+			order = 21,
 			get = "getMinimapButton",
 			set = "setMinimapButton",
-		},
-		showBuffStats = {
-			type = "toggle",
-			name = L["showBuffStatsTitle"],
-			desc = L["showBuffStatsDesc"],
-			order = 21,
-			get = "getShowBuffStats",
-			set = "setShowBuffStats",
 		},
 		minimapLayerHover = {
 			type = "toggle",
@@ -173,16 +175,96 @@ NWB.options = {
 			get = "getMinimapLayerHover",
 			set = "setMinimapLayerHover",
 		},
+		showBuffStats = {
+			type = "toggle",
+			name = L["showBuffStatsTitle"],
+			desc = L["showBuffStatsDesc"],
+			order = 23,
+			get = "getShowBuffStats",
+			set = "setShowBuffStats",
+		},
+		showAllAlts = {
+			type = "toggle",
+			name = L["showAllAltsTitle"],
+			desc = L["showAllAltsDesc"],
+			order = 24,
+			get = "getShowAllAlts",
+			set = "setShowAllAlts",
+		},
+		showUnbuffedAlts = {
+			type = "toggle",
+			name = L["showUnbuffedAltsTitle"],
+			desc = L["showUnbuffedAltsDesc"],
+			order = 25,
+			get = "getShowUnbuffedAlts",
+			set = "setShowUnbuffedAlts",
+		},
+		timerWindowWidth = {
+			type = "range",
+			name = L["timerWindowWidthTitle"],
+			desc = L["timerWindowWidthDesc"],
+			order = 26,
+			get = "getTimerWindowWidth",
+			set = "setTimerWindowWidth",
+			min = 350,
+			max = 900,
+			softMin = 350,
+			softMax = 900,
+			step = 1,
+			width = 1.5,
+		},
+		timerWindowHeight = {
+			type = "range",
+			name = L["timerWindowHeightTitle"],
+			desc = L["timerWindowHeightDesc"],
+			order = 27,
+			get = "getTimerWindowHeight",
+			set = "setTimerWindowHeight",
+			min = 150,
+			max = 950,
+			softMin = 150,
+			softMax = 950,
+			step = 1,
+			width = 1.5,
+		},
+		buffWindowWidth = {
+			type = "range",
+			name = L["buffWindowWidthTitle"],
+			desc = L["buffWindowWidthDesc"],
+			order = 28,
+			get = "getBuffWindowWidth",
+			set = "setBuffWindowWidth",
+			min = 350,
+			max = 900,
+			softMin = 350,
+			softMax = 900,
+			step = 1,
+			width = 1.5,
+		},
+		buffWindowHeight = {
+			type = "range",
+			name = L["buffWindowHeightTitle"],
+			desc = L["buffWindowHeightDesc"],
+			order = 29,
+			get = "getBuffWindowHeight",
+			set = "setBuffWindowHeight",
+			min = 150,
+			max = 950,
+			softMin = 150,
+			softMax = 950,
+			step = 1,
+			width = 1.5,
+		},
 		logonHeader = {
 			type = "header",
 			name = L["logonHeaderDesc"],
-			order = 23,
+			order = 40,
 		},
 		logonPrint = {
 			type = "toggle",
 			name = L["logonPrintTitle"],
 			desc = L["logonPrintDesc"],
-			order = 24,
+			order = 41,
 			get = "getLogonPrint",
 			set = "setLogonPrint",
 		},
@@ -190,7 +272,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["logonRendTitle"],
 			desc = L["logonRendDesc"],
-			order = 25,
+			order = 42,
 			get = "getLogonRend",
 			set = "setLogonRend",
 		},
@@ -198,7 +280,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["logonOnyTitle"],
 			desc = L["logonOnyDesc"],
-			order = 26,
+			order = 43,
 			get = "getLogonOny",
 			set = "setLogonOny",
 		},
@@ -206,7 +288,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["logonNefTitle"],
 			desc = L["logonNefDesc"],
-			order = 27,
+			order = 44,
 			get = "getLogonNef",
 			set = "setLogonNef",
 		},
@@ -214,7 +296,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["logonDmfSpawnTitle"],
 			desc = L["logonDmfSpawnDesc"],
-			order = 28,
+			order = 45,
 			get = "getLogonDmfSpawn",
 			set = "setLogonDmfSpawn",
 		},
@@ -222,20 +304,20 @@ NWB.options = {
 			type = "toggle",
 			name = L["logonDmfBuffCooldownTitle"],
 			desc = L["logonDmfBuffCooldownDesc"],
-			order = 29,
+			order = 46,
 			get = "getLogonDmfBuffCooldown",
 			set = "setLogonDmfBuffCooldown",
 		},
 		chatWarningHeader = {
 			type = "header",
 			name = L["chatWarningHeaderDesc"],
-			order = 30,
+			order = 60,
 		},
 		chat30 = {
 			type = "toggle",
 			name = L["chat30Title"],
 			desc = L["chat30Desc"],
-			order = 31,
+			order = 61,
 			get = "getChat30",
 			set = "setChat30",
 		},
@@ -243,7 +325,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["chat15Title"],
 			desc = L["chat15Desc"],
-			order = 32,
+			order = 62,
 			get = "getChat15",
 			set = "setChat15",
 		},
@@ -251,7 +333,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["chat10Title"],
 			desc = L["chat10Desc"],
-			order = 33,
+			order = 63,
 			get = "getChat10",
 			set = "setChat10",
 		},
@@ -259,7 +341,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["chat5Title"],
 			desc = L["chat5Desc"],
-			order = 34,
+			order = 64,
 			get = "getChat5",
 			set = "setChat5",
 		},
@@ -267,7 +349,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["chat1Title"],
 			desc = L["chat1Desc"],
-			order = 35,
+			order = 65,
 			get = "getChat1",
 			set = "setChat1",
 		},
@@ -275,7 +357,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["chatResetTitle"],
 			desc = L["chatResetDesc"],
-			order = 36,
+			order = 66,
 			get = "getChat0",
 			set = "setChat0",
 		},
@@ -283,7 +365,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["chatZanTitle"],
 			desc = L["chatZanDesc"],
-			order = 37,
+			order = 67,
 			get = "getChatZan",
 			set = "setChatZan",
 		},
@@ -291,20 +373,20 @@ NWB.options = {
 			type = "toggle",
 			name = L["chatNpcKilledTitle"],
 			desc = L["chatNpcKilledDesc"],
-			order = 38,
+			order = 68,
 			get = "getChatNpcKilled",
 			set = "setChatNpcKilled",
 		},
 		middleWarningHeader = {
 			type = "header",
 			name = L["middleWarningHeaderDesc"],
-			order = 40,
+			order = 80,
 		},
 		middle30 = {
 			type = "toggle",
 			name = L["middle30Title"],
 			desc = L["middle30Desc"],
-			order = 41,
+			order = 81,
 			get = "getMiddle30",
 			set = "setMiddle30",
 		},
@@ -312,7 +394,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middle15Title"],
 			desc = L["middle15Desc"],
-			order = 42,
+			order = 82,
 			get = "getMiddle15",
 			set = "setMiddle15",
 		},
@@ -320,7 +402,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middle10Title"],
 			desc = L["middle10Desc"],
-			order = 43,
+			order = 83,
 			get = "getMiddle10",
 			set = "setMiddle10",
 		},
@@ -328,7 +410,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middle5Title"],
 			desc = L["middle5Desc"],
-			order = 44,
+			order = 84,
 			get = "getMiddle5",
 			set = "setMiddle5",
 		},
@@ -336,7 +418,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middle1Title"],
 			desc = L["middle1Desc"],
-			order = 45,
+			order = 85,
 			get = "getMiddle1",
 			set = "setMiddle1",
 		},
@@ -344,7 +426,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middleResetTitle"],
 			desc = L["middleResetDesc"],
-			order = 46,
+			order = 86,
 			get = "getMiddle0",
 			set = "setMiddle0",
 		},
@@ -352,7 +434,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middleBuffWarningTitle"],
 			desc = L["middleBuffWarningDesc"],
-			order = 47,
+			order = 87,
 			get = "getMiddleBuffWarning",
 			set = "setMiddleBuffWarning",
 		},
@@ -360,7 +442,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middleHideCombatTitle"],
 			desc = L["middleHideCombatDesc"],
-			order = 48,
+			order = 88,
 			get = "getMiddleHideCombat",
 			set = "setMiddleHideCombat",
 		},
@@ -368,7 +450,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middleHideRaidTitle"],
 			desc = L["middleHideRaidDesc"],
-			order = 49,
+			order = 89,
 			get = "getMiddleHideRaid",
 			set = "setMiddleHideRaid",
 		},
@@ -376,7 +458,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["middleHideBattlegroundsTitle"],
 			desc = L["middleHideBattlegroundsDesc"],
-			order = 50,
+			order = 90,
 			get = "getMiddleHideBattlegrounds",
 			set = "setMiddleHideBattlegrounds",
 		},
@@ -384,20 +466,20 @@ NWB.options = {
 			type = "toggle",
 			name = L["middleNpcKilledTitle"],
 			desc = L["middleNpcKilledDesc"],
-			order = 51,
+			order = 91,
 			get = "getMiddleNpcKilled",
 			set = "setMiddleNpcKilled",
 		},
 		guildWarningHeader = {
 			type = "header",
 			name = L["guildWarningHeaderDesc"],
-			order = 52,
+			order = 110,
 		},
 		guild10 = {
 			type = "toggle",
 			name = L["guild10Title"],
 			desc = L["guild10Desc"],
-			order = 53,
+			order = 111,
 			get = "getGuild10",
 			set = "setGuild10",
 		},
@@ -405,7 +487,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["guild1Title"],
 			desc = L["guild1Desc"],
-			order = 55,
+			order = 112,
 			get = "getGuild1",
 			set = "setGuild1",
 		},
@@ -413,7 +495,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["guildNpcDialogueTitle"],
 			desc = L["guildNpcDialogueDesc"],
-			order = 57,
+			order = 113,
 			get = "getGuildNpcDialogue",
 			set = "setGuildNpcDialogue",
 		},
@@ -421,7 +503,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["guildBuffDroppedTitle"],
 			desc = L["guildBuffDroppedDesc"],
-			order = 58,
+			order = 114,
 			get = "getGuildBuffDropped",
 			set = "setGuildBuffDropped",
 		},
@@ -429,7 +511,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["guildZanDialogueTitle"],
 			desc = L["guildZanDialogueDesc"],
-			order = 59,
+			order = 115,
 			get = "getGuildZanDialogue",
 			set = "setGuildZanDialogue",
 		},
@@ -437,7 +519,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["guildNpcKilledTitle"],
 			desc = L["guildNpcKilledDesc"],
-			order = 60,
+			order = 116,
 			get = "getGuildNpcKilled",
 			set = "setGuildNpcKilled",
 		},
@@ -445,7 +527,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["guildCommandTitle"],
 			desc = L["guildCommandDesc"],
-			order = 61,
+			order = 117,
 			get = "getGuildCommand",
 			set = "setGuildCommand",
 		},
@@ -453,20 +535,20 @@ NWB.options = {
 			type = "toggle",
 			name = L["disableAllGuildMsgsTitle"],
 			desc = L["disableAllGuildMsgsDesc"],
-			order = 62,
+			order = 118,
 			get = "getDisableAllGuildMsgs",
 			set = "setDisableAllGuildMsgs",
 		},
 		songflowersHeader = {
 			type = "header",
 			name = L["songflowersHeaderDesc"],
-			order = 70,
+			order = 140,
 		},
 		guildSongflower = {
 			type = "toggle",
 			name = L["guildSongflowerTitle"],
 			desc = L["guildSongflowerDesc"],
-			order = 71,
+			order = 141,
 			get = "getGuildSongflower",
 			set = "setGuildSongflower",
 		},
@@ -474,7 +556,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["mySongflowerOnlyTitle"],
 			desc = L["mySongflowerOnlyDesc"],
-			order = 72,
+			order = 142,
 			get = "getMySongflowerOnly",
 			set = "setMySongflowerOnly",
 		},
@@ -482,7 +564,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["syncFlowersAllTitle"],
 			desc = L["syncFlowersAllDesc"],
-			order = 73,
+			order = 143,
 			get = "getSyncFlowersAll",
 			set = "setSyncFlowersAll",
 		},
@@ -490,7 +572,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showNewFlowerTitle"],
 			desc = L["showNewFlowerDesc"],
-			order = 74,
+			order = 144,
 			get = "getShowNewFlower",
 			set = "setShowNewFlower",
 		},
@@ -498,7 +580,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showSongflowerWorldmapMarkersTitle"],
 			desc = L["showSongflowerWorldmapMarkersDesc"],
-			order = 75,
+			order = 145,
 			get = "getShowSongflowerWorldmapMarkers",
 			set = "setShowSongflowerWorldmapMarkers",
 		},
@@ -506,7 +588,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showSongflowerMinimapMarkersTitle"],
 			desc = L["showSongflowerMinimapMarkersDesc"],
-			order = 76,
+			order = 146,
 			get = "getShowSongflowerMinimapMarkers",
 			set = "setShowSongflowerMinimapMarkers",
 		},
@@ -514,7 +596,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showTuberWorldmapMarkersTitle"],
 			desc = L["showTuberWorldmapMarkersDesc"],
-			order = 77,
+			order = 147,
 			get = "getShowTuberWorldmapMarkers",
 			set = "setShowTuberWorldmapMarkers",
 		},
@@ -522,7 +604,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showTuberMinimapMarkersTitle"],
 			desc = L["showTuberMinimapMarkersDesc"],
-			order = 78,
+			order = 148,
 			get = "getShowTuberMinimapMarkers",
 			set = "setShowTuberMinimapMarkers",
 		},
@@ -530,7 +612,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showDragonWorldmapMarkersTitle"],
 			desc = L["showDragonWorldmapMarkersDesc"],
-			order = 79,
+			order = 149,
 			get = "getShowDragonWorldmapMarkers",
 			set = "setShowDragonWorldmapMarkers",
 		},
@@ -538,7 +620,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showDragonMinimapMarkersTitle"],
 			desc = L["showDragonMinimapMarkersDesc"],
-			order = 80
+			order = 150
 			,
 			get = "getShowDragonMinimapMarkers",
 			set = "setShowDragonMinimapMarkers",
@@ -547,7 +629,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showExpiredTimersTitle"],
 			desc = L["showExpiredTimersDesc"],
-			order = 81,
+			order = 151,
 			get = "getShowExpiredTimers",
 			set = "setShowExpiredTimers",
 		},
@@ -555,7 +637,7 @@ NWB.options = {
 			type = "range",
 			name = L["expiredTimersDurationTitle"],
 			desc = L["expiredTimersDurationDesc"],
-			order = 82,
+			order = 152,
 			get = "getExpiredTimersDuration",
 			set = "setExpiredTimersDuration",
 			min = 1,
@@ -567,19 +649,19 @@ NWB.options = {
 		dmfHeader = {
 			type = "header",
 			name = L["dmfHeaderDesc"],
-			order = 90,
+			order = 170,
 		},
 		dmfText = {
 			type = "description",
-			name = "|CffDEDE42" .. L["dmfTextDesc"],
+			name = "|cFF9CD6DE" .. L["dmfTextDesc"],
 			fontSize = "medium",
-			order = 91,
+			order = 171,
 		},
 		showDmfWb = {
 			type = "toggle",
 			name = L["showDmfWbTitle"],
 			desc = L["showDmfWbDesc"],
-			order = 92,
+			order = 172,
 			get = "getShowDmfWb",
 			set = "setShowDmfWb",
 		},
@@ -587,7 +669,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["showDmfBuffWbTitle"],
 			desc = L["showDmfBuffWbDesc"],
-			order = 93,
+			order = 173,
 			get = "getShowDmfBuffWb",
 			set = "setShowDmfBuffWb",
 		},
@@ -595,26 +677,26 @@ NWB.options = {
 			type = "toggle",
 			name = L["showDmfMapTitle"],
 			desc = L["showDmfMapDesc"],
-			order = 95,
+			order = 175,
 			get = "getShowDmfMap",
 			set = "setShowDmfMap",
 		},
 		guildChatFilterHeader = {
 			type = "header",
 			name = L["guildChatFilterHeaderDesc"],
-			order = 100,
+			order = 190,
 		},
 		guildChatFilterText = {
 			type = "description",
-			name = "|CffDEDE42".. L["guildChatFilterTextDesc"],
+			name = "|cFF9CD6DE".. L["guildChatFilterTextDesc"],
 			fontSize = "medium",
-			order = 101,
+			order = 191,
 		},
 		filterYells = {
 			type = "toggle",
 			name = L["filterYellsTitle"],
 			desc = L["filterYellsDesc"],
-			order = 102,
+			order = 192,
 			get = "getFilterYells",
 			set = "setFilterYells",
 		},
@@ -622,7 +704,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["filterDropsTitle"],
 			desc = L["filterDropsDesc"],
-			order = 103,
+			order = 193,
 			get = "getFilterDrops",
 			set = "setFilterDrops",
 		},
@@ -630,7 +712,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["filterTimersTitle"],
 			desc = L["filterTimersDesc"],
-			order = 104,
+			order = 194,
 			get = "getFilterTimers",
 			set = "setFilterTimers",
 		},
@@ -638,7 +720,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["filterCommandTitle"],
 			desc = L["filterCommandDesc"],
-			order = 105,
+			order = 195,
 			get = "getFilterCommand",
 			set = "setFilterCommand",
 		},
@@ -646,7 +728,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["filterCommandResponseTitle"],
 			desc = L["filterCommandResponseDesc"],
-			order = 106,
+			order = 196,
 			get = "getFilterCommandResponse",
 			set = "setFilterCommandResponse",
 		},
@@ -654,7 +736,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["filterSongflowersTitle"],
 			desc = L["filterSongflowersDesc"],
-			order = 107,
+			order = 197,
 			get = "getFilterSongflowers",
 			set = "setFilterSongflowers",
 		},
@@ -662,26 +744,26 @@ NWB.options = {
 			type = "toggle",
 			name = L["filterNpcKilledTitle"],
 			desc = L["filterNpcKilledDesc"],
-			order = 108,
+			order = 198,
 			get = "getFilterNpcKilled",
 			set = "setFilterNpcKilled",
 		},
 		soundsHeader = {
 			type = "header",
 			name = L["soundsHeaderDesc"],
-			order = 110,
+			order = 220,
 		},
 		soundsText = {
 			type = "description",
 			name = "|CffDEDE42" .. L["soundsTextDesc"],
 			fontSize = "medium",
-			order = 111,
+			order = 221,
 		},
 		disableAllSounds = {
 			type = "toggle",
 			name = L["disableAllSoundsTitle"],
 			desc = L["disableAllSoundsDesc"],
-			order = 112,
+			order = 222,
 			get = "getDisableAllSounds",
 			set = "setDisableAllSounds",
 		},
@@ -689,7 +771,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["extraSoundOptionsTitle"],
 			desc = L["extraSoundOptionsDesc"],
-			order = 113,
+			order = 223,
 			get = "getExtraSoundOptions",
 			set = "setExtraSoundOptions",
 			--width = "double",
@@ -698,7 +780,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["soundOnlyInCityTitle"],
 			desc = L["soundOnlyInCityDesc"],
-			order = 114,
+			order = 224,
 			get = "getSoundOnlyInCity",
 			set = "setSoundOnlyInCity",
 		},
@@ -706,7 +788,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["soundsDisableInInstancesTitle"],
 			desc = L["soundsDisableInInstancesDesc"],
-			order = 115,
+			order = 225,
 			get = "getSoundsDisableInInstances",
 			set = "setSoundsDisableInInstances",
 		},
@@ -714,7 +796,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["soundsDisableInBattlegroundsTitle"],
 			desc = L["soundsDisableInBattlegroundsDesc"],
-			order = 116,
+			order = 226,
 			get = "getSoundsDisableInBattlegrounds",
 			set = "setSoundsDisableInBattlegrounds",
 		},
@@ -725,7 +807,7 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds();
 			end,
-			order = 117,
+			order = 227,
 			get = "getSoundsFirstYell",
 			set = "setSoundsFirstYell",
 		},
@@ -736,7 +818,7 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds();
 			end,
-			order = 118,
+			order = 228,
 			get = "getSoundsOneMinute",
 			set = "setSoundsOneMinute",
 		},
@@ -747,7 +829,7 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds("rend");
 			end,
-			order = 120,
+			order = 229,
 			get = "getSoundsRendDrop",
 			set = "setSoundsRendDrop",
 		},
@@ -758,7 +840,7 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds("ony");
 			end,
-			order = 121,
+			order = 230,
 			get = "getSoundsOnyDrop",
 			set = "setSoundsOnyDrop",
 		},
@@ -769,7 +851,7 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds("nef");
 			end,
-			order = 122,
+			order = 231,
 			get = "getSoundsNefDrop",
 			set = "setSoundsNefDrop",
 		},
@@ -780,7 +862,7 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds("zan");
 			end,
-			order = 123,
+			order = 232,
 			get = "getSoundsZanDrop",
 			set = "setSoundsZanDrop",
 		},
@@ -791,20 +873,20 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds("npcKilled");
 			end,
-			order = 124,
+			order = 233,
 			get = "getSoundsNpcKilled",
 			set = "setSoundsNpcKilled",
 		},
 		flashHeader = {
 			type = "header",
 			name = L["flashHeaderDesc"],
-			order = 130,
+			order = 260,
 		},
 		flashOneMin = {
 			type = "toggle",
 			name = L["flashOneMinTitle"],
 			desc = L["flashOneMinDesc"],
-			order = 131,
+			order = 261,
 			get = "getFlashOneMin",
 			set = "setFlashOneMin",
 		},
@@ -812,7 +894,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["flashFirstYellTitle"],
 			desc = L["flashFirstYellDesc"],
-			order = 132,
+			order = 262,
 			get = "getFlashFirstYell",
 			set = "setFlashFirstYell",
 		},
@@ -820,7 +902,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["flashFirstYellZanTitle"],
 			desc = L["flashFirstYellZanDesc"],
-			order = 133,
+			order = 263,
 			get = "getFlashFirstYellZan",
 			set = "setFlashFirstYellZan",
 		},
@@ -828,20 +910,20 @@ NWB.options = {
 			type = "toggle",
 			name = L["flashNpcKilledTitle"],
 			desc = L["flashNpcKilledDesc"],
-			order = 134,
+			order = 264,
 			get = "getFlashNpcKilled",
 			set = "setFlashNpcKilled",
 		},
 		dispelsHeader = {
 			type = "header",
 			name = L["dispelsHeaderDesc"],
-			order = 140,
+			order = 280,
 		},
 		dispelsMine = {
 			type = "toggle",
 			name = L["dispelsMineTitle"],
 			desc = L["dispelsMineDesc"],
-			order = 141,
+			order = 281,
 			get = "getDispelsMine",
 			set = "setDispelsMine",
 		},
@@ -849,7 +931,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["dispelsMineWBOnlyTitle"],
 			desc = L["dispelsMineWBOnlyDesc"],
-			order = 142,
+			order = 282,
 			get = "getDispelsMineWBOnly",
 			set = "setDispelsMineWBOnly",
 		},
@@ -860,7 +942,7 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds();
 			end,
-			order = 143,
+			order = 283,
 			get = "getSoundsDispelsMine",
 			set = "setSoundsDispelsMine",
 		},
@@ -868,7 +950,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["dispelsAllTitle"],
 			desc = L["dispelsAllDesc"],
-			order = 144,
+			order = 284,
 			get = "getDispelsAll",
 			set = "setDispelsAll",
 		},
@@ -876,7 +958,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["dispelsAllWBOnlyTitle"],
 			desc = L["dispelsAllWBOnlyDesc"],
-			order = 145,
+			order = 285,
 			get = "getDispelsAllWBOnly",
 			set = "setDispelsAllWBOnly",
 		},
@@ -887,20 +969,26 @@ NWB.options = {
 			values = function()
 				return NWB:getSounds();
 			end,
-			order = 146,
+			order = 286,
 			get = "getSoundsDispelsAll",
 			set = "setSoundsDispelsAll",
 		},
 		autoBuffsHeader = {
 			type = "header",
 			name = L["autoBuffsHeaderDesc"],
-			order = 160,
+			order = 300,
+		},
+		autoBuffsText = {
+			type = "description",
+			name = "|cFFFF0000" .. L["note"] .. " |cFF9CD6DE" .. L["dmfConfigWarning"],
+			fontSize = "medium",
+			order = 301,
 		},
 		autoDmfBuff = {
 			type = "toggle",
 			name = L["autoDmfBuffTitle"],
 			desc = L["autoDmfBuffDesc"],
-			order = 164,
+			order = 304,
 			get = "getAutoDmfBuff",
 			set = "setAutoDmfBuff",
 		},
@@ -928,7 +1016,7 @@ NWB.options = {
 				[7] = "Armor",
 				[8] = "Resistance",
 			},
-			order = 165,
+			order = 305,
 			width = "double",
 			--width = 1.6,
 			get = "getAutoDmfBuffType",
@@ -938,7 +1026,7 @@ NWB.options = {
 			type = "toggle",
 			name = L["autoDireMaulBuffTitle"],
 			desc = L["autoDireMaulBuffDesc"],
-			order = 166,
+			order = 306,
 			get = "getAutoDireMaulBuff",
 			set = "setAutoDireMaulBuff",
 		},
@@ -946,42 +1034,71 @@ NWB.options = {
 			type = "toggle",
 			name = L["autoBwlPortalTitle"],
 			desc = L["autoBwlPortalDesc"],
-			order = 167,
+			order = 307,
 			get = "getAutoBwlPortal",
 			set = "setAutoBwlPortal",
 		},
-		--[[autoDmfBuffCharsText = {
+		dmfSettingsList = {
+			type = "execute",
+			name = L["dmfSettingsListTitle"],
+			desc = L["dmfSettingsListDesc"],
+			func = "openDMFListFrame",
+			order = 308,
+		},
+		trimDataHeader = {
+			type = "header",
+			name = L["trimDataHeaderDesc"],
+			order = 330,
+		},
+		trimDataText = {
 			type = "description",
-			name = function()
-				local buffs = {
-					["Damage"] = L["Sayge's Dark Fortune of Damage"],
-					["Agility"] = L["Sayge's Dark Fortune of Agility"],
-					["Intelligence"] = L["Sayge's Dark Fortune of Intelligence"],
-					["Spirit"] = L["Sayge's Dark Fortune of Spirit"],
-					["Stamina"] = L["Sayge's Dark Fortune of Stamina"],
-					["Strength"] = L["Sayge's Dark Fortune of Strength"],
-					["Armor"] = L["Sayge's Dark Fortune of Armor"],
-					["Resistance"] = L["Sayge's Dark Fortune of Resistance"],
-				};
-				local text = NWB.prefixColor .. L["autoDmfBuffCharsText"] .. "\n";
-				if (NWB.data.dmfBuffSettings and next(NWB.data.dmfBuffSettings)) then
-					for k, v in NWB:pairsByKeys(NWB.data.layers) do
-						local classColorHex = "FFFFFFFF";
-						if (NWB.data.myChars[k]) then
-							_, _, _, classColorHex = GetClassColor(NWB.data.myChars[k].englishClass);
-						end
-						text = text .. "|c" .. classColorHex .. k .. " |cFFFFFFFF->|CffDEDE42 " .. buffs[v] .. "\n";
-					end
-					text = text .. "All other alts using " .. buffs[NWB.db.global.autoDmfBuffType] .. ".";
-				else
-					text = text .. "|CffDEDE42No character specific buffs set yet, all alts using "
-							.. buffs[NWB.db.global.autoDmfBuffType] .. ".";
-				end
-				return text;
-			end,
+			name = "|cFF9CD6DE".. L["trimDataTextDesc"],
 			fontSize = "medium",
-			order = 168,
-		},]]
+			order = 331,
+		},
+		trimDataBelowLevel = {
+			type = "range",
+			name = L["trimDataBelowLevelTitle"],
+			desc = L["trimDataBelowLevelDesc"],
+			order = 332,
+			get = "getTrimDataBelowLevel",
+			set = "setTrimDataBelowLevel",
+			min = 1,
+			max = 60,
+			softMin = 1,
+			softMax = 60,
+			step = 1,
+			width = "double",
+		},
+		trimDataBelowLevelButton = {
+			type = "execute",
+			name = L["trimDataBelowLevelButtonTitle"],
+			desc = L["trimDataBelowLevelButtonDesc"],
+			func = "removeCharsBelowLevel",
+			order = 333,
+			--width = 1.7,
+			confirm = function()
+				return string.format(L["trimDataBelowLevelButtonConfirm"], "|cFFFFFF00" .. NWB.db.global.trimDataBelowLevel .. "|r");
+			end,
+		},
+		trimDataText2 = {
+			type = "description",
+			name = "|cFF9CD6DE".. L["trimDataText2Desc"],
+			fontSize = "medium",
+			order = 334,
+		},
+		trimDataCharInput = {
+			type = "input",
+			name = L["trimDataCharInputTitle"],
+			desc = L["trimDataCharInputDesc"],
+			get = "getTrimDataCharInput",
+			set = "setTrimDataCharInput",
+			order = 335,
+			--width = 1.7,
+			confirm = function(self, input)
+				return string.format(L["trimDataCharInputConfirm"], "|cFFFFFF00" .. input .. "|r");
+			end,
+		},
 	},
 };
 
@@ -1162,10 +1279,18 @@ NWB.optionDefaults = {
 		timerLogShowNef = true,
 		timerLogMergeLayers = true,
 		copyFormatDiscord = false,
-		
+		trimDataBelowLevel = 1,
+		showUnbuffedAlts = false,
+		timerWindowWidth = 450,
+		timerWindowHeight = 300,
+		buffWindowWidth = 475,
+		buffWindowHeight = 300,
+		ignoreKillData = false,
+		noOverwrite = false,
 		resetLayers4 = true, --Reset layers one time (sometimes needed when upgrading from old version.
 		resetSongflowers = true, --Reset songflowers one time.
 		experimental = true, --Enable features being tested on occasion.
+		resetTimerData1 = true,
 		resetLayerMaps = true,
 		convertSettings = true,
 		wipeSingleLayer = true,
@@ -1251,7 +1376,7 @@ function NWB:buildRealmFactionData()
 	end
 	if (not self.db.global[NWB.realm][NWB.faction].dmfBuffSettings) then
 		--Enable after testing at the next DMF.
-		--self.db.global[NWB.realm][NWB.faction].dmfBuffSettings = {};
+		self.db.global[NWB.realm][NWB.faction].dmfBuffSettings = {};
 	end
 	local localizedClass, englishClass = UnitClass("player");
 	self.db.global[NWB.realm][NWB.faction].myChars[UnitName("player")].localizedClass = localizedClass;
@@ -1439,13 +1564,36 @@ function NWB:getColorizePrefixLinks(info)
 	return self.db.global.colorizePrefixLinks;
 end
 
---Show all alts in the buffs window.
+--Show buff stats.
+function NWB:setShowBuffStats(info, value)
+	self.db.global.showBuffStats = value;
+	NWB.showStatsButton:SetChecked(value);
+	NWB:recalcBuffListFrame(true);
+end
+
+function NWB:getShowBuffStats(info)
+	return self.db.global.showBuffStats;
+end
+
+--Show all alts with buff stats in the buffs window.
 function NWB:setShowAllAlts(info, value)
-	self.db.global.showAllAlts = value;
+	self.db.global.showBuffAllStats = value;
+	NWB.showStatsAllButton:SetChecked(value);
+	NWB:recalcBuffListFrame(true);
 end
 
 function NWB:getShowAllAlts(info)
-	return self.db.global.showAllAlts;
+	return self.db.global.showBuffAllStats;
+end
+
+--Show unbuffed alts in the buffs window.
+function NWB:setShowUnbuffedAlts(info, value)
+	self.db.global.showUnbuffedAlts = value;
+	NWB:recalcBuffListFrame(true);
+end
+
+function NWB:getShowUnbuffedAlts(info)
+	return self.db.global.showUnbuffedAlts;
 end
 
 --Flash one min warnings.
@@ -1498,16 +1646,6 @@ end
 
 function NWB:getMinimapButton(info)
 	return self.db.global.minimapButton;
-end
-
---Show buff stats.
-function NWB:setShowBuffStats(info, value)
-	self.db.global.showBuffStats = value;
-	NWB:recalcBuffListFrame();
-end
-
-function NWB:getShowBuffStats(info)
-	return self.db.global.showBuffStats;
 end
 
 --Chat 30 minute warning.
@@ -2373,8 +2511,7 @@ end
 
 --Which DMF buff to get.
 function NWB:setAutoDmfBuffType(info, value)
-	self.db.global.autoDmfBuffType = value;
-	if (NWB.data.dmfBuffSettings and NWB.data.dmfBuffSettings[UnitName("player")]) then
+	if (NWB.data.dmfBuffSettings) then
 		NWB.data.dmfBuffSettings[UnitName("player")] = value;
 	else
 		self.db.global.autoDmfBuffType = value;
@@ -2419,4 +2556,242 @@ end
 
 function NWB:getMinimapLayerHover(info)
 	return self.db.global.minimapLayerHover;
+end
+
+--Trim data of characters below this level.
+function NWB:setTrimDataBelowLevel(info, value)
+	self.db.global.trimDataBelowLevel = value;
+end
+
+function NWB:getTrimDataBelowLevel(info)
+	return self.db.global.trimDataBelowLevel;
+end
+
+--Trim data for single char.
+function NWB:setTrimDataCharInput(info, value)
+	NWB:removeSingleChar(value);
+end
+
+function NWB:getTrimDataCharInput(info)
+
+end
+
+--Window dimensions.
+function NWB:setTimerWindowWidth(info, value)
+	self.db.global.timerWindowWidth = value;
+	_G["NWBlayerFrame"]:SetWidth(value);
+	_G["NWBlayerFrame"].EditBox:SetWidth(value - 30);
+end
+
+function NWB:getTimerWindowWidth(info)
+	return self.db.global.timerWindowWidth;
+end
+
+--Window dimensions.
+function NWB:setTimerWindowHeight(info, value)
+	self.db.global.timerWindowHeight = value;
+	_G["NWBlayerFrame"]:SetHeight(value);
+end
+
+function NWB:getTimerWindowHeight(info)
+	return self.db.global.timerWindowHeight;
+end
+
+--Window dimensions.
+function NWB:setBuffWindowWidth(info, value)
+	self.db.global.buffWindowWidth = value;
+	_G["NWBbuffListFrame"]:SetWidth(value);
+	_G["NWBbuffListFrame"].EditBox:SetWidth(value - 30);
+end
+
+function NWB:getBuffWindowWidth(info)
+	return self.db.global.buffWindowWidth;
+end
+
+--Window dimensions.
+function NWB:setBuffWindowHeight(info, value)
+	self.db.global.buffWindowHeight = value;
+	_G["NWBbuffListFrame"]:SetHeight(value);
+end
+
+function NWB:getBuffWindowHeight(info)
+	return self.db.global.buffWindowHeight;
+end
+
+function NWB:setIgnoreKillData(info, value)
+	self.db.global.ignoreKillData = value;
+end
+
+function NWB:getIgnoreKillData(info)
+	return self.db.global.ignoreKillData;
+end
+
+function NWB:setNoOverwrite(info, value)
+	self.db.global.noOverwrite = value;
+end
+
+function NWB:getNoOverwrite(info)
+	return self.db.global.noOverwrite;
+end
+
+--DMF settings list frame.
+local NWBDMFListFrame = CreateFrame("ScrollFrame", "NWBDMFListFrame", UIParent, "InputScrollFrameTemplate");
+NWBDMFListFrame:Hide();
+NWBDMFListFrame:SetToplevel(true);
+NWBDMFListFrame:SetMovable(true);
+NWBDMFListFrame:EnableMouse(true);
+tinsert(UISpecialFrames, "NWBDMFListFrame");
+NWBDMFListFrame:SetPoint("CENTER", UIParent, 0, 100);
+NWBDMFListFrame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
+NWBDMFListFrame:SetBackdropColor(0,0,0,.5);
+NWBDMFListFrame.CharCount:Hide();
+NWBDMFListFrame:SetFrameStrata("HIGH");
+NWBDMFListFrame.EditBox:SetAutoFocus(false);
+NWBDMFListFrame.EditBox:SetScript("OnKeyDown", function(self, arg)
+	--If control key is down keep focus for copy/paste to work.
+	--Otherwise remove focus so "enter" can be used to open chat and not have a stuck cursor on this edit box.
+	if (not IsControlKeyDown()) then
+		NWBDMFListFrame.EditBox:ClearFocus();
+	end
+end)
+NWBDMFListFrame.EditBox:SetScript("OnShow", function(self, arg)
+	NWBDMFListFrame:SetVerticalScroll(0);
+end)
+local dmfListUpdateTime = 0;
+NWBDMFListFrame:HookScript("OnUpdate", function(self, arg)
+	--Only update once per second.
+	if (GetServerTime() - dmfListUpdateTime > 0 and self:GetVerticalScrollRange() == 0) then
+		dmfListUpdateTime = GetServerTime();
+		NWB:recalcDMFListFrame();
+	end
+end)
+NWBDMFListFrame.fs = NWBDMFListFrame:CreateFontString("NWBDMFListFrameFS", "HIGH");
+NWBDMFListFrame.fs:SetPoint("TOP", 0, -0);
+NWBDMFListFrame.fs:SetFont(NWB.regionFont, 14);
+NWBDMFListFrame.fs:SetText("|cFFFFFF00Darkmoon Faire Buff Settings|r");
+
+local NWBDMFListDragFrame = CreateFrame("Frame", "NWBDMFListDragFrame", NWBDMFListFrame);
+NWBDMFListDragFrame:SetToplevel(true);
+NWBDMFListDragFrame:EnableMouse(true);
+NWBDMFListDragFrame:SetWidth(205);
+NWBDMFListDragFrame:SetHeight(38);
+NWBDMFListDragFrame:SetPoint("TOP", 0, 4);
+NWBDMFListDragFrame:SetFrameLevel(131);
+NWBDMFListDragFrame.tooltip = CreateFrame("Frame", "NWBDMFListDragTooltip", NWBDMFListDragFrame, "TooltipBorderedFrameTemplate");
+NWBDMFListDragFrame.tooltip:SetPoint("CENTER", NWBDMFListDragFrame, "TOP", 0, 12);
+NWBDMFListDragFrame.tooltip:SetFrameStrata("TOOLTIP");
+NWBDMFListDragFrame.tooltip:SetFrameLevel(9);
+NWBDMFListDragFrame.tooltip:SetAlpha(.8);
+NWBDMFListDragFrame.tooltip.fs = NWBDMFListDragFrame.tooltip:CreateFontString("NWBDMFListDragTooltipFS", "HIGH");
+NWBDMFListDragFrame.tooltip.fs:SetPoint("CENTER", 0, 0.5);
+NWBDMFListDragFrame.tooltip.fs:SetFont(NWB.regionFont, 12);
+NWBDMFListDragFrame.tooltip.fs:SetText("Hold to drag");
+NWBDMFListDragFrame.tooltip:SetWidth(NWBDMFListDragFrame.tooltip.fs:GetStringWidth() + 16);
+NWBDMFListDragFrame.tooltip:SetHeight(NWBDMFListDragFrame.tooltip.fs:GetStringHeight() + 10);
+NWBDMFListDragFrame:SetScript("OnEnter", function(self)
+	NWBDMFListDragFrame.tooltip:Show();
+end)
+NWBDMFListDragFrame:SetScript("OnLeave", function(self)
+	NWBDMFListDragFrame.tooltip:Hide();
+end)
+NWBDMFListDragFrame.tooltip:Hide();
+NWBDMFListDragFrame:SetScript("OnMouseDown", function(self, button)
+	if (button == "LeftButton" and not self:GetParent().isMoving) then
+		self:GetParent().EditBox:ClearFocus();
+		self:GetParent():StartMoving();
+		self:GetParent().isMoving = true;
+		--self:GetParent():SetUserPlaced(false);
+	end
+end)
+NWBDMFListDragFrame:SetScript("OnMouseUp", function(self, button)
+	if (button == "LeftButton" and self:GetParent().isMoving) then
+		self:GetParent():StopMovingOrSizing();
+		self:GetParent().isMoving = false;
+	end
+end)
+NWBDMFListDragFrame:SetScript("OnHide", function(self)
+	if (self:GetParent().isMoving) then
+		self:GetParent():StopMovingOrSizing();
+		self:GetParent().isMoving = false;
+	end
+end)
+
+--Top right X close button.
+local NWBDMFListFrameClose = CreateFrame("Button", "NWBDMFListFrameClose", NWBDMFListFrame, "UIPanelCloseButton");
+NWBDMFListFrameClose:SetPoint("TOPRIGHT", -12, 3.75);
+NWBDMFListFrameClose:SetWidth(20);
+NWBDMFListFrameClose:SetHeight(20);
+NWBDMFListFrameClose:SetFrameLevel(3);
+NWBDMFListFrameClose:SetScript("OnClick", function(self, arg)
+	NWBDMFListFrame:Hide();
+end)
+--Adjust the X texture so it fits the entire frame and remove the empty clickable space around the close button.
+--Big thanks to Meorawr for this.
+NWBDMFListFrameClose:GetNormalTexture():SetTexCoord(0.1875, 0.8125, 0.1875, 0.8125);
+NWBDMFListFrameClose:GetHighlightTexture():SetTexCoord(0.1875, 0.8125, 0.1875, 0.8125);
+NWBDMFListFrameClose:GetPushedTexture():SetTexCoord(0.1875, 0.8125, 0.1875, 0.8125);
+NWBDMFListFrameClose:GetDisabledTexture():SetTexCoord(0.1875, 0.8125, 0.1875, 0.8125);
+
+function NWB:openDMFListFrame()
+	NWBDMFListFrame.fs:SetFont(NWB.regionFont, 14);
+	if (NWBDMFListFrame:IsShown()) then
+		NWBDMFListFrame:Hide();
+	else
+		NWBDMFListFrame:SetHeight(300);
+		NWBDMFListFrame:SetWidth(450);
+		local fontSize = false
+		NWBDMFListFrame.EditBox:SetFont(NWB.regionFont, 14);
+		NWBDMFListFrame.EditBox:SetWidth(NWBDMFListFrame:GetWidth() - 30);
+		NWBDMFListFrame:Show();
+		NWB:recalcDMFListFrame();
+		--Changing scroll position requires a slight delay.
+		--Second delay is a backup.
+		C_Timer.After(0.05, function()
+			NWBDMFListFrame:SetVerticalScroll(0);
+		end)
+		C_Timer.After(0.3, function()
+			NWBDMFListFrame:SetVerticalScroll(0);
+		end)
+		--So interface options and this frame will open on top of each other.
+		if (InterfaceOptionsFrame:IsShown()) then
+			NWBDMFListFrame:SetFrameStrata("DIALOG")
+		else
+			NWBDMFListFrame:SetFrameStrata("HIGH")
+		end
+	end
+end
+
+function NWB:recalcDMFListFrame()
+	local buffs = {
+		["Damage"] = L["Sayge's Dark Fortune of Damage"],
+		["Agility"] = L["Sayge's Dark Fortune of Agility"],
+		["Intelligence"] = L["Sayge's Dark Fortune of Intelligence"],
+		["Spirit"] = L["Sayge's Dark Fortune of Spirit"],
+		["Stamina"] = L["Sayge's Dark Fortune of Stamina"],
+		["Strength"] = L["Sayge's Dark Fortune of Strength"],
+		["Armor"] = L["Sayge's Dark Fortune of Armor"],
+		["Resistance"] = L["Sayge's Dark Fortune of Resistance"],
+	};
+	NWBDMFListFrame.fs:SetText(NWB.prefixColor .. L["autoDmfBuffCharsText"]);
+	NWBDMFListFrame.EditBox:SetText("\n\n");
+	if (not next(NWB.data.dmfBuffSettings)) then
+		NWBDMFListFrame.EditBox:Insert("|cffDEDE42No character specific buffs set yet.\n\n");
+		NWBDMFListFrame.EditBox:Insert("|cffDEDE42All characters are using default |cFF9CD6DE" .. buffs[NWB.db.global.autoDmfBuffType] .. "|cffDEDE42.\n");
+	else
+		local text = "";
+		if (NWB.data.dmfBuffSettings and next(NWB.data.dmfBuffSettings)) then
+			for k, v in NWB:pairsByKeys(NWB.data.dmfBuffSettings) do
+				local classColorHex = "FFFFFFFF";
+				if (NWB.data.myChars[k]) then
+					_, _, _, classColorHex = GetClassColor(NWB.data.myChars[k].englishClass);
+				end
+				text = text .. "|c" .. classColorHex .. k .. " |cFFFFFFFF->|cFF9CD6DE " .. buffs[v] .. "\n";
+			end
+			text = text .. "\n|cffDEDE42All other alts using default |cFF9CD6DE" .. buffs[NWB.db.global.autoDmfBuffType] .. "|cffDEDE42.";
+			NWBDMFListFrame.EditBox:Insert(text);
+		else
+			NWBDMFListFrame.EditBox:Insert("|cffDEDE42No character specific buffs set yet.\n\n");
+			NWBDMFListFrame.EditBox:Insert("|cffDEDE42All characters are using default |cFF9CD6DE" .. buffs[NWB.db.global.autoDmfBuffType] .. "|cffDEDE42.\n");
+		end
+	end
 end

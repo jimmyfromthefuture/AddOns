@@ -31,10 +31,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "WyvernSting", 26180)
 	self:Log("SPELL_AURA_APPLIED", "WyvernStingApplied", 26180)
@@ -66,7 +62,7 @@ do
 end
 
 function mod:Enrage(args)
-	self:Message2(26051, "yellow")
+	self:Message(26051, "yellow")
 	if self:Dispeller("enrage", true) then
 		self:PlaySound(26051, "warning")
 	end
@@ -86,7 +82,7 @@ function mod:BerserkApplied(args)
 	self:CancelDelayedMessage(CL.custom_sec:format(berserk, 5))
 	self:CancelDelayedMessage(CL.custom_end:format(self.displayName, berserk))
 
-	self:Message2("berserk", "orange", CL.percent:format(30, args.spellName))
+	self:Message("berserk", "orange", CL.percent:format(30, args.spellName), false)
 	self:PlaySound("berserk", "alarm")
 end
 
@@ -95,7 +91,7 @@ function mod:UNIT_HEALTH_FREQUENT(event, unit)
 		local hp = UnitHealth(unit)
 		if hp < 36  then
 			self:UnregisterUnitEvent(event, "target", "focus")
-			self:Message2("berserk", "red", CL.soon:format(self:SpellName(26662)), false)
+			self:Message("berserk", "red", CL.soon:format(self:SpellName(26662)), false)
 		end
 	end
 end

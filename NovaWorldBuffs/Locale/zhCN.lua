@@ -533,8 +533,8 @@ L["showBuffStatsTitle"] = "显示Buff计数器";
 L["showBuffStatsDesc"] = "在/buffs命令出现的窗口中显示你获得的每个世界Buff的次数.";
 
 L["buffResetButtonTooltip"] = "重置所有已记录的Buffs.\nBuff计数器数据不会被重置."; --Reset button tooltip for the /buffs frame.
-L["time"] = "次"; --Singular - This shows how many timers you got a buff. Example: (1 time)
-L["times"] = "次"; --Plural - This shows how many timers you got a buff. Example: (5 times)
+L["time"] = "(%s 次)"; --Singular - This shows how many timers you got a buff. Example: (1 time)
+L["times"] = "(%s 次)"; --Plural - This shows how many timers you got a buff. Example: (5 times)
 L["flowerWarning"] = "你在开启了位面的服务器上采集了风歌花,虽然风歌花计时器已启用,但是自你到达费伍德森林后,尚未选中任何NPC,所以插件无法记录采集时间.";
 
 L["mmColorTitle"] = "小地图位面信息颜色";
@@ -574,3 +574,36 @@ L["chatNpcKilledDesc"] = "当奥妮克希亚或者奈法利安Buff NPC被击杀�
 
 L["flashNpcKilledTitle"] = "NPC被击杀后闪烁";
 L["flashNpcKilledDesc"] = "当一个Buff NPC被击杀后,闪烁魔兽世界图标?";
+
+L["trimDataHeaderDesc"] = "清除数据";
+ 
+L["trimDataBelowLevelTitle"] = "删除的最高等级";
+L["trimDataBelowLevelDesc"] = "选择要从数据库中删除角色的最高等级, 所有已选等级和低于该等级的角色都将被删除.";
+ 
+L["trimDataBelowLevelButtonTitle"] = "删除角色";
+L["trimDataBelowLevelButtonDesc"] = "单击此按钮可从此插件数据库中删除具有所选等级及更低等级的所有角色. 注意: 这将永久删除Buff计数数据.";
+ 
+L["trimDataTextDesc"] = "从Buff数据库中删除多个角色:";
+L["trimDataText2Desc"] = "从Buff数据库中删除一个角色:";
+ 
+L["trimDataCharInputTitle"] = "删除一个输入的角色";
+L["trimDataCharInputDesc"] = "在此处输入要删除的角色, 格式为 名称-服务器(区分大小写). 注意: 这将永久删除Buff计数数据.";
+ 
+L["trimDataBelowLevelButtonConfirm"] = "你确定要从数据库中删除 %s 级以下的所有角色吗?";
+L["trimDataCharInputConfirm"] = "你确定要从数据库中删除 %s 角色?";
+ 
+L["trimDataMsg1"] = "Buff记录已重置."
+L["trimDataMsg2"] = "删除 %s 级以下的所有角色.";
+L["trimDataMsg3"] = "删除: %s.";
+L["trimDataMsg4"] = "完成, 找不到角色.";
+L["trimDataMsg5"] = "完成, 已删除 %s 角色.";
+L["trimDataMsg6"] = "请输入有效的角色名称以从数据库中删除.";
+L["trimDataMsg7"] = "该角色名称 %s 不包含服务器名称, 请输入 服务器名称.";
+L["trimDataMsg8"] = "从数据库中删除 %s 时出错, 角色未找到(名称区分大小写).";
+L["trimDataMsg9"] = "从数据库中删除 %s .";
+
+L["serverTime"] = "服务器时间";
+L["serverTimeShort"] = "服务器时间";
+
+L["showUnbuffedAltsTitle"] = "显示没有Buff的小号";
+L["showUnbuffedAltsDesc"] = "在输入 /buffs 出现的窗口中显示所有没有任何Buff的小号?这样你就可以查看哪些小号没有Buff了.";

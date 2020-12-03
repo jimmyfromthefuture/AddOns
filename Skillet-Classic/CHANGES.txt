@@ -1,15 +1,22 @@
 ------------------------------------------------------------------------
-r165 | bsmorgan | 2020-08-20 14:19:25 +0000 (Thu, 20 Aug 2020) | 1 line
+r169 | bsmorgan | 2020-10-11 00:43:58 +0000 (Sun, 11 Oct 2020) | 1 line
 Changed paths:
-   M /trunk/Skillet-Classic.toc
+   M /trunk/RecipeGroups.lua
 
-- Update .toc
+- Fix Custom Groups (issue #179)
 ------------------------------------------------------------------------
-r164 | bsmorgan | 2020-06-08 12:32:24 +0000 (Mon, 08 Jun 2020) | 1 line
+r168 | bsmorgan | 2020-10-02 20:36:26 +0000 (Fri, 02 Oct 2020) | 2 lines
 Changed paths:
-   M /trunk/Skillet.lua
-   M /trunk/SkilletOptions.lua
+   M /trunk/UI/MainFrame.lua
 
-- Add "/skillet flushplayerdata"
+- Adjust debug statements
+
+------------------------------------------------------------------------
+r167 | bsmorgan | 2020-09-29 15:22:11 +0000 (Tue, 29 Sep 2020) | 1 line
+Changed paths:
+   M /trunk/UI/MainFrame.lua
+   M /trunk/UI/MainFrame.xml
+
+- Add alt-click to link reagents to chat (issue #178)
 ------------------------------------------------------------------------
 

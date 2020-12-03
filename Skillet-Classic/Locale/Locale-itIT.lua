@@ -127,6 +127,8 @@ L["Ignored Materials Clear"] = "Ignored Materials Clear"
 L["Ignored Materials List"] = "Ignored Materials List"
 L["IGNORELISTDESC"] = "Open the Ignored Materials list frame."
 L["Illusions"] = "Illusions"
+--[[Translation missing --]]
+L["in your bank"] = "in your bank"
 L["in your inventory"] = "in your inventory"
 L["Include alts"] = "Includi alt"
 L["Include bank"] = "Include bank"

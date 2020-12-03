@@ -30,10 +30,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "FrostBreath", 21099)
 	self:Log("SPELL_CAST_START", "MassiveGeyser", 22421)
@@ -44,12 +40,12 @@ end
 --
 
 function mod:FrostBreath(args)
-	self:Message2(21099, "yellow")
+	self:Message(21099, "yellow")
 	self:PlaySound(21099, "info")
 	self:CastBar(21099, 2)
 end
 
 function mod:MassiveGeyser(args)
-	self:Message2(22421, "orange")
+	self:Message(22421, "orange")
 	self:PlaySound(22421, "alarm")
 end

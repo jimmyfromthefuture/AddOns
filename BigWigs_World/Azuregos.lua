@@ -35,10 +35,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	--self:ScheduleTimer("CheckForEngage", 1)
 	--self:RegisterEvent("BOSS_KILL")
@@ -62,18 +58,18 @@ end
 --end
 
 function mod:Reflection(args)
-	self:Message2(22067, "yellow")
+	self:Message(22067, "yellow")
 	self:PlaySound(22067, "long")
 	self:Bar(22067, 10)
 end
 
 function mod:ReflectionRemoved(args)
-	self:Message2(22067, "yellow", CL.over:format(args.spellName))
+	self:Message(22067, "yellow", CL.over:format(args.spellName))
 	self:PlaySound(22067, "info")
 end
 
 function mod:CHAT_MSG_MONSTER_YELL(_, msg)
 	if msg:find(L.teleport_trigger, nil, true) then
-		self:Message2("teleport", "red", L.teleport_message, false)
+		self:Message("teleport", "red", L.teleport_message, false)
 	end
 end

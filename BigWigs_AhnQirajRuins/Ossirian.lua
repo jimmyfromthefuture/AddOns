@@ -45,10 +45,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "Weakness", 25181, 25177, 25178, 25180, 25183)
 	self:Log("SPELL_AURA_REMOVED", "WeaknessRemoved", 25181, 25177, 25178, 25180, 25183)
@@ -56,7 +52,7 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	self:Message2(25176, "red") -- Strength of Ossirian
+	self:Message(25176, "red") -- Strength of Ossirian
 end
 
 --------------------------------------------------------------------------------
@@ -64,7 +60,7 @@ end
 --
 
 function mod:Weakness(args)
-	self:Message2("debuff", "yellow", args.spellName, icons[args.spellName])
+	self:Message("debuff", "yellow", args.spellName, icons[args.spellName])
 	self:PlaySound("debuff", "info")
 	self:Bar("debuff", 45, args.spellName, icons[args.spellName])
 
@@ -75,9 +71,9 @@ function mod:Weakness(args)
 end
 
 function mod:WeaknessRemoved(args)
-	self:Message2("debuff", "yellow", CL.over:format(args.spellName), icons[args.spellName])
+	self:Message("debuff", "yellow", CL.over:format(args.spellName), icons[args.spellName])
 end
 
 function mod:StrengthOfOssirian(args)
-	self:Message2(25176, "red")
+	self:Message(25176, "red")
 end

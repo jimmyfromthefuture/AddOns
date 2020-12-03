@@ -35,10 +35,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "MarkOfKazzak", 21056)
 	self:Log("SPELL_AURA_APPLIED", "TwistedReflection", 21063)
@@ -58,14 +54,14 @@ end
 --
 
 function mod:MarkOfKazzak(args)
-	self:TargetMessage2(21056, "yellow", args.destName)
+	self:TargetMessage(21056, "yellow", args.destName)
 	if self:Me(args.destGUID) then
 		self:PlaySound(21056, "alert")
 	end
 end
 
 function mod:TwistedReflection(args)
-	self:TargetMessage2(21063, "orange", args.destName)
+	self:TargetMessage(21063, "orange", args.destName)
 end
 
 function mod:CHAT_MSG_MONSTER_YELL(_, msg)

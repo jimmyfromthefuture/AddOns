@@ -3,7 +3,7 @@ local Data = ECSLoader:ImportModule("Data")
 ---@type DataUtils
 local DataUtils = ECSLoader:ImportModule("DataUtils")
 
-local _GetTalentModifierDefense, _GetItemModifierBlockValue
+local _GetTalentModifierDefense, _GetItemModifierBlockValue, _GetDefenseValueOnItems
 
 
 ---@return number
@@ -37,6 +37,47 @@ function Data:GetDefenseValue()
     skillModifier = skillModifier + _GetTalentModifierDefense()
 
     return skillRank .. " + " .. skillModifier
+end
+
+_GetDefenseValueOnItems = function ()
+    local defense = 0
+    for i = 1, 18 do
+        local itemLink = GetInventoryItemLink("player", i)
+        if itemLink then
+            local stats = GetItemStats(itemLink)
+            if stats then
+                local statDefense = stats["ITEM_MOD_DEFENSE_SKILL_RATING_SHORT"]
+                if statDefense then
+                    defense = defense + statDefense + 1
+                end
+            end
+            local enchant = DataUtils:GetEnchantFromItemLink(itemLink)
+            if enchant and enchant == Data.enchantIds.BRACER_MANA_REGENERATION then
+                defense = defense + 4
+            end
+            -- Priest ZG Enchant
+            if enchant and enchant == Data.enchantIds.PROPHETIC_AURA then
+                defense = defense + 4
+            end
+        end
+    end
+
+    -- Check weapon enchants (e.g. Mana Oil)
+    local hasMainEnchant, _, _, mainHandEnchantID = GetWeaponEnchantInfo()
+    mainHandEnchantID = tostring(mainHandEnchantID)
+    if (hasMainEnchant) then
+        if mainHandEnchantID == Data.enchantIds.BRILLIANT_MANA_OIL then
+            defense = defense + 12
+        end
+        if mainHandEnchantID == Data.enchantIds.LESSER_MANA_OIL then
+            defense = defense + 8
+        end
+        if mainHandEnchantID == Data.enchantIds.MINOR_MANA_OIL then
+            defense = defense + 4
+        end
+    end
+
+    return defense
 end
 
 ---@return number

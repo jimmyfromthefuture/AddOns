@@ -6,6 +6,8 @@ local UnitName, GetTime, GetCursorPosition, UnitIsUnit = UnitName, GetTime, GetC
 local select, floor, tonumber, tostring, string_sub, string_find, string_len, bit_band, type, unpack, pairs, format, strsplit = select, floor, tonumber, tostring, string.sub, string.find, string.len, bit.band, type, unpack, pairs, format, strsplit
 local string_gsub, string_match = string.gsub, string.match
 local RAID_CLASS_COLORS, COMBATLOG_OBJECT_TYPE_MASK, COMBATLOG_OBJECT_CONTROL_MASK, COMBATLOG_OBJECT_REACTION_MASK, COMBATLOG_OBJECT_AFFILIATION_MASK, COMBATLOG_OBJECT_SPECIAL_MASK = RAID_CLASS_COLORS, COMBATLOG_OBJECT_TYPE_MASK, COMBATLOG_OBJECT_CONTROL_MASK, COMBATLOG_OBJECT_REACTION_MASK, COMBATLOG_OBJECT_AFFILIATION_MASK, COMBATLOG_OBJECT_SPECIAL_MASK
+local UnitGroupRolesAssigned = UnitGroupRolesAssigned or ExRT.NULLfunc
+local GetRaidRosterInfo = GetRaidRosterInfo
 
 do
 	local antiSpamArr = {}
@@ -44,7 +46,7 @@ do
 			return 0.8,0.8,0.8
 		end
 	end
-	
+
 	function ExRT.F.classColorByGUID(guid)
 		local class,_ = ""
 		if guid and guid ~= "" and guid ~= "0000000000000000" then
@@ -89,15 +91,15 @@ function ExRT.F.splitLongLine(text,maxLetters,SpellLinksEnabled)
 				lettersNow = lastC - 1
 			end
 		end
-		
+
 		local utf8pos = 1
 		local textLen = string.len(text)
 		while true do
 			local char = string.sub(text,utf8pos,utf8pos)
 			local c = char:byte()
-			
+
 			local lastPos = utf8pos
-			
+
 			if c > 0 and c <= 127 then
 				utf8pos = utf8pos + 1
 			elseif c >= 194 and c <= 223 then
@@ -109,14 +111,14 @@ function ExRT.F.splitLongLine(text,maxLetters,SpellLinksEnabled)
 			else
 				utf8pos = utf8pos + 1
 			end
-			
+
 			if utf8pos > lettersNow then
 				lettersNow = lastPos - 1
 				break
 			elseif utf8pos >= textLen then
 				break
-			end		
-		end		
+			end
+		end
 		result[#result + 1] = string.sub(text,1,lettersNow)
 		text = string.sub(text,lettersNow+1)
 	until string.len(text) < maxLetters
@@ -221,7 +223,7 @@ function ExRT.F.GetRaidDiffMaxGroup()
 		return 8
 	else
 		return 5
-	end	
+	end
 end
 
 function ExRT.F.GetDifficultyForCooldownReset()
@@ -288,22 +290,22 @@ function ExRT.F.GetUnitInfoByUnitFlag(unitFlag,infoType)
 	if infoType == 1 then
 		return bit_band(unitFlag,COMBATLOG_OBJECT_TYPE_MASK)
 		--[1024]="player", [2048]="NPC", [4096]="pet", [8192]="GUARDIAN", [16384]="OBJECT"
-		
+
 	--> CONTROL
 	elseif infoType == 2 then
 		return bit_band(unitFlag,COMBATLOG_OBJECT_CONTROL_MASK)
 		--[256]="by players", [512]="by NPC",
-		
+
 	--> REACTION
 	elseif infoType == 3 then
 		return bit_band(unitFlag,COMBATLOG_OBJECT_REACTION_MASK)
 		--[16]="FRIENDLY", [32]="NEUTRAL", [64]="HOSTILE"
-		
+
 	--> Controller affiliation
 	elseif infoType == 4 then
 		return bit_band(unitFlag,COMBATLOG_OBJECT_AFFILIATION_MASK)
 		--[1]="player", [2]="PARTY", [4]="RAID", [8]="OUTSIDER"
-		
+
 	--> Special
 	elseif infoType == 5 then
 		return bit_band(unitFlag,COMBATLOG_OBJECT_SPECIAL_MASK)
@@ -334,7 +336,7 @@ end
 function ExRT.F.dtime(...)
 	return nil
 end
-if ExRT.T == "D" or ExRT.T == "DU" then	--debug or debug ultra
+if ExRT.isDev then	--debug or debug ultra
 	ExRT.F.dprint = function(...)
 		print(...)
 	end
@@ -505,6 +507,81 @@ do
 	end
 end
 
+do
+	local printDiff = false
+	local printTable = nil
+	local function cmp(t1,t2,r,p)
+		local c,t = 0,0
+		p = p or "."
+		for k,v in pairs(t1) do
+			if type(v) == "table" then
+				if type(t2[k]) == "table" then
+					local c2,t2 = cmp(v,t2[k],false,p..k..".")
+					c = c + c2
+					t = t + t2
+				else
+					t = t + 1
+					if printTable then
+						printTable[p..k] = true
+					elseif printDiff then
+						print(p..k)
+					end
+				end
+			else
+				t = t + 1
+				if t1[k] == t2[k] then
+					c = c + 1
+				elseif type(v) == "number" and type(t2[k]) == "number" and tostring(v) == tostring(t2[k]) then
+					c = c + 1
+				elseif printTable then
+					printTable[p..k] = true
+				elseif printDiff then
+					print(p..k)
+				end
+			end
+		end
+		if not r then
+			local c2,t2 = cmp(t2,t1,true,p)
+			c = c + c2
+			t = t + t2
+		end
+		return c, t
+	end
+	function ExRT.F.table_compare(t1,t2,showDiff)
+		printDiff = showDiff
+		if type(printDiff) == "table" then
+			printTable = printDiff
+			printDiff = nil
+		else
+			printTable = nil
+		end
+		local c, t = cmp(t1,t2)
+	
+		return c / max(1,t), c, t
+	end
+end
+
+function ExRT.F.table_rewrite(t1,t2)
+	local toRemove = {}
+	for k,v in pairs(t1) do
+		if not t2[k] then
+			toRemove[k] = true
+		elseif type(v) == "table" and type(t2[k]) == "table" then
+			ExRT.F.table_rewrite(v,t2[k])
+		else
+			t1[k] = t2[k]
+		end
+	end
+	for k,v in pairs(toRemove) do
+		t1[k] = nil
+	end
+	for k,v in pairs(t2) do
+		if not t1[k] then
+			t1[k] = v
+		end
+	end
+end
+
 function ExRT.F.tohex(num,size)
 	return format("%0"..(size or "1").."X",num)
 end
@@ -584,7 +661,7 @@ function ExRT.F.IsPlayerRLorOfficer(unitName)
 			end
 		end
 	end
-	
+
 	-- nil: not in party or raid
 	-- false: no rl, no officer
 	-- 1: officer
@@ -594,23 +671,11 @@ end
 function ExRT.F.GetPlayerParty(unitName)
 	for i=1,GetNumGroupMembers() do
 		local name,_,subgroup = GetRaidRosterInfo(i)
-		if name == unitName then
+		if UnitIsUnit(name,unitName) then
 			return subgroup
 		end
 	end
-	return 9
-end
-
-function ExRT.F._unp(str)
-	if not str or #str < 4 then
-		return 0
-	end
-	local c = strbyte(str, 1) + strbyte(str, 2)
-	local d = 0
-	for i=3,#str do
-		d = d + strbyte(str, 1)
-	end
-	return d * 1000 + c
+	return 0
 end
 
 function ExRT.F.CreateAddonMsg(...)
@@ -674,15 +739,105 @@ function ExRT.F.GetUnitRole(unit)
 	end
 end
 
+function ExRT.F.TextureToText(textureName,widthInText,heightInText,textureWidth,textureHeight,leftTexCoord,rightTexCoord,topTexCoord,bottomTexCoord)
+	return "|T"..textureName..":"..(widthInText or 0)..":"..(heightInText or 0)..":0:0:"..textureWidth..":"..textureHeight..":"..
+		format("%d",leftTexCoord*textureWidth)..":"..format("%d",rightTexCoord*textureWidth)..":"..format("%d",topTexCoord*textureHeight)..":"..format("%d",bottomTexCoord*textureHeight).."|t"
+end
+function ExRT.F.GetRaidTargetText(icon,size)
+	size = size or 0
+	return ExRT.F.TextureToText([[Interface\TargetingFrame\UI-RaidTargetingIcons]],size,size,256,256,((icon-1)%4)/4,((icon-1)%4+1)/4,floor((icon-1)/4)/4,(floor((icon-1)/4)+1)/4)
+end
+
+function ExRT.F.IterateMediaData(mediaType)
+	local list
+	if LibStub then
+		local loaded,media = pcall(LibStub,"LibSharedMedia-3.0")
+		if loaded and media then
+			list = media:HashTable(mediaType)
+		end
+	end
+	return next, list or {}
+end
+
+--[[
+	for index, name, subgroup, class, guid, rank, level, online, isDead, combatRole in ExRT.F.IterateRoster do
+		<...>
+	end
+]]
+function ExRT.F.IterateRoster(maxGroup,index)
+	index = (index or 0) + 1
+	maxGroup = maxGroup or 8
+
+	if IsInRaid() then
+		if index > GetNumGroupMembers() then
+			return
+		end
+		local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML, combatRole = GetRaidRosterInfo(index)
+		if subgroup > maxGroup then
+			return ExRT.F.IterateRoster(maxGroup,index)
+		end
+		local guid = UnitGUID(name or "raid"..index)
+		name = name or ""
+		return index, name, subgroup, fileName, guid, rank, level, online, isDead, combatRole
+	else
+		local name, rank, subgroup, level, class, fileName, online, isDead, combatRole, _
+
+		local unit = index == 1 and "player" or "party"..(index-1)
+
+		local guid = UnitGUID(unit)
+		if not guid then
+			return
+		end
+
+		subgroup = 1
+		name, _ = UnitName(unit)
+		name = name or ""
+		if _ then
+			name = name .. "-" .. _
+		end
+		class, fileName = UnitClass(unit)
+
+		if UnitIsGroupLeader(unit) then
+			rank = 2
+		else
+			rank = 1
+		end
+
+		level = UnitLevel(unit)
+
+		if UnitIsConnected(unit) then
+			online = true
+		end
+
+		if UnitIsDeadOrGhost(unit) then
+			isDead = true
+		end
+
+		combatRole = UnitGroupRolesAssigned(unit)
+
+		return index, name, subgroup, fileName, guid, rank, level, online, isDead, combatRole
+	end
+end
+
+function ExRT.F.vpairs(t)
+	local prev
+	local function it()
+		local k,v = next(t,prev)
+		prev = k
+		return v
+	end
+	return it
+end
+
 do
 	-- UTF8
-	
+
 	-- returns the number of bytes used by the UTF-8 character at byte i in s
 	-- also doubles as a UTF-8 character validator
 	local function utf8charbytes(s, i)
 		-- argument defaults
 		i = i or 1
-	
+
 		-- argument checking
 		if type(s) ~= "string" then
 			error("bad argument #1 to 'utf8charbytes' (string expected, got ".. type(s).. ")")
@@ -690,39 +845,39 @@ do
 		if type(i) ~= "number" then
 			error("bad argument #2 to 'utf8charbytes' (number expected, got ".. type(i).. ")")
 		end
-	
+
 		local c = strbyte(s, i)
-	
+
 		-- determine bytes needed for character, based on RFC 3629
 		-- validate byte 1
 		if c > 0 and c <= 127 then
 			-- UTF8-1
 			return 1
-	
+
 		elseif c >= 194 and c <= 223 then
 			-- UTF8-2
 			local c2 = strbyte(s, i + 1)
-	
+
 			if not c2 then
 				error("UTF-8 string terminated early")
 			end
-	
+
 			-- validate byte 2
 			if c2 < 128 or c2 > 191 then
 				error("Invalid UTF-8 character")
 			end
-	
+
 			return 2
-	
+
 		elseif c >= 224 and c <= 239 then
 			-- UTF8-3
 			local c2 = strbyte(s, i + 1)
 			local c3 = strbyte(s, i + 2)
-	
+
 			if not c2 or not c3 then
 				error("UTF-8 string terminated early")
 			end
-	
+
 			-- validate byte 2
 			if c == 224 and (c2 < 160 or c2 > 191) then
 				error("Invalid UTF-8 character")
@@ -731,24 +886,24 @@ do
 			elseif c2 < 128 or c2 > 191 then
 				error("Invalid UTF-8 character")
 			end
-	
+
 			-- validate byte 3
 			if c3 < 128 or c3 > 191 then
 				error("Invalid UTF-8 character")
 			end
-	
+
 			return 3
-	
+
 		elseif c >= 240 and c <= 244 then
 			-- UTF8-4
 			local c2 = strbyte(s, i + 1)
 			local c3 = strbyte(s, i + 2)
 			local c4 = strbyte(s, i + 3)
-	
+
 			if not c2 or not c3 or not c4 then
 				error("UTF-8 string terminated early")
 			end
-	
+
 			-- validate byte 2
 			if c == 240 and (c2 < 144 or c2 > 191) then
 				error("Invalid UTF-8 character")
@@ -757,76 +912,143 @@ do
 			elseif c2 < 128 or c2 > 191 then
 				error("Invalid UTF-8 character")
 			end
-	
+
 			-- validate byte 3
 			if c3 < 128 or c3 > 191 then
 				error("Invalid UTF-8 character")
 			end
-	
+
 			-- validate byte 4
 			if c4 < 128 or c4 > 191 then
 				error("Invalid UTF-8 character")
 			end
-	
+
 			return 4
-	
+
 		else
 			error("Invalid UTF-8 character")
 		end
 	end
-	
-	function ExRT.F:utf8len(s)
+
+	function ExRT.F.utf8len(s)
 		local pos = 1
 		local bytes = strlen(s)
 		local len = 0
-	
+
 		while pos <= bytes do
 			len = len + 1
 			pos = pos + utf8charbytes(s, pos)
 		end
-	
+
 		return len
 	end
-	
+
 	-- functions identically to string.sub except that i and j are UTF-8 characters
 	-- instead of bytes
-	function ExRT.F:utf8sub(s, i, j)
+	function ExRT.F.utf8sub(s, i, j)
 		-- argument defaults
 		j = j or -1
-	
+
 		local pos = 1
 		local bytes = strlen(s)
 		local len = 0
-	
+
 		-- only set l if i or j is negative
-		local l = (i >= 0 and j >= 0) or ExRT.F:utf8len(s)
+		local l = (i >= 0 and j >= 0) or ExRT.F.utf8len(s)
 		local startChar = (i >= 0) and i or l + i + 1
 		local endChar   = (j >= 0) and j or l + j + 1
-	
+
 		-- can't have start before end!
 		if startChar > endChar then
 			return ""
 		end
-	
+
 		-- byte offsets to pass to string.sub
 		local startByte, endByte = 1, bytes
-	
+
 		while pos <= bytes do
 			len = len + 1
-	
+
 			if len == startChar then
 				startByte = pos
 			end
-	
+
 			pos = pos + utf8charbytes(s, pos)
-	
+
 			if len == endChar then
 				endByte = pos - 1
 				break
 			end
 		end
-	
+
 		return strsub(s, startByte, endByte)
+	end
+end
+
+function ExRT.F.GetFirstTableInText(str)
+	local strlen = str:len()
+	local i = 1
+	local deep = 0
+	local start
+	local inStr
+	local inWideStr
+	local wideStrEqCount = 0
+	while i <= strlen do
+		local b = str:byte(i)
+		if not start and not inStr and b == 123 then
+			start = i
+		elseif start and not inStr and b == 123 then
+			deep = deep + 1
+		elseif start and not inStr and b == 125 then
+			if deep <= 0 then
+				return str:sub(start,i)
+			else
+				deep = deep - 1
+			end
+		elseif not inStr and b == 34 then	--"
+			inStr = i
+		elseif inStr and not inWideStr and b == 92 then	--\
+			i = i + 1
+		elseif inStr and not inWideStr and b == 34 then	--"
+			inStr = false
+		elseif not inStr and b == 91 then	-- [ = [
+			local k = i + 1
+			local eqc = 0
+			while k <= strlen do
+				local c1 = str:byte(k)
+				if c1 == 61 then
+					eqc = eqc + 1
+				elseif c1 == b then
+					inStr = i
+					inWideStr = i
+					wideStrEqCount = eqc
+					break
+				else
+					break
+				end
+				k = k + 1
+			end
+		elseif inStr and inWideStr and b == 93 then	-- ] = ]
+			local k = i + 1
+			local eqc = 0
+			while k <= strlen do
+				local c1 = str:byte(k)
+				if c1 == 61 then
+					eqc = eqc + 1
+				elseif c1 == b then
+					if eqc == wideStrEqCount then
+						i = k
+						inStr = false
+						inWideStr = false
+					end
+					break
+				else
+					break
+				end
+				k = k + 1
+			end
+		end
+		i = i + 1
 	end
 end
 
@@ -852,13 +1074,13 @@ do
 		chatWindow:SetScript("OnDragStop", function(self) 
 			self:StopMovingOrSizing() 
 		end)
-		
+
 		chatWindow.border = ExRT.lib:Shadow(chatWindow,20)
-		
+
 		chatWindow.title:SetText(ExRT.L.ChatwindowName)
-		
+
 		chatWindow.box = ExRT.lib:MultiEdit(chatWindow):Size(230,265):Point(10,-23):Font('x',11)
-		
+
 		local chats = {
 			{"ME",ExRT.L.ChatwindowChatSelf},
 			{"SAY",ExRT.L.ChatwindowChatSay},
@@ -888,12 +1110,12 @@ do
 				end
 			}
 		end
-		
+
 		chatWindow.target = ExRT.lib:Edit(chatWindow):Size(130,20):Point(255,-115):OnChange(function (self)
 			activeName = self:GetText()
 		end)
 		chatWindow.targetText = ExRT.lib:Text(chatWindow,ExRT.L.ChatwindowNameEB,10):Size(350,14):Point("BOTTOMLEFT",chatWindow.target,"TOPLEFT",5,2):Bottom():Color():Shadow()
-		
+
 		chatWindow.button = ExRT.lib:Button(chatWindow,ExRT.L.ChatwindowSend):Size(130,22):Point(255,-150):OnClick(function (self)
 			local lines = {strsplit("\n", chatWindow.box.EditBox:GetText())}
 			local channel = activeChat
@@ -924,9 +1146,9 @@ do
 			end
 			chatWindow:Hide()
 		end)
-		
+
 		chatWindow.helpText = ExRT.lib:Text(chatWindow,ExRT.L.ChatwindowHelp,10):Size(130,100):Point("TOP",chatWindow.button,"BOTTOM",0,-10):Top():Color():Shadow()
-		
+
 		chatWindow.chk1 = ExRT.lib:Check(chatWindow,"Option 1"):Point(255,-260):OnClick(function()
 			UpdateLines()
 		end)
@@ -986,9 +1208,9 @@ do
 	local alertArg1 = nil
 	local function CreateWindow()
 		alertWindow = ExRT.lib:Popup():Size(500,65)
-		
+
 		alertWindow.EditBox = ExRT.lib:Edit(alertWindow):Size(480,16):Point("TOP",0,-20)
-		
+
 		alertWindow.OK = ExRT.lib:Button(alertWindow,ACCEPT):Size(130,20):Point("TOP",0,-40):OnClick(function (self)
 			alertWindow:Hide()
 			local input = alertWindow.EditBox:GetText()
@@ -999,11 +1221,12 @@ do
 			self:GetParent().OK:Click("LeftButton")
 		end)
 	end
-	function ExRT.F.ShowInput(text,func,arg1,onlyNum,defText)
+	function ExRT.F.ShowInput(text,func,arg1,onlyNum,defText,funcOnEdit)
 		if not alertWindow then
 			CreateWindow()
 		end
 		alertWindow.title:SetText(text)
+		alertWindow.EditBox:SetScript("OnTextChanged",funcOnEdit)
 		alertWindow.EditBox:SetText(defText or "")
 		alertWindow:ClearAllPoints()
 		alertWindow:SetPoint("CENTER",UIParent,0,0)
@@ -1064,7 +1287,7 @@ end
 ---------------> Export Window <---------------
 do
 	local exportWindow
-	function ExRT.F:Export(stringData)
+	function ExRT.F:Export(stringData,hideTextInfo,windowName,onChangeFunc)
 		if not exportWindow then
 			exportWindow = ELib:Popup(ExRT.L.Export):Size(650,615)
 			exportWindow.Edit = ELib:MultiEdit(exportWindow):Point("TOP",0,-20):Size(640,575)
@@ -1072,15 +1295,374 @@ do
 			exportWindow:SetScript("OnHide",function(self)
 				self.Edit:SetText("")
 			end)
+			exportWindow.Next = ExRT.lib:Button(exportWindow,">>>"):Size(100,16):Point("BOTTOMRIGHT",0,0):OnClick(function (self)
+				self.now = self.now + 1
+				self:SetText(">>> "..self.now.."/"..#exportWindow.hugeText)
+				exportWindow.Edit:SetText(exportWindow.hugeText[self.now])
+				exportWindow.Edit.EditBox:HighlightText()
+				exportWindow.Edit.EditBox:SetFocus()
+				if self.now == #exportWindow.hugeText then
+					self:Hide()
+				end
+			end)
 		end
-		exportWindow.Edit:SetText(stringData)
+		exportWindow.title:SetText(windowName or ExRT.L.Export)
+		exportWindow.Edit.OnTextChanged = onChangeFunc
 		exportWindow:NewPoint("CENTER",UIParent,0,0)
+		exportWindow.TextInfo:SetShown(not hideTextInfo)
 		exportWindow:Show()
-		exportWindow.Edit.EditBox:HighlightText()
-		exportWindow.Edit.EditBox:SetFocus()
+		if #stringData > 200000 then
+			exportWindow.hugeText = {}
+			while stringData and stringData ~= "" do
+				local newText = stringData:sub(1,200000)..strsplit("\n",stringData:sub(200001))
+				exportWindow.hugeText[#exportWindow.hugeText+1] = newText
+				stringData = select(2,strsplit("\n",stringData:sub(200001),2))
+			end
+			exportWindow.Next.now = 0
+			exportWindow.Next:Show()
+			exportWindow.Next:Click()
+		else
+			exportWindow.hugeText = nil
+			exportWindow.Next:Hide()
+			exportWindow.Edit:SetText(stringData)
+			exportWindow.Edit.EditBox:HighlightText()
+			exportWindow.Edit.EditBox:SetFocus()
+		end
 	end
 
 end
+
+---------------> Import/Export data <---------------
+do
+	local function StringToText(str)
+		if str:find("\n") then
+			local n = 0
+			if str:find("%]$") then
+				n = n + 1
+			end
+			while str:find("%["..string.rep("=",n).."%[") or str:find("%]"..string.rep("=",n).."%]") do
+				n = n + 1
+			end
+			return "["..string.rep("=",n).."["..str.."]"..string.rep("=",n).."]", true
+		else
+			return "\""..str:gsub("\\","\\\\"):gsub("\"","\\\"").."\""
+		end
+	end
+	
+	local function IterateTable(t)
+		local prev
+		local index = 1
+		local indexMax
+		local isIndexDone
+		local function it()
+			if not indexMax then
+				local v = t[index]
+				if v then
+					index = index + 1
+					return index-1, v, true
+				else
+					indexMax = index - 1
+				end
+			end
+			local k,v = next(t,prev)
+			prev = k
+			while k and type(k)=="number" and k >= 1 and k <= indexMax do
+				k,v = next(t,prev)
+				prev = k
+			end
+			return k, v, false
+		end
+		return it
+	end
+	
+	function ExRT.F.TableToText(t,e,b)
+		b = b or {}
+		b[t] = true
+		e = e or {"{"}
+		local ignoreIndex = false
+		for k,v,isIndex in IterateTable(t) do
+			local newline = ""
+			local ignore = true
+			if type(v) == "boolean" or type(v) == "number" or type(v) == "string" or type(v) == "table" then
+				ignore = false
+			end
+			if type(v) == "table" and b[v] then
+				ignore = true
+			end
+			if ignore then
+				ignoreIndex = true
+			elseif isIndex and not ignoreIndex then
+			elseif type(k)=="number" then
+				newline = newline .. "["..k.."]="
+			elseif type(k)=="string" then
+				if k:match("[A-Za-z_][A-Za-z_0-9]*") == k then
+					newline = newline .. k .. "="
+				else
+					local kstr, ismultiline = StringToText(k)
+					newline = newline .. "["..(ismultiline and " " or "")..kstr..(ismultiline and " " or "").."]="
+				end
+			elseif type(k)=="boolean" then
+				newline = newline .. "["..(k and "true" or "false").."]="
+			else
+				ignore = true
+			end
+			if not ignore then
+				local tableToExplore
+				if type(v)=="number" then
+					newline = newline .. v .. ","
+				elseif type(v)=="string" then
+					newline = newline .. StringToText(v)..","
+				elseif type(v)=="boolean" then
+					newline = newline ..(v and "true" or "false")..","
+				elseif type(v)=="table" then
+					newline = newline .."{"
+					tableToExplore = v
+				end
+				e[#e+1] = newline
+				if tableToExplore then
+					ExRT.F.TableToText(tableToExplore,e,b)
+					e[#e] = e[#e] .. ","
+				end
+			end
+		end
+		e[#e] = e[#e]:gsub(",$","")
+		e[#e+1] = "}"
+		return e
+	end
+
+	local string_byte = string.byte
+	function ExRT.F.TextToTable(str,map,offset)
+		if not map and string_byte(str, 1) == 123 then
+			str = str:sub(2,-2)	--Expect valid table here
+		end
+		local strlen = str:len()
+		local i = 1
+		local prev = 1
+		map = map or {}
+		offset = offset or 0
+	
+		local inTable, inString, inWideString
+		local startTable, wideStringEqCount = 1, 0
+	
+		while i <= strlen do
+			local b1 = string_byte(str, i)
+			if not inString and not inTable and b1 == 123 then
+				inTable = 0
+				startTable = i
+			elseif not inString and inTable and b1 == 123 then
+				inTable = inTable + 1
+			elseif not inString and inTable and b1 == 125 then
+				if inTable == 0 then
+					map[startTable+offset] = i + offset
+					map[startTable+0.5+offset] = 1
+					inTable = false
+				else
+					inTable = inTable - 1
+				end
+			elseif not inString and b1 == 34 then	--"
+				if map[i+offset+0.5] == 2 then
+					i = map[i+offset] - offset
+				else
+					inString = i
+				end
+			elseif inString and not inWideString and b1 == 92 then	--\
+				i = i + 1
+			elseif inString and not inWideString and b1 == 34 then	--"
+				map[inString+offset] = i + offset
+				map[inString+0.5+offset] = 2
+				inString = false
+			elseif not inString and b1 == 91 then	-- [ = [
+				if map[i+offset+0.5] == 3 then
+					i = map[i+offset] - offset
+				else
+					local k = i + 1
+					local eqc = 0
+					while k <= strlen do
+						local c1 = string_byte(str, k)
+						if c1 == 61 then
+							eqc = eqc + 1
+						elseif c1 == b1 then
+							inString = i
+							inWideString = i
+							i = k
+							wideStringEqCount = eqc
+							break
+						else
+							break
+						end
+						k = k + 1
+					end
+				end
+			elseif inString and inWideString and b1 == 93 then	-- ] = ]
+				local k = i + 1
+				local eqc = 0
+				while k <= strlen do
+					local c1 = string_byte(str, k)
+					if c1 == 61 then
+						eqc = eqc + 1
+					elseif c1 == b1 then
+						if eqc == wideStringEqCount then
+							i = k
+							map[inWideString+offset] = i + offset
+							map[inWideString+0.5+offset] = 3
+							inString = false
+							inWideString = false
+						end
+						break
+					else
+						break
+					end
+					k = k + 1
+				end
+			end
+			if not inString and not inTable and (b1 == 44 or i == strlen) then	--,
+				map[-prev-offset] = i - (b1 == 44 and 1 or 0) + offset
+				prev = i + 1
+			end
+			i = i + 1
+		end
+	
+		local res = {}
+		local numKey = 1
+		i = 1
+		while i <= strlen do
+			if map[-i-offset] then
+				local s, e = i, map[-i-offset] - offset
+				local k = s
+				local key, value
+				local isError
+				prev = k
+				while k <= e do
+					if map[k+offset] then
+						if map[k+0.5+offset] == 1 then
+							value = ExRT.F.TextToTable( str:sub(k+1,map[k+offset]-offset-1) ,map,k+offset)
+						elseif map[k+0.5+offset] == 2 then
+							value = str:sub(k + 1,map[k+offset]-offset-1):gsub("\\\"","\""):gsub("\\\\","\\")
+						elseif map[k+0.5+offset] == 3 then
+							value = str:sub(k,map[k+offset]-offset):gsub("^%[=*%[",""):gsub("%]=*%]$","")
+						end
+						k = map[k+offset] + 1 - offset
+					else
+						local b1 = string_byte(str, k)
+						if b1 == 61 then	--=
+							if value then
+								key = value
+								value = nil
+							else
+								key = str:sub(prev, k-1):trim()
+								if key:find("^%[") and key:find("%]$") then
+									key = key:gsub("^%[",""):gsub("%]$","")
+									if tonumber(key) then
+										key = tonumber(key)
+									end
+								elseif key == "true" then
+									key = true
+								elseif key == "false" then
+									key = false
+								elseif tonumber(key) then
+									key = tonumber(key)
+								else
+									key = key:match("[A-Za-z_][A-Za-z_0-9]*")
+								end
+								if not key then
+									isError = true
+									break
+								end
+							end
+							prev = k + 1
+						elseif k == e and not value then
+							value = str:sub(prev, k):trim()
+							if value == "true" then
+								value = true
+							elseif value == "false" then
+								value = false
+							else
+								value = tonumber(value)
+							end
+						end
+						k = k + 1
+					end
+				end
+				if not isError then
+					if not key then
+						key = numKey
+						numKey = numKey + 1
+					end
+					res[key] = value
+				end
+				i = map[-i-offset] - offset
+			end
+			i = i + 1
+		end
+		return res
+	end
+
+	function ExRT.F.CreateImportExportWindows()
+		local function ImportOnUpdate(self, elapsed)
+			self.tmr = self.tmr + elapsed
+			if self.tmr >= 0.1 then
+				self.tmr = 0
+				self:SetScript("OnUpdate",nil)
+				local str = table.concat(self.buff):trim()
+				self.parent:Hide()
+
+				self.buff = {}
+				self.buffPos = 0
+		
+				if self.parent.ImportFunc then
+					self.parent:ImportFunc(str)
+				end
+			end
+		end
+		
+		local importWindow = ELib:Popup(ExRT.L.Import.." "..ExRT.L.ImportHelp):Size(650,100)
+		importWindow.Edit = ELib:MultiEdit(importWindow):Point("TOP",0,-20):Size(640,75)
+		importWindow:SetScript("OnHide",function(self)
+			self.Edit:SetText("")	
+		end)
+		importWindow:SetScript("OnShow",function(self)
+			self.Edit.EditBox.buffPos = 0
+			self.Edit.EditBox.tmr = 0
+			self.Edit.EditBox.buff = {}
+			self.Edit.EditBox:SetFocus()
+		end)
+		importWindow.Edit.EditBox:SetMaxBytes(1)
+		importWindow.Edit.EditBox:SetScript("OnChar", function(self, c)
+			self.buffPos = self.buffPos + 1
+			self.buff[self.buffPos] = c
+			self:SetScript("OnUpdate",ImportOnUpdate)
+		end)
+		importWindow.Edit.EditBox.parent = importWindow
+		
+		
+		local exportWindow = ELib:Popup(ExRT.L.Export):Size(650,50)
+		exportWindow.Edit = ELib:Edit(exportWindow):Point("TOP",0,-20):Size(640,25)
+		exportWindow:SetScript("OnHide",function(self)
+			self.Edit:SetText("")	
+		end)
+		exportWindow.Edit:SetScript("OnEditFocusGained", function(self)
+			self:HighlightText()
+		end)
+		exportWindow.Edit:SetScript("OnMouseUp", function(self, button)
+			self:HighlightText()
+			if button == "RightButton" then
+				self:GetParent():Hide()
+			end
+		end)
+		exportWindow.Edit:SetScript("OnKeyUp", function(self, c)
+			if (c == "c" or c == "C") and IsControlKeyDown() then
+				self:GetParent():Hide()
+			end
+		end)
+		function exportWindow:OnShow()
+			self.Edit:SetFocus()
+		end
+
+		return importWindow, exportWindow
+	end
+end
+
+
 -------------------> Data <--------------------
 
 ExRT.GDB.ClassSpecializationIcons = {

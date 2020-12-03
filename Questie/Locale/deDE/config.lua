@@ -4,6 +4,8 @@ QuestieLocale.locale['deDE'] = {
     ['GENERAL_OPTIONS_HEADER'] = "Allgemeine Einstellungen",
     ['ENABLE_ICONS'] = "Icons aktivieren",
     ['ENABLE_ICONS_DESC'] = "Aktivieren/Deaktivieren der Questie-Icons",
+    ['TRACKING_ICONS_BUTTON'] = "Tracking Icons konfigurieren",
+    ['TRACKING_ICONS_BUTTON_DESC'] = "Ermöglicht das Konfigurieren der Tracking Icons (z.B. Briefkästen, Reparatur-NPCs) auf der Karte und Minimap.",
     ['ENABLE_MINIMAP_BUTTON'] = "Minimap-Button aktivieren",
     ['ENABLE_MINIMAP_BUTTON_DESC'] = "Questie Minimap-Button aktivieren/deaktivieren. Mit /questie kannst du trotzdem die Einstellungen aufrufen.",
     ['ENABLE_INSTANT'] = "Questtext sofort anzeigen",
@@ -64,6 +66,8 @@ QuestieLocale.locale['deDE'] = {
     ['ENABLE_ACCEPT_TRIVIAL_DESC'] = "Aktiviert/Deaktiviert, ob Questie triviale (graune) Quests automatisch annimmt.",
     ['AUTO_MODIFIER'] = "Auto Modifikator",
     ['AUTO_MODIFIER_DESC'] = "Die Taste, um Quests NICHT automatisch anzunehmen/abzugeben, wenn die jeweilige Einstellung aktiviert ist und mit einem Quest NPC interagiert wird.",
+    ['ENABLE_YELL'] = "Share quest progress with nearby players",
+    ['ENABLE_YELL_DESC'] = "Your quest progress will be periodically sent to nearby players. Disabling this doesn't affect sharing progress with party members.",
 
     -- Minimap tab
     ['MINIMAP_TAB'] = "Minimap",
@@ -172,6 +176,8 @@ QuestieLocale.locale['deDE'] = {
     ['ENABLE_TOOLTIPS_QUEST_LEVEL_DESC'] = "Aktiviert/Deaktiviert, ob das Questlevel in den Tooltips angezeigt wird.",
     ['SHARED_TOOLTIP_PARTY_ONLY'] = "Party nur geteilt",
     ['SHARED_TOOLTIP_PARTY_ONLY_DESC'] = "Wenn dies aktiviert ist, werden freigegebene Questinformationen nur angezeigt, wenn sie von Gruppenmitgliedern stammen.",
+    ['SHOW_QUESTS_IN_NPC_TOOLTIPS'] = 'Quests in NPC Tooltips anzeigen',
+    ['SHOW_QUESTS_IN_NPC_TOOLTIPS_DESC'] = 'Zeigt Quests (verfügbar/abgeschlossen) in den NPC Tooltips.',
 
     -- Advanced tab
     ['ADVANCED_TAB'] = "Erweitert",
@@ -192,6 +198,8 @@ QuestieLocale.locale['deDE'] = {
     ['RESET_QUESTIE_BTN_DESC'] = "Setzt alle Einstellungen von Questie auf den Standardwert zurück.",
     ['RECOMPILE_DATABASE_BTN'] = "Datenbank neukompilieren",
     ['RECOMPILE_DATABASE_BTN_DESC'] = "Lässt die Questie Datenbank neu kompilieren und läd das UI neu.",
+    ['SHOW_PROFILER_BTN'] = "Open Profiler",
+    ['SHOW_PROFILER_BTN_DESC'] = "Open the Questie profiler, this is useful for tracking down the source of lag / frame spikes.",
     ['QUESTIE_DEV_MESSAGE'] = "Questie befindet sich noch aktiv in der Entwicklungsphase für World of Warcraft: Classic. Für Neuigkeiten und aktuelle Versionen schau auf Github vorbei oder trete unserem Discord Server bei! (( https://github.com/AeroScripts/QuestieDev/ ))",
 
     -- UI Elements
@@ -201,7 +209,7 @@ QuestieLocale.locale['deDE'] = {
     ['ICON_LEFT_CLICK_HOLD'] = "Linksklick + Halten",
     ['ICON_DRAG_LOCKED'] = "Ziehen, während gesperrt",
     ['ICON_TOGGLE'] = "Einstellungen anzeigen/verstecken",
-    ['ICON_SHIFTLEFT_CLICK'] = "Shift + Linksklick",
+    ['ICON_SHIFTLEFT_CLICK'] = "Strg + Shift + Linksklick",
     ['ICON_TOGGLE_QUESTIE'] = "Icons aktivieren/deaktivieren",
     ['ICON_CTRLRIGHT_CLICK'] = "Strg + Rechtsklick",
     ['ICON_CTRLLEFT_CLICK'] = "Strg + Linksklick",
@@ -221,6 +229,8 @@ QuestieLocale.locale['deDE'] = {
     ['TOOLTIP_QUEST_REPEATABLE'] = "(Wiederholbar)",
     ['TOOLTIP_QUEST_EVENT'] = "(Event)",
     ['XP'] = "xp";
+    ['COMPLETE'] = "Abgeschlossen";
+    ['FAILED'] = "Fehlgeschlagen";
 
     -- Slash Commands
     ['SLASH_INVALID'] = "Ungültiger Befehl. Für eine Liste aller verfügbaren Befehle nutze: ",
@@ -373,6 +383,8 @@ QuestieLocale.locale['deDE'] = {
     ['JOURNEY_SELECT_HEAD'] = "Wähle deinen Kontinent und deine Zone",
     ['JOURNEY_SELECT_CONT'] = "Wähle deinen Kontinent",
     ['JOURNEY_SELECT_ZONE'] = "Wähle deine Zone",
+    ['JOURNEY_SELECT_PROFESSION'] = "Wähle deinen Beruf",
+    ['JOURNEY_NO_QUESTS_FOUND'] = "Keine Quests gefunden",
     ['JOURNEY_QUESTS'] = "Zonen-Quests",
     ['JOURNEY_QUESTINFO'] = "Quest-Informationen",
     ['JOURNEY_START_NPC'] = "Quest-Start-NPC-Informationen",
@@ -401,7 +413,7 @@ QuestieLocale.locale['deDE'] = {
     ['JOURNEY_NOTE_DESC'] = "Erstelle einen Eintrag in deinem Reisetagebuch, um dich an einen bestimmten Moment zu erinnern. Gebe einfach einen Titel und eine Beschreibung an und Questie wird sich für dich erinnern!",
     ['JOURNEY_NOTE_TITLE'] = "Neue Notiz für: %s",
     ['JOURNEY_NOTE_ENTRY_TITLE'] = "Titel des Eintrags",
-    ['JOUNREY_NOTE_ENTRY_BODY'] = "Tagebucheintrag",
+    ['JOURNEY_NOTE_ENTRY_BODY'] = "Tagebucheintrag",
     ['JOURNEY_NOTE_SUBMIT_BTN'] = "Eintrag hinzufügen",
     ['JOURNEY_ERR_NOTITLE'] = "Kein Titel angegeben. Du musst einen Titel angeben, bevor ein Eintrag angelegt werden kann.",
     ['JOURNEY_ERR_NONOTE'] = "Keine Notiz angegeben. Du musst eine Notiz angeben, bevor ein Eintrag angelegt werden kann.",
@@ -421,6 +433,10 @@ QuestieLocale.locale['deDE'] = {
     ['JOURNEY_SEARCH_EXE'] = "Suche",
     ['JOURNEY_SEARCH_RESULTS'] = "Suchergebnisse",
     ['JOURNEY_SEARCH_NOMATCH'] = "Keine Treffer für die Suche: %s",
+    ['JOURNEY_SEARCH_QUESTS'] = "Quests",
+    ['JOURNEY_SEARCH_NPCS'] = "NPCs",
+    ['JOURNEY_SEARCH_OBJECTS'] = "Objects",
+    ['JOURNEY_SEARCH_ITEMS'] = "Items",
 
     -- Debug Messages
     ['DEBUG_LOWLEVEL'] = "Graue Quests-Option geändert auf:",
@@ -448,6 +464,46 @@ QuestieLocale.locale['deDE'] = {
     ['QUESTIE_ACCEPT_NIL'] = "|cFFFF0000Questie ERROR:|r Eine nil Quest wurde angenommen! Du musst eventuell \"/questie reload\" ausführen.",
     ['QUESTIE_UPDATED_RESTART'] = "|cFFFF0000WARNING!|r Du hast Questie aktualisiert ohne WoW neuzustarten, was zu Problemen führen wird! Bitte starte den WoW Client neu, bevor du fortfährst.",
 
+    -- Townsfolk related strings
+    ["Repair"] = "Reparieren",
+    ["Auctioneer"] = "Auktionator",
+    ["Banker"] = "Bankier",
+    ["Battlemaster"] = "Kampfmeister",
+    ["Flight Master"] = "Flugmeister",
+    ["Innkeeper"] = "Gastwirt",
+    ["Weapon Master"] = "Waffenmeister",
+    ["Reagents"] = "Reagenzien",
+    ["Class Trainer"] = "Lehrer für eine Klasse",
+    ["Stable Master"] = "Stallmeister",
+    ["Mailbox"] = "Briefkasten",
+    ["Spirit Healer"] = "Geistheiler",
+    ["Available Quest"] = "Verfügbare Quests",
+    ["Trivial Quest"] = "Niedrigstufige Quests",
+    ["Objective"] = "Questziele",
+    ["Vendor"] = "Händler",
+    ["Profession Trainer"] = "Berufsausbilder",
+    ["Questie Options"] = "Questie-Einstellungen",
+    ["Ammo"] = "Munition",
+    ["Pet Food"] = "Tier füttern",
+    ["Portal Trainer"] = "Portallehrerin",
+    ["Bags"] = "Taschen",
+    ["Trade Goods"] = "Handwerkswaren",
+    ["Food"] = "Essen",
+    ["Drink"] = "Trinken",
+    -- professions use their ID as the key for a much cleaner implementation. Translations for these are alerady in QuestieProfessions.lua
+    ["129"] = "Erste Hilfe",
+    ["164"] = "Schmiedekunst",
+    ["165"] = "Lederverarbeitung",
+    ["171"] = "Alchemie",
+    ["182"] = "Kräuterkunde",
+    ["185"] = "Kochkunst",
+    ["186"] = "Bergbau",
+    ["197"] = "Schneiderei",
+    ["202"] = "Ingenieurskunst",
+    ["333"] = "Verzauberkunst",
+    ["356"] = "Angeln",
+    ["393"] = "Kürschnerei",
+
     -- TODO finally switch all keys to this style for code readability:
     ['Show on Map'] = "Show on Map",
     ['Remove from Map'] = "Remove from Map",
@@ -455,5 +511,13 @@ QuestieLocale.locale['deDE'] = {
     ['Ends the following quests:'] = "Ends the following quests:",
     ['No quests to list.'] = "No quests to list.",
     ['No spawn data available.'] = "No spawn data available.",
+    ['The database needs to be updated to change language. Press reload to apply the new language'] = "The database needs to be updated to change language. Press reload to apply the new language",
+    ['Reload UI'] = "Reload UI",
+    ["\124cFFAAEEFFQuestie DB has updated!\124r\124cFFFF6F22 Data is being processed, this may take a few moments and cause some lag..."] = "\124cFFAAEEFFQuestie DB has updated!\124r\124cFFFF6F22 Data is being processed, this may take a few moments and cause some lag...",
+    ["\124cFF4DDBFF [1/4] Updating NPCs..."] = "\124cFF4DDBFF [1/4] Updating NPCs...",
+    ["\124cFF4DDBFF [2/4] Updating objects..."] = "\124cFF4DDBFF [2/4] Updating objects...",
+    ["\124cFF4DDBFF [3/4] Updating quests..."] = "\124cFF4DDBFF [3/4] Updating quests...",
+    ["\124cFF4DDBFF [4/4] Updating items..."] = "\124cFF4DDBFF [4/4] Updating items...",
+    ["\124cFFAAEEFFQuestie DB update complete!"] = "\124cFFAAEEFFQuestie DB update complete!",
     ["Nearby"] = "In der Nähe",
 };

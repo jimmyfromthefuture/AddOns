@@ -13,7 +13,7 @@ local _, Plexus = ...
 local L = Plexus.L
 local PlexusRoster = Plexus:GetModule("PlexusRoster")
 
-local PlexusStatusHealth = Plexus:NewStatusModule("PlexusStatusHealth")
+local PlexusStatusHealth = Plexus:NewStatusModule("PlexusStatusHealth", "AceTimer-3.0")
 PlexusStatusHealth.menuName = L["Health"]
 
 PlexusStatusHealth.defaultDB = {
@@ -24,6 +24,8 @@ PlexusStatusHealth.defaultDB = {
         range = false,
         deadAsFullHealth = true,
         useClassColors = true,
+        enableupdateFrequency = false,
+        updateFrequency = 1,
     },
     unit_healthDeficit = {
         enable = true,
@@ -89,11 +91,41 @@ local healthOptions = {
         name = L["Use class color"],
         desc = L["Color health based on class."],
         type = "toggle", width = "double",
+        order = 1,
         get = function()
             return PlexusStatusHealth.db.profile.unit_health.useClassColors
         end,
         set = function(_, v)
             PlexusStatusHealth.db.profile.unit_health.useClassColors = v
+            PlexusStatusHealth:UpdateAllUnits()
+        end,
+    },
+    enableupdateFrequency = {
+        name = "Enable Custom Health Update Interval",
+        desc = "Enable Use of Update Frequency Setting",
+        type = "toggle", width = "double",
+        order = 100,
+        get = function()
+            return PlexusStatusHealth.db.profile.unit_health.enableupdateFrequency
+        end,
+        set = function(_, v)
+            PlexusStatusHealth.db.profile.unit_health.enableupdateFrequency = v
+            PlexusStatusHealth:UpdateAllUnits()
+        end,
+    },
+    updateFrequency = {
+        name = "Update Frequency (Note setting this too low can hurt performance)",
+        desc = "How often unit health will update in seconds",
+        type = "range", min = 0.01, max = 1, step = 0.01,
+        order = 200,
+        hidden = function()
+            return not PlexusStatusHealth.db.profile.unit_health.enableupdateFrequency
+        end,
+        get = function()
+            return PlexusStatusHealth.db.profile.unit_health.updateFrequency
+        end,
+        set = function(_, v)
+            PlexusStatusHealth.db.profile.unit_health.updateFrequency = v
             PlexusStatusHealth:UpdateAllUnits()
         end,
     },
@@ -171,6 +203,9 @@ end
 
 function PlexusStatusHealth:OnStatusEnable()
     self:UpdateAllUnits()
+    if self.db.profile.unit_health.enableupdateFrequency then
+        self.timer = self:ScheduleRepeatingTimer("FrequentHealth", self.db.profile.unit_health.updateFrequency)
+    end
 end
 
 function PlexusStatusHealth:OnStatusDisable(status)
@@ -178,6 +213,14 @@ function PlexusStatusHealth:OnStatusDisable(status)
 end
 
 function PlexusStatusHealth:UpdateAllUnits()
+    if (self.timer and not self.db.profile.unit_health.enableupdateFrequency) then
+        self:Debug("have timer but not enabled")
+        self:CancelTimer(self.timer)
+    end
+    if (not self.timer and self.db.profile.unit_health.enableupdateFrequency) then
+        self:Debug("no timer but enabled")
+        self.timer = self:ScheduleRepeatingTimer("FrequentHealth", self.db.profile.unit_health.updateFrequency)
+    end
     for guid, unitid in PlexusRoster:IterateRoster() do
         self:Plexus_UnitJoined("UpdateAllUnits", guid, unitid)
     end
@@ -275,6 +318,12 @@ function PlexusStatusHealth:UpdateUnit(event, unitid, ignoreRange)
         cur,
         max,
         healthSettings.icon)
+end
+
+function PlexusStatusHealth:FrequentHealth()
+    if self.db.profile.unit_health.enableupdateFrequency then
+        self:UpdateAllUnits()
+    end
 end
 
 function PlexusStatusHealth:IsLowHealth(cur, max)

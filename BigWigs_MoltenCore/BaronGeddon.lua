@@ -32,10 +32,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "LivingBomb", self:SpellName(20475))
 	self:Log("SPELL_AURA_REMOVED", "LivingBombRemoved", self:SpellName(20475))
@@ -56,7 +52,10 @@ function mod:LivingBomb(args)
 	else
 		self:OpenProximity(20475, 9, args.destName)
 	end
-	self:TargetMessage(20475, args.destName, "blue", "Alarm")
+	self:TargetMessage(20475, "blue", args.destName)
+	if self:Me(args.destGUID) then
+		self:PlaySound(20475, "alarm")
+	end
 	self:PrimaryIcon(20475, args.destName)
 	self:TargetBar(20475, 8, args.destName)
 end
@@ -66,7 +65,8 @@ function mod:LivingBombRemoved(args)
 end
 
 function mod:Inferno(args)
-	self:Message(19695, "red", "Long")
+	self:Message(19695, "red")
+	self:PlaySound(19695, "long")
 	self:Bar(19695, 8)
 end
 

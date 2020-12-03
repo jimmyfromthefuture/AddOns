@@ -28,12 +28,9 @@ local defaultOrder = {
     healingBar = 4,
     text = 5,
     text2 = 6,
-    icon = 7,
-    corner3 = 8,
-    corner4 = 9,
-    corner1 = 10,
-    corner2 = 11,
-    frameAlpha = 12,
+    text3 = 7,
+    icon = 9,
+    frameAlpha = 10,
 }
 
 local defaultNew = function() return {} end
@@ -238,7 +235,6 @@ PlexusFrame.defaultDB = {
     frameWidth = 36,
     frameHeight = 36,
     borderSize = 1,
-    cornerSize = 6,
     showTooltip = "OOC",
     rightClickMenu = true,
     orientation = "VERTICAL",
@@ -247,7 +243,6 @@ PlexusFrame.defaultDB = {
     texture = "Gradient",
     enableBarColor = false,
     invertBarColor = false,
-    invertResourceBarColor = false,
     invertTextColor = false,
     healingBar_intensity = 0.5,
     healingBar_useStatusColor = false,
@@ -259,15 +254,41 @@ PlexusFrame.defaultDB = {
     stackOffsetX = 4,
     stackOffsety = -2,
     enableIconCooldown = true,
+    showIconCountDownText = false,
     enableIconStackText = true,
-    iconsMore1 = true,
-    iconsMore2 = false,
+    iconStackFontSize = 3,
+    iconCoolDownFontSize = 3,
     font = "Friz Quadrata TT",
     fontSize = 12,
     fontOutline = "NONE",
     fontShadow = true,
     textlength = 4,
+    cornerSize = 6,
+    cornerBorderSize = 1,
+    cornerBorderColor = { r = 0, g = 0, b = 0, a = 1 },
+    enableCorner2 = true,
+    enableCorner34 = true,
+    enableCornerBarSeparation = true,
     enableText2 = false,
+    enableText3 = false,
+    enableExtraText2 = false,
+    enableExtraText34 = false,
+    enableTextTop = false,
+    enableTextTopLeft = false,
+    enableTextTopRight = false,
+    enableTextBottom = false,
+    enableTextBottomLeft = false,
+    enableTextBottomRight = false,
+    enableIcon2 = true,
+    enableIcon34 = true,
+    enableIconBarSeparation = true,
+    enableIconBackgroundColor = false,
+    iconBackgroundAlpha = 0.8,
+    ExtraBarSize = 0.1,
+    ExtraBarSide = "Bottom",
+    ExtraBarBorderSize = 1,
+    ExtraBarInvertColor = false,
+    enableExtraBar = true,
     statusmap = {
         text = {
             alert_death = true,
@@ -331,6 +352,9 @@ PlexusFrame.defaultDB = {
         icon = {
             raid_icon = true,
             ready_check = true,
+        },
+        ei_bar_barone = {
+            unit_resource = true,
         }
     },
 }
@@ -396,12 +420,6 @@ PlexusFrame.options = {
                     order = 3, width = "double",
                     type = "range", min = 1, max = 9, step = 1,
                 },
-                cornerSize = {
-                    name = L["Corner Size"],
-                    desc = L["Adjust the size of the corner indicators."],
-                    order = 4, width = "double",
-                    type = "range", min = 1, max = 20, step = 1,
-                },
                 showTooltip = {
                     name = L["Show Tooltip"],
                     desc = L["Show unit tooltip.  Choose 'Always', 'Never', or 'OOC'."],
@@ -439,21 +457,11 @@ PlexusFrame.options = {
                         HORIZONTAL = L["Horizontal"]
                     },
                 },
-                textorientation = {
-                    name = L["Orientation of Text"],
-                    desc = L["Set frame text orientation."],
-                    order = 8, width = "double",
-                    type = "select",
-                    values = {
-                        VERTICAL = L["Vertical"],
-                        HORIZONTAL = L["Horizontal"]
-                    },
-                },
                 throttleUpdates = {
                     name = L["Throttle Updates"],
                     desc = L["Throttle updates on group changes. This option may cause delays in updating frames, so you should only enable it if you're experiencing temporary freezes or lockups when people join or leave your group."],
                     type = "toggle",
-                    order = 9, width = "double",
+                    order = 8, width = "double",
                     set = function(info, v) --luacheck: ignore 212
                         PlexusFrame.db.profile.throttleUpdates = v
                         if v then
@@ -483,10 +491,16 @@ PlexusFrame.options = {
                     values = Media:HashTable("statusbar"),
                     dialogControl = "LSM30_Statusbar",
                 },
+                healingBar_intensity = {
+                    name = L["Healing Bar Opacity"],
+                    desc = L["Sets the opacity of the healing bar."],
+                    order = 2, width = "double",
+                    type = "range", min = 0, max = 1, step = 0.01, bigStep = 0.05,
+                },
                 enableBarColor = {
                     name = format(L["Enable %s indicator"], L["Health Bar Color"]),
                     desc = format(L["Toggle the %s indicator."], L["Health Bar Color"]),
-                    order = 2, width = "double",
+                    order = 3, width = "double",
                     type = "toggle",
                     set = function(info, v) --luacheck: ignore 212
                         PlexusFrame.db.profile.enableBarColor = v
@@ -496,12 +510,6 @@ PlexusFrame.options = {
                 },
                 invertBarColor = {
                     name = L["Invert Health Bar Color"],
-                    desc = L["Swap foreground/background colors on bars."],
-                    order = 3, width = "double",
-                    type = "toggle",
-                },
-                invertResourceBarColor = {
-                    name = L["Invert Resource Bar Color"],
                     desc = L["Swap foreground/background colors on bars."],
                     order = 4, width = "double",
                     type = "toggle",
@@ -514,12 +522,6 @@ PlexusFrame.options = {
                     disabled = function()
                         return not PlexusFrame.db.profile.invertBarColor
                     end,
-                },
-                healingBar_intensity = {
-                    name = L["Healing Bar Opacity"],
-                    desc = L["Sets the opacity of the healing bar."],
-                    order = 5, width = "double",
-                    type = "range", min = 0, max = 1, step = 0.01, bigStep = 0.05,
                 },
                 healingBar_useStatusColor = {
                     name = L["Healing Bar Uses Status Color"],
@@ -564,6 +566,7 @@ PlexusFrame.options = {
                     desc = L["Adjust the size of icon margins."],
                     order = 5, width = "double",
                     type = "range", min = 0, max = 9, step = 1,
+                    hidden = true,
                 },
                 enableIconCooldown = {
                     name = format(L["Enable %s"], L["Icon Cooldown Frame"]),
@@ -571,23 +574,159 @@ PlexusFrame.options = {
                     order = 6, width = "double",
                     type = "toggle",
                 },
-                enableIconStackText = {
-                    name = format(L["Enable %s"], L["Icon Stack Text"]),
-                    desc = L["Toggle icon stack count text."],
+                IconHeader = {
+                    name = "",
                     order = 7, width = "double",
-                    type = "toggle",
+                    type = "header",
                 },
-                iconsMore = {
-                    name = format(L["Enable %s"], L["more icons"]),
-                    desc = L["Toggle more icon indicators."],
+                showIconCountDownText = {
+                    name = format(L["Enable %s"], L["Icon Cooldown Text"]),
+                    desc = L["Toggle icons cooldown text."],
                     order = 8, width = "double",
                     type = "toggle",
                 },
-                iconsMore2 = {
-                    name = format(L["Enable %s"], L["even MORE icons"]),
-                    desc = L["Toggle even MORE icon indicators."],
+                iconCoolDownFontSize = {
+                    name = L["Icon Cool Down Text Size"],
+                    desc = L["Icon Cool Down Text Size"],
                     order = 9, width = "double",
+                    type = "range", min = 0, max = 20, step = 1,
+                    disabled = function()
+                        return not PlexusFrame.db.profile.showIconCountDownText
+                    end,
+                },
+                IconHeader0 = {
+                    name = "",
+                    order = 10, width = "double",
+                    type = "header",
+                },
+                enableIconStackText = {
+                    name = format(L["Enable %s"], L["Icon Stack Text"]),
+                    desc = L["Toggle icon stack count text."],
+                    order = 11, width = "double",
                     type = "toggle",
+                },
+                iconStackFontSize = {
+                    name = L["Icon Stack Text Size"],
+                    desc = L["Icon Stack Text Size"],
+                    order = 12, width = "double",
+                    type = "range", min = 0, max = 20, step = 1,
+                    disabled = function()
+                        return not PlexusFrame.db.profile.enableIconStackText
+                    end,
+                },
+                IconHeader1 = {
+                    name = "",
+                    order = 13, width = "double",
+                    type = "header",
+                },
+                enableIcon2 = {
+                    name = "Enable Extra Icon xx 2 Indicators Requires ReloadUI",
+                    desc = "Enable Extra Icon xx 2 Indicators",
+                    order = 14, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableIcon2 = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableIcon34 = {
+                    name = "Enable Extra Icon xx 3/4 Indicators Requires ReloadUI",
+                    desc = "Enable Extra Icon xx 3/4 Indicators Requires ReloadUI",
+                    order = 15, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableIcon34 = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                IconHeader2 = {
+                    name = "",
+                    order = 16, width = "double",
+                    type = "header",
+                },
+                enableIconBarSeparation = {
+                    name = "Enable Separation of Icons and Extra Bar Requires ReloadUI",
+                    desc = "Enable Separation of Icon indicators away from Extra Bar Requires ReloadUI",
+                    order = 17, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableIconBarSeparation = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                IconHeader3 = {
+                    name = "",
+                    order = 18, width = "double",
+                    type = "header",
+                },
+                IconTestModeEnable = {
+                    name = "Icon Test Mode Enable",
+                    order = 19,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local texture = "Interface\\Icons\\Spell_Holy_GuardianSpirit"
+                        local start = GetTime()
+                        local duration = 30
+                        local count = 2
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            for k in pairs(frame.indicators) do
+                                if string.find(k, "ei_icon") then
+                                    frame:SetIndicator(k, nil, nil, nil, nil, texture, start, duration, count)
+                                end
+                            end
+                            frame:SetIndicator("icon", nil, nil, nil, nil, texture, start, duration, count)
+                        end
+                    end,
+                },
+                IconTestModeDisable = {
+                    name = "Icon Test Mode Disable",
+                    order = 20,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            for k in pairs(frame.indicators) do
+                                if string.find(k, "ei_icon") then
+                                    frame:ClearIndicator(k)
+                                end
+                            end
+                            frame:ClearIndicator("icon")
+                        end
+                    end,
+                },
+                iconbackground = {
+                    name = L["Icon Background"],
+                    desc = L["Options related to icon indicators."],
+                    order = 21,
+                    type = "group", inline = true,
+                    args = {
+                        enableIconBackgroundColor = {
+                            name = "Enable",
+                            desc = "Enable Showing Background Colors from Status Behinde the icon.",
+                            order = 1, width = "double",
+                            type = "toggle",
+                            set = function(info, v) --luacheck: ignore 212
+                                PlexusFrame.db.profile.enableIconBackgroundColor = v
+                                PlexusFrame:UpdateAllFrames()
+                                PlexusFrame:UpdateOptionsMenu()
+                            end,
+                        },
+                        iconBackgroundAlpha = {
+                            name = L["Icon Alpha"],
+                            desc = L["Adjust how much the icon shows over background."],
+                            order = 2, width = "double",
+                            disabled = function()
+                                return not PlexusFrame.db.profile.enableIconBackgroundColor
+                            end,
+                            type = "range", min = 0, max = 1, step = 0.1,
+                        },
+                    },
                 },
             },
         },
@@ -605,11 +744,15 @@ PlexusFrame.options = {
                     values = Media:HashTable("font"),
                     dialogControl = "LSM30_Font",
                 },
-                fontSize = {
-                    name = L["Font Size"],
-                    desc = L["Adjust the font size."],
+                textorientation = {
+                    name = L["Orientation of Text"],
+                    desc = L["Set frame text orientation."],
                     order = 2, width = "double",
-                    type = "range", min = 6, max = 24, step = 1,
+                    type = "select",
+                    values = {
+                        VERTICAL = L["Vertical"],
+                        HORIZONTAL = L["Horizontal"]
+                    },
                 },
                 fontOutline = {
                     name = L["Font Outline"],
@@ -622,27 +765,449 @@ PlexusFrame.options = {
                         THICKOUTLINE = L["Thick"] ,
                     },
                 },
-                fontShadow = {
-                    name = L["Font Shadow"],
-                    desc = L["Toggle the font drop shadow effect."],
+                TextHeader1 = {
+                    name = "",
                     order = 4, width = "double",
-                    type = "toggle",
+                    type = "header",
+                },
+                fontSize = {
+                    name = L["Font Size"],
+                    desc = L["Adjust the font size."],
+                    order = 5, width = "double",
+                    type = "range", min = 6, max = 24, step = 1,
                 },
                 textlength = {
                     name = L["Center Text Length"],
                     desc = L["Number of characters to show on Center Text indicator."],
-                    order = 5, width = "double",
+                    order = 6, width = "double",
                     type = "range", min = 1, max = 12, step = 1,
                 },
+                fontShadow = {
+                    name = L["Font Shadow"],
+                    desc = L["Toggle the font drop shadow effect."],
+                    order = 7, width = "double",
+                    type = "toggle",
+                },
+                TextHeader2 = {
+                    name = "",
+                    order = 8, width = "double",
+                    type = "header",
+                },
                 enableText2 = {
-                    name = format(L["Enable %s indicator"], L["Center Text 2"]),
+                    name = format(L["Enable %s indicator"], L["Center Text 2"]) .. " Requires ReloadUI",
                     desc = format(L["Toggle the %s indicator."], L["Center Text 2"]),
-                    order = 6, width = "double",
+                    order = 9, width = "double",
                     type = "toggle",
                     set = function(info, v) --luacheck: ignore 212
                         PlexusFrame.db.profile.enableText2 = v
                         PlexusFrame:UpdateAllFrames()
                         PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableText3 = {
+                    name = format(L["Enable %s indicator"], L["Center Text 3"]) .. " Requires ReloadUI",
+                    desc = format(L["Toggle the %s indicator."], L["Center Text 3"]),
+                    order = 10, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableText3 = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableTextTop = {
+                    name = "Enable Top Text Requires ReloadUI",
+                    desc = "Enable Top Text Requires ReloadUI",
+                    order = 11, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableTextTop = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableTextTopLeft = {
+                    name = "Enable Top Left Text Requires ReloadUI",
+                    desc = "Enable Top Left Text Requires ReloadUI",
+                    order = 12, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableTextTopLeft = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableTextTopRight = {
+                    name = "Enable Top Right Text Requires ReloadUI",
+                    desc = "Enable Top Right Text Requires ReloadUI",
+                    order = 13, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableTextTopRight = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableTextBottom = {
+                    name = "Enable Bottom Text Requires ReloadUI",
+                    desc = "Enable Bottom Text Requires ReloadUI",
+                    order = 14, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableTextBottom = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableTextBottomLeft = {
+                    name = "Enable Bottom Left Text Requires ReloadUI",
+                    desc = "Enable Bottom Left Text Requires ReloadUI",
+                    order = 15, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableTextBottomLeft = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableTextBottomRight = {
+                    name = "Enable Bottom Right Text Requires ReloadUI",
+                    desc = "Enable Bottom Right Text Requires ReloadUI",
+                    order = 16, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableTextBottomRight = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableExtraText2 = {
+                    name = "Enable Extra Text xx 2 Indicators Requires ReloadUI",
+                    desc = "Enable Extra Text xx 2 Indicators Requires ReloadUI",
+                    order = 17, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableExtraText2 = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableExtraText34 = {
+                    name = "Enable Extra Text xx 3/4 Indicators Requires ReloadUI",
+                    desc = "Enable Extra Text xx 3/4 Indicators Requires ReloadUI",
+                    order = 18, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableExtraText34 = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                TextHeader3 = {
+                    name = "",
+                    order = 19, width = "double",
+                    type = "header",
+                },
+                TextTestModeEnable = {
+                    name = "Icon Test Mode Enable",
+                    order = 20,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local text = "Test"
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            for k in pairs(frame.indicators) do
+                                if string.find(k, "ei_text") then
+                                    frame:SetIndicator(k, nil, text)
+                                end
+                            end
+                        end
+                    end,
+                },
+                TextTestModeDisable = {
+                    name = "Icon Test Mode Disable",
+                    order = 21,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            for k in pairs(frame.indicators) do
+                                if string.find(k, "ei_text") then
+                                    frame:ClearIndicator(k)
+                                end
+                            end
+                        end
+                    end,
+                },
+            },
+        },
+        corner = {
+            name = L["Corner Indicator Options"],
+            desc = L["Options related to corner indicators."],
+            order = 5,
+            type = "group",
+            args = {
+                cornerSize = {
+                    name = L["Size"],
+                    desc = L["Adjust the size of the corner indicators."],
+                    order = 1, width = "double",
+                    type = "range", min = 1, max = 20, step = 1,
+                },
+                cornerBorderSize = {
+                    name = "Border Size",
+                    desc = "Adjust the size of the border on corner indicators.",
+                    order = 2, width = "double",
+                    disabled = true,
+                    hidden = true,
+                    type = "range", min = 0, max = 9, step = 1,
+                },
+                cornerBorderColor = {
+                    name = L["Corner Border color"],
+                    order = 3,
+                    width = "double",
+                    type = "color", hasAlpha = true,
+                    get = function(info) --luacheck: ignore 212
+                        local v = PlexusFrame.db.profile.cornerBorderColor
+                        if type(v) == "table" and v.r and v.g and v.b then
+                            return v.r, v.g, v.b, v.a
+                        else
+                            return v
+                        end
+                    end,
+                    set = function(info, r, g, b, a) --luacheck: ignore 212
+                        local color = PlexusFrame.db.profile.cornerBorderColor
+                        color.r, color.g, color.b, color.a = r, g, b, a
+                        PlexusFrame:UpdateAllFrames()
+                    end,
+                },
+                CornerHeader1 = {
+                    name = "",
+                    order = 4, width = "double",
+                    type = "header",
+                },
+                enableCorner2 = {
+                    name = "Enable Extra Icon xx 2 Indicators Requires ReloadUI",
+                    desc = "Enable Extra Icon xx 2 Indicators Requires ReloadUI",
+                    order = 5, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableCorner2 = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableCorner34 = {
+                    name = "Enable Extra Icon xx 3/4 Indicators Requires ReloadUI",
+                    desc = "Enable Extra Icon xx 3/4 Indicators Requires ReloadUI",
+                    order = 6, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableCorner34 = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                enableCornerBarSeparation = {
+                    name = "Enable Separation of Corner and Extra Bar Requires ReloadUI",
+                    desc = "Enable Separation of Corner indicators away from Extra Bar Requires ReloadUI",
+                    order = 7, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableCornerBarSeparation = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                CornerHeader2 = {
+                    name = "",
+                    order = 8, width = "double",
+                    type = "header",
+                },
+                CornerTestModeEnable = {
+                    name = "Icon Test Mode Enable",
+                    order = 9,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local color = { r = 0, g = 1, b = 0, a = 1 }
+                        local start = GetTime()
+                        local duration = 30
+                        local count = 2
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            frame:SetIndicator("corner3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("topleft2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("topleft3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("corner4", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("topright2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("topright3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("corner1", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("bottomleft2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("bottomleft3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("corner2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("bottomright2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("bottomright3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Top", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Top2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Top3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Top4", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Bottom", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Bottom2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Bottom3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Bottom4", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Left", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Left2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Left3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Left4", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Right", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Right2", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Right3", color, nil, nil, nil, nil, start, duration, count)
+                            frame:SetIndicator("Right4", color, nil, nil, nil, nil, start, duration, count)
+                        end
+                    end,
+                },
+                CornerTestModeDisable = {
+                    name = "Icon Test Mode Disable",
+                    order = 10,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            frame:ClearIndicator("corner3")
+                            frame:ClearIndicator("topleft2")
+                            frame:ClearIndicator("topleft3")
+                            frame:ClearIndicator("corner4")
+                            frame:ClearIndicator("topright2")
+                            frame:ClearIndicator("topright3")
+                            frame:ClearIndicator("corner1")
+                            frame:ClearIndicator("bottomleft2")
+                            frame:ClearIndicator("bottomleft3")
+                            frame:ClearIndicator("corner2")
+                            frame:ClearIndicator("bottomright2")
+                            frame:ClearIndicator("bottomright3")
+                            frame:ClearIndicator("Top")
+                            frame:ClearIndicator("Top2")
+                            frame:ClearIndicator("Top3")
+                            frame:ClearIndicator("Top4")
+                            frame:ClearIndicator("Bottom")
+                            frame:ClearIndicator("Bottom2")
+                            frame:ClearIndicator("Bottom3")
+                            frame:ClearIndicator("Bottom4")
+                            frame:ClearIndicator("Left")
+                            frame:ClearIndicator("Left2")
+                            frame:ClearIndicator("Left3")
+                            frame:ClearIndicator("Left4")
+                            frame:ClearIndicator("Right")
+                            frame:ClearIndicator("Right2")
+                            frame:ClearIndicator("Right3")
+                            frame:ClearIndicator("Right4")
+                        end
+                    end,
+                },
+            },
+        },
+        extrabar = {
+            name = L["Extra Bar Indicator Options"],
+            desc = L["Options related to extra indicators."],
+            order = 6,
+            type = "group",
+            args = {
+                enableExtraBar = {
+                    name = "Enable Extra Bar Requires ReloadUI",
+                    desc = "Enable/disable Extra Bar Indicator.",
+                    order = 1, width = "double",
+                    type = "toggle",
+                    set = function(info, v) --luacheck: ignore 212
+                        PlexusFrame.db.profile.enableExtraBar = v
+                        PlexusFrame:UpdateAllFrames()
+                        PlexusFrame:UpdateOptionsMenu()
+                    end,
+                },
+                ExtraBarHeader1 = {
+                    name = "",
+                    order = 2, width = "double",
+                    type = "header",
+                },
+                ExtraBarSize = {
+                    name = L["Size"],
+                    desc = "Percentage of frame for extra bar",
+                    order = 3, width = "double",
+                    type = "range", min = 1, max = 50, step = 1,
+                    get = function ()
+                        return PlexusFrame.db.profile.ExtraBarSize * 100
+                    end,
+                    set = function(_, v)
+                        PlexusFrame.db.profile.ExtraBarSize = v / 100
+                        PlexusFrame:UpdateAllFrames()
+                    end
+                },
+                ExtraBarBorderSize = {
+                    name = L["Border Size"],
+                    desc = L["Adjust the size of the border on extra bar."],
+                    order = 4, width = "double",
+                    type = "range", min = 1, max = 20, step = 1,
+                },
+                ExtraBarSide = {
+                    type = "select",
+                    name = "Location",
+                    order = 5, width = "full",
+                    desc = "Where extra bar attaches to",
+                    get = function ()
+                        return PlexusFrame.db.profile.ExtraBarSide
+                        end,
+                    set = function(_, v)
+                        PlexusFrame.db.profile.ExtraBarSide = v
+                        PlexusFrame:UpdateAllFrames()
+                    end,
+                    values={["Left"] = "Left", ["Top"] = "Top", ["Right"] = "Right", ["Bottom"] = "Bottom" },
+                },
+                ExtraBarInvertColor = {
+                    name = L["Invert Extra Bar Color"],
+                    desc = L["Swap foreground/background colors on bars."],
+                    order = 6, width = "double",
+                    type = "toggle",
+                },
+                ExtraBarHeader2 = {
+                    name = "",
+                    order = 7, width = "double",
+                    type = "header",
+                },
+                ExtraBarTestModeEnable = {
+                    name = "Icon Test Mode Enable",
+                    order = 8,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local color = { r = 0, g = 1, b = 0, a = 1 }
+                        local value = 50
+                        local maxvalue = 100
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            for k in pairs(frame.indicators) do
+                                if string.find(k, "ei_bar") then
+                                    frame:SetIndicator(k, color, nil, value, maxvalue)
+                                end
+                            end
+                        end
+                    end,
+                },
+                ExtraBarTestModeDisable = {
+                    name = "Icon Test Mode Disable",
+                    order = 9,
+                    width = "double",
+                    type = "execute",
+                    func = function()
+                        local PlexusFrameTest = Plexus:GetModule("PlexusFrame")
+                        for _, frame in pairs(PlexusFrameTest.registeredFrames) do
+                            for k in pairs(frame.indicators) do
+                                if string.find(k, "ei_bar") then
+                                    frame:ClearIndicator(k)
+                                end
+                            end
+                        end
                     end,
                 },
             },
@@ -949,6 +1514,46 @@ function PlexusFrame:UpdateOptionsForIndicator(indicator, name, order)
         return
     end
 
+    if indicator == "text3" and not self.db.profile.enableText3 then
+        self:Debug("indicator text3 is disabled")
+        menu[indicator] = nil
+        return
+    end
+
+    if indicator == "tooltip" then
+        self:Debug("indicator tooltip is disabled")
+        menu[indicator] = nil
+        return
+    end
+
+    if (string.find(name, "Indicator") and (string.find(name, "2")) and not self.db.profile.enableCorner2) then --luacheck:ignore 631
+        self:Debug("Disabling Corners 2")
+        menu[indicator] = nil
+        return
+    end
+    if (string.find(name, "Indicator") and (string.find(name, "3") or string.find(name, "4")) and not self.db.profile.enableCorner34) then --luacheck:ignore 631
+        self:Debug("Disabling Corners 3-4")
+        menu[indicator] = nil
+        return
+    end
+
+    if (string.find(indicator, "ei_icon") and (string.find(indicator, "2")) and not self.db.profile.enableIcon2) then
+        self:Debug("Disabling Extra Icons 2")
+        menu[indicator] = nil
+        return
+    end
+    if (string.find(indicator, "ei_icon") and (string.find(indicator, "3") or string.find(indicator, "4")) and not self.db.profile.enableIcon34) then --luacheck:ignore 631
+        self:Debug("Disabling Extra Icons 3-4")
+        menu[indicator] = nil
+        return
+    end
+
+    if indicator == "ei_bar_barone" and not self.db.profile.enableExtraBar  then
+        self:Debug("disableing extra bar one menu")
+        menu[indicator] = nil
+        return
+    end
+
     if indicator == "barcolor" and not self.db.profile.enableBarColor then
         self:Debug("indicator barcolor is disabled")
         menu[indicator] = nil
@@ -977,6 +1582,27 @@ function PlexusFrame:UpdateOptionsForIndicator(indicator, name, order)
         }
         if indicator == "text2" then
             menu[indicator].disabled = function() return not PlexusFrame.db.profile.enableText2 end
+        end
+        if indicator == "text3" then
+            menu[indicator].disabled = function() return not PlexusFrame.db.profile.enableText3 end
+        end
+        if indicator == "tooltip" then
+            menu[indicator].disabled = function() return true end
+        end
+        if (string.find(name, "Indicator") and string.find(name, "2")) then
+            menu[indicator].disabled = function() return not PlexusFrame.db.profile.enableCorner2 end
+        end
+        if (string.find(name, "Indicator") and (string.find(name, "3") or string.find(name, "4"))) then
+            menu[indicator].disabled = function() return not PlexusFrame.db.profile.enableCorner34 end
+        end
+        if (string.find(indicator, "ei_icon") and string.find(indicator, "2")) then
+            menu[indicator].disabled = function() return not PlexusFrame.db.profile.enableIcon2 end
+        end
+        if (string.find(indicator, "ei_icon") and (string.find(indicator, "3") or string.find(indicator, "4"))) then
+            menu[indicator].disabled = function() return not PlexusFrame.db.profile.enableIcon34 end
+        end
+        if indicator == "ei_bar_barone" then
+            menu[indicator].disabled = function() return not PlexusFrame.db.profile.enableExtraBar end
         end
     end
 

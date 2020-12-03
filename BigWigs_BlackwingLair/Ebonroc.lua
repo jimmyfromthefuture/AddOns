@@ -30,10 +30,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "WingBuffet", self:SpellName(23339))
 	self:Log("SPELL_CAST_START", "ShadowFlame", self:SpellName(22539))
@@ -60,7 +56,7 @@ function mod:ShadowFlame(args)
 end
 
 function mod:Curse(args)
-	self:TargetMessage(23340, args.destName, "yellow")
+	self:TargetMessage(23340, "yellow", args.destName)
 	self:TargetBar(23340, 8, args.destName)
 	self:PrimaryIcon(23340, args.destName)
 end

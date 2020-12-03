@@ -13,7 +13,7 @@ GT.Log = LibStub:GetLibrary('Log')
 ---------- END LOAD LIBRARIES ----------
 
 GT.resetWarned = false
-GT.version = 'release_6.0.4'
+GT.version = 'release_6.0.6'
 
 GT.DAY = 24 * 60 * 60
 GT.STARTUP_DELAY = 5
@@ -62,7 +62,9 @@ function GT:Welcome()
 	character.class = GT:GetCharacterClass()
 	character.isOnline = true
 	
-	GT.Log:PlayerInfo(L['WELCOME'])
+	if GT.DB:GetShouldPrintLoginMessage() then
+		GT.Log:PlayerInfo(L['WELCOME'])
+	end
 	if not GT.DB.valid then
 		GT.Log:PlayerError(L['CORRUPTED_DATABASE'])
 	end

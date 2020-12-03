@@ -32,10 +32,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "GreatHeal", 25807)
 	self:Log("SPELL_CAST_SUCCESS", "Fear", 26580)
@@ -51,18 +47,18 @@ end
 --
 
 function mod:GreatHeal(args)
-	self:Message2(25807, "orange", CL.casting:format(args.spellName))
+	self:Message(25807, "orange", CL.casting:format(args.spellName))
 	self:CastBar(25807, 2)
 end
 
 function mod:Fear(args)
-	self:Message2(26580, "red")
+	self:Message(26580, "red")
 	self:Bar(26580, 20)
 	self:DelayedMessage(26580, 15, "orange", CL.custom_sec:format(args.spellName, 5))
 end
 
 function mod:ToxicVolley(args)
-	self:Message2(25812, "yellow")
+	self:Message(25812, "yellow")
 end
 
 do
@@ -71,7 +67,7 @@ do
 		local t = GetTime()
 		if t-prev > 2 and self:Me(args.destGUID) then
 			prev = t
-			self:Message2(25786, "blue", CL.underyou:format(args.spellName))
+			self:Message(25786, "blue", CL.underyou:format(args.spellName))
 			self:PlaySound(25786, "alarm")
 		end
 	end

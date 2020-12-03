@@ -51,10 +51,6 @@ function mod:GetOptions()
 	}
 end
 
-function mod:OnRegister()
-	self.displayName = L.bossName
-end
-
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "Sweep", 26103)
 	self:Log("SPELL_CAST_START", "SandBlast", 26102)
@@ -62,12 +58,18 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "SummonOuroMounds", 26058) -- Submerge
 	self:Log("SPELL_SUMMON", "SummonOuroScarabs", 26060) -- Emerge
 
-	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "target", "focus")
+	self:RegisterEvent("PLAYER_REGEN_ENABLED", "CheckForWipe")
+	self:Death("Win", 15517)
 end
 
 function mod:OnEngage()
 	self:PossibleSubmerge()
-	self:Message2("stages", "yellow", L.engage_message, false)
+	self:Message("stages", "yellow", L.engage_message, false)
+
+	self:CDBar(26103, 22.7) -- Sweep
+	self:CDBar(26102, 24.3) -- Sand Blast
+
+	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "target", "focus")
 end
 
 --------------------------------------------------------------------------------
@@ -82,13 +84,13 @@ function mod:PossibleSubmerge()
 end
 
 function mod:Sweep(args)
-	self:Message2(26103, "red")
+	self:Message(26103, "red")
 	self:Bar(26103, 21)
 	self:DelayedMessage(26103, 16, "red", CL.custom_sec:format(args.spellName, 5))
 end
 
 function mod:SandBlast(args)
-	self:Message2(26102, "yellow")
+	self:Message(26102, "yellow")
 	self:Bar(26102, 22)
 	self:DelayedMessage(26102, 17, "red", CL.custom_sec:format(args.spellName, 5))
 end
@@ -100,7 +102,7 @@ function mod:BerserkApplied(args)
 	self:StopBar(L.possible_submerge_bar)
 	self:StopBar(L.emergebartext)
 
-	self:Message2(26615, "orange", "Long", CL.percent:format(20, args.spellName))
+	self:Message(26615, "orange", "Long", CL.percent:format(20, args.spellName))
 	self:PlaySound(26615, "long")
 end
 
@@ -114,7 +116,7 @@ function mod:SummonOuroMounds() -- Submerge
 	self:StopBar(26103) -- Sweep
 	self:StopBar(26102) -- Sand Blast
 
-	self:Message2("stages", "red", L.submerge, L.submerge_icon)
+	self:Message("stages", "red", L.submerge, L.submerge_icon)
 	self:DelayedMessage("stages", 25, "red", CL.custom_sec:format(L.emerge, 5))
 	self:Bar("stages", 30, L.emerge, L.emerge_icon)
 end
@@ -126,7 +128,7 @@ do
 		if t-prev > 5 then
 			prev = t
 
-			self:Message2("stages", "red", L.emerge, L.emerge_icon)
+			self:Message("stages", "red", L.emerge, L.emerge_icon)
 			self:PossibleSubmerge()
 
 			-- Sweep
@@ -149,8 +151,7 @@ function mod:UNIT_HEALTH_FREQUENT(event, unit)
 		local hp = UnitHealth(unit)
 		if hp < 25 then
 			self:UnregisterUnitEvent(event, "target", "focus")
-			self:Message2(26615, "green", CL.soon:format(self:SpellName(26615)), false)
+			self:Message(26615, "green", CL.soon:format(self:SpellName(26615)), false)
 		end
 	end
 end
-

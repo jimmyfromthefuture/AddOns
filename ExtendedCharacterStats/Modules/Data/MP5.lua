@@ -3,7 +3,7 @@ local Data = ECSLoader:ImportModule("Data")
 ---@type DataUtils
 local DataUtils = ECSLoader:ImportModule("DataUtils")
 
-local _GetMP5ValueOnItems, _GetTalentModifier
+local _GetMP5ValueOnItems, _GetTalentModifier, _GetBlessingOfWisdomModifier
 
 local _, _, classId = UnitClass("player")
 
@@ -42,13 +42,13 @@ _GetMP5ValueOnItems = function ()
     mainHandEnchantID = tostring(mainHandEnchantID)
     if (hasMainEnchant) then
         if mainHandEnchantID == Data.enchantIds.BRILLIANT_MANA_OIL then
-        	mp5 = mp5 + 12
+            mp5 = mp5 + 12
         end
         if mainHandEnchantID == Data.enchantIds.LESSER_MANA_OIL then
-        	mp5 = mp5 + 8
+            mp5 = mp5 + 8
         end
         if mainHandEnchantID == Data.enchantIds.MINOR_MANA_OIL then
-        	mp5 = mp5 + 4
+            mp5 = mp5 + 4
         end
     end
 
@@ -149,33 +149,50 @@ function Data:GetMP5FromBuffs()
             bonus = bonus + 25 -- 10 Mana per 2 seconds from Mana Spring Totem (Rank 4)
         end
         if spellId == 25894 then
-        	bonus = bonus + 30 -- Greater Blessing of Wisdom Rank 1
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(30 * blessingMod) -- Greater Blessing of Wisdom Rank 1
         end
         if spellId == 25918 then
-        	bonus = bonus + 33 -- Greater Blessing of Wisdom Rank 2
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(33 * blessingMod) -- Greater Blessing of Wisdom Rank 2
         end
         if spellId == 19742 then
-        	bonus = bonus + 10 -- Blessing of Wisdom Rank 1
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(10 * blessingMod) -- Blessing of Wisdom Rank 1
         end
         if spellId == 19850 then
-        	bonus = bonus + 15 -- Blessing of Wisdom Rank 2
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(15 * blessingMod) -- Blessing of Wisdom Rank 2
         end
         if spellId == 19852 then
-        	bonus = bonus + 20 -- Blessing of Wisdom Rank 3
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(20 * blessingMod) -- Blessing of Wisdom Rank 3
         end
         if spellId == 19853 then
-        	bonus = bonus + 25 -- Blessing of Wisdom Rank 4
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(25 * blessingMod) -- Blessing of Wisdom Rank 4
         end
         if spellId == 19854 then
-        	bonus = bonus + 30 -- Blessing of Wisdom Rank 5
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(30 * blessingMod) -- Blessing of Wisdom Rank 5
         end
         if spellId == 25290 then
-        	bonus = bonus + 33 -- Blessing of Wisdom Rank 6
+            local blessingMod = _GetBlessingOfWisdomModifier() + 1
+            bonus = bonus + math.ceil(33 * blessingMod) -- Blessing of Wisdom Rank 6
         end
         if spellId == 17252 then
-        	bonus = bonus + 22 -- 22 MP5 from Mark of the Dragon Lord
+            bonus = bonus + 22 -- 22 MP5 from Mark of the Dragon Lord
         end
     end
 
     return mod, bonus
+end
+
+_GetBlessingOfWisdomModifier = function()
+    local mod = 0
+    if classId == Data.PALADIN then
+        local _, _, _, _, points, _, _, _ = GetTalentInfo(1, 10)
+        mod = points * 0.1 -- 0-20% from Improved Blessing of Wisdom
+    end
+    return mod
 end
